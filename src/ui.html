@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Wellwe Design System Automator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
+      color: #333;
+      padding: 16px;
+      background: #fff;
+    }
+
+    h1 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #00cc61;
+    }
+
+    .section {
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #00cc61;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #00b356;
+    }
+
+    .btn-secondary {
+      background: #f3f3f3;
+      color: #333;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #e6e6e6;
+    }
+
+    .btn-agent {
+      background: #6366f1;
+      color: white;
+    }
+
+    .btn-agent:hover:not(:disabled) {
+      background: #4f46e5;
+    }
+
+    .info {
+      font-size: 11px;
+      color: #797979;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-connected {
+      background: #ecfdf5;
+      color: #065f46;
+    }
+
+    .status-connected .status-dot {
+      background: #10b981;
+    }
+
+    .status-disconnected {
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .status-disconnected .status-dot {
+      background: #ef4444;
+    }
+
+    .status-loading {
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .status-loading .status-dot {
+      background: #f59e0b;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .progress {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wellwe Design System</h1>
+
+  <!-- Agent Server Status -->
+  <div id="server-status" class="status status-loading">
+    <div class="status-dot"></div>
+    <span>Agent Server 연결 확인 중...</span>
+  </div>
+
+  <div class="section">
+    <div class="section-title">전처리</div>
+    <button class="btn-secondary" onclick="runCommand('cleanup-wrappers')">
+      의미 없는 래퍼 제거
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Auto Layout</div>
+    <button class="btn-primary" onclick="runCommand('apply-autolayout')">
+      선택 영역에 Auto Layout 적용
+    </button>
+    <button id="btn-autolayout-agent" class="btn-agent" onclick="runCommand('apply-autolayout-agent')" disabled>
+      AI Auto Layout (Agent)
+    </button>
+    <button class="btn-secondary" onclick="runCommand('standardize-spacing')">
+      간격 표준화
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">네이밍 & 컴포넌트</div>
+    <button class="btn-secondary" onclick="runCommand('auto-naming')">
+      네이밍 자동화 (Rule-based)
+    </button>
+    <button id="btn-naming-agent" class="btn-agent" onclick="runCommand('auto-naming-agent')" disabled>
+      AI 네이밍 (Agent)
+    </button>
+    <button class="btn-secondary" onclick="runCommand('componentize')">
+      컴포넌트 후보 탐지
+    </button>
+    <button class="btn-primary" onclick="runCommand('componentize-convert')">
+      컴포넌트로 변환
+    </button>
+  </div>
+
+  <div class="section">
+    <button class="btn-primary" onclick="runCommand('run-all')">
+      전체 실행
+    </button>
+    <button id="btn-run-all-agent" class="btn-agent" onclick="runCommand('run-all-agent')" disabled>
+      전체 실행 (with AI Agent)
+    </button>
+  </div>
+
+  <div class="info">
+    <p>프레임을 선택한 후 버튼을 클릭하세요.</p>
+    <p style="margin-top: 4px;">토큰 기반: spacing (0, 4, 8, 12, 16, 24, 32, 64)</p>
+  </div>
+
+  <div id="progress" class="progress" style="display: none;"></div>
+
+  <script>
+    const AGENT_SERVER_URL = 'http://localhost:3001';
+    let serverConnected = false;
+
+    // Check server connection on load
+    checkServerConnection();
+
+    async function checkServerConnection() {
+      try {
+        const response = await fetch(AGENT_SERVER_URL + '/health', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (response.ok) {
+          serverConnected = true;
+          updateServerStatus(true);
+          enableAgentButtons(true);
+        } else {
+          throw new Error('Server not responding');
+        }
+      } catch (error) {
+        serverConnected = false;
+        updateServerStatus(false);
+        enableAgentButtons(false);
+      }
+    }
+
+    function updateServerStatus(connected) {
+      const statusEl = document.getElementById('server-status');
+      if (connected) {
+        statusEl.className = 'status status-connected';
+        statusEl.innerHTML = '<div class="status-dot"></div><span>Agent Server 연결됨 (localhost:3001)</span>';
+      } else {
+        statusEl.className = 'status status-disconnected';
+        statusEl.innerHTML = '<div class="status-dot"></div><span>Agent Server 연결 안됨 - Rule-based 모드</span>';
+      }
+    }
+
+    function enableAgentButtons(enabled) {
+      document.getElementById('btn-autolayout-agent').disabled = !enabled;
+      document.getElementById('btn-naming-agent').disabled = !enabled;
+      document.getElementById('btn-run-all-agent').disabled = !enabled;
+    }
+
+    function showProgress(message) {
+      const progressEl = document.getElementById('progress');
+      progressEl.style.display = 'block';
+      progressEl.textContent = message;
+    }
+
+    function hideProgress() {
+      document.getElementById('progress').style.display = 'none';
+    }
+
+    function runCommand(command) {
+      parent.postMessage({ pluginMessage: { type: command } }, '*');
+    }
+
+    // Listen for messages from main code
+    window.onmessage = async (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      switch (msg.type) {
+        case 'agent-naming':
+          await handleNamingAgent(msg.data);
+          break;
+
+        case 'agent-naming-batch':
+          await handleNamingBatch(msg.data);
+          break;
+
+        case 'agent-autolayout':
+          await handleAutoLayoutAgent(msg.data);
+          break;
+
+        case 'check-connection':
+          await checkServerConnection();
+          parent.postMessage({
+            pluginMessage: {
+              type: 'connection-result',
+              connected: serverConnected
+            }
+          }, '*');
+          break;
+      }
+    };
+
+    // Naming Agent API call
+    async function handleNamingAgent(data) {
+      if (!serverConnected) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'agent-result',
+            success: false,
+            error: 'Agent server not connected'
+          }
+        }, '*');
+        return;
+      }
+
+      showProgress('AI 네이밍 분석 중...');
+
+      try {
+        const response = await fetch(AGENT_SERVER_URL + '/agents/naming', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-result',
+            ...result
+          }
+        }, '*');
+      } catch (error) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-result',
+            success: false,
+            error: error.message
+          }
+        }, '*');
+      } finally {
+        hideProgress();
+      }
+    }
+
+    // Batch Naming Agent API call
+    async function handleNamingBatch(data) {
+      if (!serverConnected) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-batch-result',
+            success: false,
+            error: 'Agent server not connected'
+          }
+        }, '*');
+        return;
+      }
+
+      showProgress('AI 네이밍 분석 중... (0/' + data.nodes.length + ')');
+
+      try {
+        const results = [];
+
+        for (let i = 0; i < data.nodes.length; i++) {
+          showProgress('AI 네이밍 분석 중... (' + (i + 1) + '/' + data.nodes.length + ')');
+
+          const response = await fetch(AGENT_SERVER_URL + '/agents/naming', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data.nodes[i]),
+          });
+
+          const result = await response.json();
+          results.push(result);
+        }
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-batch-result',
+            success: true,
+            results
+          }
+        }, '*');
+      } catch (error) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-batch-result',
+            success: false,
+            error: error.message
+          }
+        }, '*');
+      } finally {
+        hideProgress();
+      }
+    }
+
+    // AutoLayout Agent API call
+    async function handleAutoLayoutAgent(data) {
+      if (!serverConnected) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'autolayout-result',
+            success: false,
+            error: 'Agent server not connected'
+          }
+        }, '*');
+        return;
+      }
+
+      showProgress('AI Auto Layout 분석 중...');
+
+      try {
+        const response = await fetch(AGENT_SERVER_URL + '/agents/autolayout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'autolayout-result',
+            ...result
+          }
+        }, '*');
+      } catch (error) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'autolayout-result',
+            success: false,
+            error: error.message
+          }
+        }, '*');
+      } finally {
+        hideProgress();
+      }
+    }
+  </script>
+</body>
+</html>
