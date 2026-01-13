@@ -888,3 +888,10 @@ npm run typecheck    # 타입 체크
 | 2025-01-13 | - LLM: sizing 추론 (HUG/FILL/FIXED) |
 | 2025-01-13 | - 자식별 layoutAlign, layoutGrow 설정 |
 | 2025-01-13 | - 안전 검증: 5px 이상 크기 변화 경고 |
+| 2025-01-14 | **프로젝트 환경 설정** |
+| 2025-01-14 | - GitHub 레포지토리 클론 (plumlabs-official/WDS) |
+| 2025-01-14 | - Node.js 설치 (Homebrew) |
+| 2025-01-14 | - 프로젝트 의존성 설치 완료 |
+| 2025-01-14 | - 프로젝트 구조 파악 완료 |
+| 2025-01-14 | **다음 예정: AI Auto Layout 테스트** |
+| 2025-01-14 | - Agent Server 실행 → Figma에서 통합 테스트 진행 예정 |
