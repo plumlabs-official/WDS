@@ -42,6 +42,9 @@ export async function askClaudeWithImage(
   imageBase64: string,
   mediaType: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' = 'image/png'
 ): Promise<string> {
+  // data:image/xxx;base64, prefix 제거
+  const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+
   const response = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 4096,
@@ -54,7 +57,7 @@ export async function askClaudeWithImage(
             source: {
               type: 'base64',
               media_type: mediaType,
-              data: imageBase64,
+              data: base64Data,
             },
           },
           {

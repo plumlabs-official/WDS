@@ -5,99 +5,85 @@
  * - Direction, Gap, Padding (룰 베이스 값 검증)
  * - Sizing 모드 추론 (HUG/FILL/FIXED) - 반응형 핵심
  *
- * 중요: 기존 디자인이 깨지지 않도록 sizing 결정
+ * 핵심 원칙: 기존 디자인이 절대 깨지지 않아야 함
+ * - 요소 순서 유지
+ * - 요소 크기 유지 (기본값)
+ * - FILL은 명확한 경우에만 사용
  */
 
 import { askClaudeWithImage, parseJsonResponse } from '../utils/claude';
 import type { AutoLayoutRequest, AutoLayoutResult, BaseResponse } from '../types';
 
-const AUTOLAYOUT_PROMPT = `당신은 UI 레이아웃 분석 전문가입니다.
-주어진 Figma 프레임 스크린샷과 자식 요소 위치 정보를 분석하여 최적의 Auto Layout 설정을 제안해주세요.
+const AUTOLAYOUT_PROMPT = `당신은 Figma Auto Layout 전문가입니다.
+주어진 프레임 스크린샷과 자식 요소 정보를 분석하여 Auto Layout 설정을 제안해주세요.
 
-## 핵심 원칙
-1. **기존 디자인 보존**: 적용 후에도 현재와 동일한 모습이어야 함
-2. **반응형 고려**: 화면 크기 변화에 적절히 대응하도록 sizing 결정
-3. **일관성**: 디자인 토큰 값 사용
+## 절대 원칙 (반드시 준수)
 
-## 분석 항목
+### 1. 기존 디자인 100% 보존
+- Auto Layout 적용 후에도 **현재 스크린샷과 완전히 동일한 모습**이어야 함
+- 요소 위치, 크기, 순서가 바뀌면 안 됨
+- 의심스러우면 FIXED/HUG 사용 (FILL 사용 자제)
 
-### 1. Direction (방향)
-- HORIZONTAL: 자식들이 가로로 나열됨
-- VERTICAL: 자식들이 세로로 나열됨
-- NONE: Auto Layout이 적합하지 않음 (겹치는 요소, 자유 배치 등)
+### 2. 요소 순서 절대 유지
+- 자식 요소의 레이어 순서(index)는 변경하지 않음
+- Figma에서 위에서 아래로, 왼쪽에서 오른쪽으로 배치됨
 
-### 2. Gap & Padding
-- 디자인 토큰: 0, 4, 8, 12, 16, 24, 32, 64
-- 룰 베이스 계산값이 제공되면 검증만 수행
+### 3. 크기 유지 우선
+- 기본적으로 모든 자식은 **현재 크기 유지** (layoutAlign: INHERIT, layoutGrow: 0)
+- STRETCH나 layoutGrow:1은 정말 필요한 경우에만 사용
 
-### 3. 컨테이너 Sizing (중요)
-- **primaryAxisSizing**: 주축 방향 사이징
-  - HUG: 자식 콘텐츠에 맞춤 (내용물 크기)
-  - FIXED: 현재 크기 유지 (고정)
-- **counterAxisSizing**: 교차축 방향 사이징
-  - HUG: 자식 콘텐츠에 맞춤
-  - FIXED: 현재 크기 유지
+## 언제 FILL(STRETCH/layoutGrow:1)을 사용하는가?
 
-### 4. 자식 요소 개별 Sizing (핵심)
-각 자식에 대해 결정:
-- **layoutAlign**: 교차축 정렬
-  - INHERIT: 부모 설정 따름
-  - STRETCH: 교차축 방향으로 늘어남 (FILL 효과)
-- **layoutGrow**: 주축 공간 채우기
-  - 0: 고정 크기 유지
-  - 1: 남은 공간 채움 (FILL 효과)
+### 사용해야 하는 경우 (명확한 증거가 있을 때만)
+- 입력 필드(Input): 너비가 부모 컨테이너에 거의 꽉 차있음
+- 전체 너비 버튼: 너비가 부모와 거의 동일
+- 구분선(Divider): 너비가 부모와 동일
 
-## Sizing 판단 가이드
+### 사용하지 않아야 하는 경우
+- 카드, 섹션: 고정 크기 유지 (여백이 있으면 FILL 아님)
+- 아이콘, 아바타, 썸네일: 항상 FIXED
+- 일반 버튼: 텍스트에 맞춤 (HUG)
+- 개별 컴포넌트들: 대부분 고정 크기
 
-| UI 요소 | Width | Height | 이유 |
-|---------|-------|--------|------|
-| 버튼 (일반) | HUG | HUG | 텍스트에 맞춤 |
-| 버튼 (전체너비) | FILL (layoutGrow:1) | HUG | 컨테이너 채움 |
-| 아이콘 | FIXED | FIXED | 정확한 크기 필요 |
-| 아바타 | FIXED | FIXED | 정확한 크기 필요 |
-| 텍스트 | HUG or FILL | HUG | 내용에 따라 |
-| 입력 필드 | FILL | FIXED | 너비는 채움, 높이 고정 |
-| 리스트 아이템 | FILL (STRETCH) | HUG | 전체 너비, 높이는 내용 |
-| 카드 | FILL or FIXED | HUG | 컨텍스트에 따라 |
-| 컨테이너/섹션 | FILL | HUG | 너비 채움, 높이 내용 |
+## 판단 기준
+
+자식 요소의 width가 (부모 width - padding*2)의 95% 이상이면 → FILL 고려
+그 외에는 → FIXED/HUG 유지
 
 ## 프레임 정보
 - 컨테이너 크기: {{containerWidth}} x {{containerHeight}}
 - 룰 베이스 계산값: direction={{calculatedDirection}}, gap={{calculatedGap}}
 
-## 자식 요소 정보
+## 자식 요소 정보 (레이어 순서대로)
 {{childrenInfo}}
 
-## 응답 형식 (JSON)
+## 응답 형식 (JSON만 출력)
 \`\`\`json
 {
   "direction": "VERTICAL",
   "gap": 16,
-  "paddingTop": 24,
-  "paddingRight": 16,
-  "paddingBottom": 24,
-  "paddingLeft": 16,
+  "paddingTop": 0,
+  "paddingRight": 0,
+  "paddingBottom": 0,
+  "paddingLeft": 0,
   "primaryAxisSizing": "HUG",
   "counterAxisSizing": "FIXED",
   "childrenSizing": [
     {
       "index": 0,
-      "layoutAlign": "STRETCH",
-      "layoutGrow": 0,
-      "reasoning": "리스트 아이템으로 전체 너비 사용"
-    },
-    {
-      "index": 1,
       "layoutAlign": "INHERIT",
-      "layoutGrow": 1,
-      "reasoning": "버튼으로 남은 공간 채움"
+      "layoutGrow": 0,
+      "reasoning": "상단 요소, 현재 크기 유지"
     }
   ],
-  "reasoning": "세로 방향 리스트 레이아웃, 각 아이템이 전체 너비 사용"
+  "reasoning": "세로 방향 레이아웃, 기존 크기 유지"
 }
 \`\`\`
 
-스크린샷과 위치 정보를 분석하고 JSON 형식으로만 응답해주세요.`;
+**중요**:
+- childrenSizing의 index는 제공된 자식 순서와 동일해야 함
+- 대부분의 자식은 layoutAlign: "INHERIT", layoutGrow: 0 이어야 함
+- STRETCH나 layoutGrow:1은 정말 필요한 경우에만 사용`;
 
 export async function analyzeAutoLayout(
   request: AutoLayoutRequest
@@ -110,12 +96,13 @@ export async function analyzeAutoLayout(
       };
     }
 
-    // 자식 정보 포맷팅 (이름 포함)
+    // 자식 정보 포맷팅 (이름, 크기, 부모 대비 비율 포함)
+    const containerWidth = request.width || 0;
     const childrenInfo = request.children
-      .map(
-        (c, i) =>
-          `- Child ${i + 1} (${c.name || 'unnamed'}): x=${c.x}, y=${c.y}, width=${c.width}, height=${c.height}`
-      )
+      .map((c, i) => {
+        const widthRatio = containerWidth > 0 ? Math.round((c.width / containerWidth) * 100) : 0;
+        return `- [${i}] "${c.name || 'unnamed'}": x=${c.x}, y=${c.y}, size=${c.width}x${c.height} (부모 대비 ${widthRatio}%)`;
+      })
       .join('\n');
 
     // 프롬프트 변수 치환

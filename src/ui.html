@@ -169,6 +169,70 @@
     .btn-reconnect:hover:not(:disabled) {
       background: #e6e6e6;
     }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      width: 260px;
+      max-height: 400px;
+      overflow: hidden;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .modal-content {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .modal-layers {
+      max-height: 150px;
+      overflow-y: auto;
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 11px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
@@ -186,14 +250,27 @@
   </div>
 
   <div class="section">
-    <div class="section-title">전처리</div>
+    <div class="section-title">1. 전처리</div>
     <button class="btn-secondary" onclick="runCommand('cleanup-wrappers')">
       의미 없는 래퍼 제거
+    </button>
+    <button class="btn-secondary" onclick="runCommand('detach-components')">
+      컴포넌트 브레이크
+    </button>
+    <button class="btn-secondary" onclick="runCommand('delete-hidden-layers')">
+      꺼진 레이어 삭제
     </button>
   </div>
 
   <div class="section">
-    <div class="section-title">Auto Layout</div>
+    <div class="section-title">2. 네이밍</div>
+    <button id="btn-naming-agent" class="btn-agent" onclick="runCommand('auto-naming-agent')" disabled>
+      AI 네이밍 (Agent)
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. Auto Layout</div>
     <button id="btn-autolayout-agent" class="btn-agent" onclick="runCommand('apply-autolayout-agent')" disabled>
       AI Auto Layout (Agent)
     </button>
@@ -203,13 +280,7 @@
   </div>
 
   <div class="section">
-    <div class="section-title">네이밍 & 컴포넌트</div>
-    <button class="btn-secondary" onclick="runCommand('auto-naming')">
-      네이밍 자동화 (Rule-based)
-    </button>
-    <button id="btn-naming-agent" class="btn-agent" onclick="runCommand('auto-naming-agent')" disabled>
-      AI 네이밍 (Agent)
-    </button>
+    <div class="section-title">4. 컴포넌트</div>
     <button class="btn-secondary" onclick="runCommand('componentize')">
       컴포넌트 후보 탐지
     </button>
@@ -219,9 +290,6 @@
   </div>
 
   <div class="section">
-    <button class="btn-primary" onclick="runCommand('run-all')">
-      전체 실행
-    </button>
     <button id="btn-run-all-agent" class="btn-agent" onclick="runCommand('run-all-agent')" disabled>
       전체 실행 (with AI Agent)
     </button>
@@ -234,6 +302,21 @@
 
   <div id="progress" class="progress" style="display: none;"></div>
 
+  <!-- 확인 모달 -->
+  <div id="modal-overlay" class="modal-overlay" style="display: none;">
+    <div class="modal">
+      <div class="modal-title">꺼진 레이어 삭제</div>
+      <div class="modal-content">
+        <p id="modal-message"></p>
+        <div id="modal-layers" class="modal-layers"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="cancelDeleteHidden()">취소</button>
+        <button class="btn-danger" onclick="confirmDeleteHidden()">삭제</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const AGENT_SERVER_URL = 'http://localhost:3001';
     let serverConnected = false;
@@ -242,6 +325,7 @@
     checkServerConnection();
 
     async function checkServerConnection() {
+      console.log('[DEBUG] checkServerConnection called');
       const reconnectBtn = document.getElementById('btn-reconnect');
       const statusEl = document.getElementById('server-status');
 
@@ -249,28 +333,38 @@
       reconnectBtn.disabled = true;
       reconnectBtn.textContent = '연결 중...';
       statusEl.className = 'status status-loading';
-      statusEl.innerHTML = '<div class="status-dot"></div><span>Agent Server 연결 확인 중...</span>';
+      statusEl.innerHTML = '<div class="status-dot"></div><span>연결 시도 중...</span>';
 
-      try {
-        const response = await fetch(AGENT_SERVER_URL + '/health', {
-          method: 'GET',
-        });
+      const urls = [
+        'http://localhost:3001/health',
+        'http://127.0.0.1:3001/health'
+      ];
 
-        if (response.ok) {
-          serverConnected = true;
-          updateServerStatus(true);
-          enableAgentButtons(true);
-        } else {
-          throw new Error('Server responded with status: ' + response.status);
+      for (const url of urls) {
+        try {
+          console.log('[DEBUG] Trying:', url);
+          const response = await fetch(url, { method: 'GET' });
+          console.log('[DEBUG] Response:', response.status);
+
+          if (response.ok) {
+            serverConnected = true;
+            updateServerStatus(true);
+            enableAgentButtons(true);
+            reconnectBtn.disabled = false;
+            reconnectBtn.textContent = '재연결';
+            return;
+          }
+        } catch (error) {
+          console.log('[DEBUG] Error for', url, ':', error.message);
         }
-      } catch (error) {
-        serverConnected = false;
-        updateServerStatus(false, error.message);
-        enableAgentButtons(false);
-      } finally {
-        reconnectBtn.disabled = false;
-        reconnectBtn.textContent = '재연결';
       }
+
+      // 모두 실패
+      serverConnected = false;
+      updateServerStatus(false, 'localhost 접근 불가');
+      enableAgentButtons(false);
+      reconnectBtn.disabled = false;
+      reconnectBtn.textContent = '재연결';
     }
 
     function updateServerStatus(connected, errorMsg) {
@@ -332,8 +426,30 @@
             }
           }, '*');
           break;
+
+        case 'confirm-hidden-layers':
+          showHiddenLayersModal(msg.data);
+          break;
       }
     };
+
+    // 꺼진 레이어 모달 표시
+    function showHiddenLayersModal(data) {
+      document.getElementById('modal-message').textContent =
+        `${data.count}개의 꺼진 레이어가 발견되었습니다. 삭제하시겠습니까?`;
+      document.getElementById('modal-layers').textContent = '- ' + data.names;
+      document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function confirmDeleteHidden() {
+      document.getElementById('modal-overlay').style.display = 'none';
+      runCommand('confirm-delete-hidden');
+    }
+
+    function cancelDeleteHidden() {
+      document.getElementById('modal-overlay').style.display = 'none';
+      runCommand('cancel-delete-hidden');
+    }
 
     // Naming Agent API call
     async function handleNamingAgent(data) {

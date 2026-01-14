@@ -65,6 +65,22 @@ function handleCommandWithUI(cmd: string) {
       handleCleanupWrappers();
       break;
 
+    case 'detach-components':
+      handleDetachComponents();
+      break;
+
+    case 'delete-hidden-layers':
+      handleDeleteHiddenLayers();
+      break;
+
+    case 'confirm-delete-hidden':
+      confirmDeleteHiddenLayers();
+      break;
+
+    case 'cancel-delete-hidden':
+      cancelDeleteHiddenLayers();
+      break;
+
     case 'auto-naming':
       handleAutoNaming();
       break;
@@ -239,6 +255,152 @@ function handleCleanupWrappers() {
 }
 
 /**
+ * 컴포넌트 브레이크 (일반 프레임으로 전환)
+ */
+function handleDetachComponents() {
+  const selection = figma.currentPage.selection;
+
+  if (selection.length === 0) {
+    figma.notify('프레임을 선택해주세요.', { error: true });
+    return;
+  }
+
+  let detachedCount = 0;
+
+  function detachRecursively(node: SceneNode) {
+    // 인스턴스인 경우 detach
+    if (node.type === 'INSTANCE') {
+      try {
+        node.detachInstance();
+        detachedCount++;
+      } catch (e) {
+        console.error('Detach failed:', node.name, e);
+      }
+    }
+
+    // 자식이 있으면 재귀 처리
+    if ('children' in node) {
+      for (const child of [...node.children]) {
+        detachRecursively(child);
+      }
+    }
+  }
+
+  for (const node of selection) {
+    detachRecursively(node);
+  }
+
+  if (detachedCount > 0) {
+    figma.notify(`${detachedCount}개 컴포넌트 인스턴스를 프레임으로 전환했습니다.`, { timeout: 3000 });
+  } else {
+    figma.notify('전환할 컴포넌트 인스턴스가 없습니다.', { timeout: 3000 });
+  }
+}
+
+// 꺼진 레이어 저장용
+let pendingHiddenLayers: SceneNode[] = [];
+
+/**
+ * 꺼진 레이어 삭제 (확인 후)
+ */
+function handleDeleteHiddenLayers() {
+  const selection = figma.currentPage.selection;
+
+  if (selection.length === 0) {
+    figma.notify('프레임을 선택해주세요.', { error: true });
+    return;
+  }
+
+  const hiddenLayers: SceneNode[] = [];
+
+  function findHiddenLayers(node: SceneNode) {
+    if (!node.visible) {
+      hiddenLayers.push(node);
+      return; // 숨겨진 노드의 자식은 탐색하지 않음
+    }
+
+    if ('children' in node) {
+      for (const child of node.children) {
+        findHiddenLayers(child);
+      }
+    }
+  }
+
+  for (const node of selection) {
+    findHiddenLayers(node);
+  }
+
+  if (hiddenLayers.length === 0) {
+    figma.notify('꺼진 레이어가 없습니다.', { timeout: 3000 });
+    return;
+  }
+
+  // 꺼진 레이어 임시로 켜서 보여주기
+  for (const layer of hiddenLayers) {
+    layer.visible = true;
+  }
+
+  // 선택해서 보여주기
+  figma.currentPage.selection = hiddenLayers;
+  if (hiddenLayers.length > 0) {
+    figma.viewport.scrollAndZoomIntoView(hiddenLayers);
+  }
+
+  // 저장
+  pendingHiddenLayers = hiddenLayers;
+
+  // UI에 확인 요청
+  const layerNames = hiddenLayers.map(l => l.name).join('\n- ');
+  figma.ui.postMessage({
+    type: 'confirm-hidden-layers',
+    data: {
+      count: hiddenLayers.length,
+      names: layerNames,
+    },
+  });
+}
+
+/**
+ * 꺼진 레이어 삭제 확인
+ */
+function confirmDeleteHiddenLayers() {
+  let deletedCount = 0;
+
+  for (const layer of pendingHiddenLayers) {
+    try {
+      if (layer.parent) {
+        layer.remove();
+        deletedCount++;
+      }
+    } catch (e) {
+      console.error('Delete failed:', layer.name, e);
+    }
+  }
+
+  pendingHiddenLayers = [];
+  figma.notify(`${deletedCount}개 레이어를 삭제했습니다.`, { timeout: 3000 });
+}
+
+/**
+ * 꺼진 레이어 삭제 취소
+ */
+function cancelDeleteHiddenLayers() {
+  // 다시 숨기기
+  for (const layer of pendingHiddenLayers) {
+    try {
+      if (layer.parent) {
+        layer.visible = false;
+      }
+    } catch (e) {
+      // 무시
+    }
+  }
+
+  pendingHiddenLayers = [];
+  figma.notify('삭제가 취소되었습니다.', { timeout: 2000 });
+}
+
+/**
  * 간격 표준화 핸들러
  */
 function handleStandardizeSpacing() {
@@ -360,10 +522,9 @@ function handleRunAll() {
       return;
     }
 
-    // 1. 래퍼 제거 (전처리)
-    const cleanupResult = cleanupSelectionWrappers();
+    // 전처리는 제외 (수동 실행만)
 
-    // 2. Auto Layout 적용
+    // 1. Auto Layout 적용
     const autoLayoutResult = applyAutoLayoutToSelection({
       direction: 'AUTO',
       standardizeSpacing: true,
@@ -371,15 +532,14 @@ function handleRunAll() {
       skipExisting: false,
     });
 
-    // 3. 간격 표준화
+    // 2. 간격 표준화
     const spacingResult = standardizeSelectionSpacing();
 
-    // 4. 네이밍 자동화
+    // 3. 네이밍 자동화
     const namingResult = renameSelectionFrames();
 
     // 결과 메시지
     const message = [
-      (cleanupResult.details && cleanupResult.details.removedCount) ? '래퍼: ' + cleanupResult.details.removedCount + '개' : '',
       'Auto Layout: ' + autoLayoutResult.count + '개',
       (spacingResult.details && spacingResult.details.changedFrames) ? '간격: ' + spacingResult.details.changedFrames + '개' : '',
       (namingResult.details && namingResult.details.renamedCount) ? '네이밍: ' + namingResult.details.renamedCount + '개' : '',
@@ -613,6 +773,30 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
   const direction = result.direction === 'HORIZONTAL' ? 'HORIZONTAL' : 'VERTICAL';
 
   try {
+    // 0. Auto Layout 적용 전에 자식들을 시각적 순서로 재정렬
+    // Figma의 children은 레이어 순서(z-index)이므로 시각적 순서와 다를 수 있음
+    const childrenWithPos = node.children.map(child => ({
+      node: child,
+      x: child.x,
+      y: child.y,
+    }));
+
+    // 방향에 따라 정렬 (VERTICAL: y 기준, HORIZONTAL: x 기준)
+    if (direction === 'VERTICAL') {
+      childrenWithPos.sort((a, b) => a.y - b.y);
+    } else {
+      childrenWithPos.sort((a, b) => a.x - b.x);
+    }
+
+    // 레이어 순서 재정렬 (시각적 순서대로)
+    for (let i = 0; i < childrenWithPos.length; i++) {
+      const child = childrenWithPos[i].node;
+      // insertChild로 순서 변경 (마지막 index = 맨 위 레이어)
+      node.insertChild(i, child);
+    }
+
+    console.log('[AI AutoLayout] 자식 순서 재정렬 완료:', childrenWithPos.map(c => c.node.name).join(', '));
+
     // 1. Auto Layout 기본 설정
     node.layoutMode = direction;
     node.itemSpacing = result.gap || 0;
@@ -826,23 +1010,17 @@ async function handleRunAllAgent() {
 
   figma.notify('AI 파이프라인 실행 중...', { timeout: 2000 });
 
-  // 1. 래퍼 제거 (Rule-based)
-  const cleanupResult = cleanupSelectionWrappers();
-  console.log('[Pipeline] Cleanup:', cleanupResult.message);
+  // 전처리는 제외 (수동 실행만)
 
-  // 2. Auto Layout (Rule-based 먼저, Agent는 선택적)
-  const autoLayoutResult = applyAutoLayoutToSelection({
-    direction: 'AUTO',
-    standardizeSpacing: true,
-    recursive: true,
-    skipExisting: false,
-  });
-  console.log('[Pipeline] AutoLayout:', autoLayoutResult.message);
+  // 1. AI 네이밍 (Agent) - 먼저 실행
+  await handleNamingAgent();
+
+  // 2. AI Auto Layout (Agent)
+  await handleAutoLayoutAgent();
 
   // 3. 간격 표준화 (Rule-based)
   const spacingResult = standardizeSelectionSpacing();
   console.log('[Pipeline] Spacing:', spacingResult.message);
 
-  // 4. AI 네이밍 (Agent)
-  await handleNamingAgent();
+  figma.notify('AI 파이프라인 완료', { timeout: 3000 });
 }
