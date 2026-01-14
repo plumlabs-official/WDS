@@ -172,6 +172,20 @@ type UIMessage =
  * UI 메시지 핸들러
  */
 async function handleUIMessage(msg: UIMessage) {
+  // confirm-delete-hidden은 selectedIds 포함하므로 특별 처리
+  if (msg.type === 'confirm-delete-hidden') {
+    const selectedIds = (msg as { type: string; selectedIds?: string[] }).selectedIds;
+    confirmDeleteHiddenLayers(selectedIds);
+    return;
+  }
+
+  // 체크박스 변경 시 Figma 선택 상태 동기화
+  if (msg.type === 'update-hidden-selection') {
+    const selectedIds = (msg as { type: string; selectedIds?: string[] }).selectedIds || [];
+    updateHiddenLayerSelection(selectedIds);
+    return;
+  }
+
   // 기존 명령어 (Rule-based)
   if (!msg.type.endsWith('-agent') && !msg.type.startsWith('agent-') && !msg.type.endsWith('-result')) {
     handleCommandWithUI(msg.type);
@@ -267,12 +281,21 @@ function handleDetachComponents() {
 
   let detachedCount = 0;
 
-  function detachRecursively(node: SceneNode) {
+  function detachRecursively(node: SceneNode): void {
     // 인스턴스인 경우 detach
     if (node.type === 'INSTANCE') {
       try {
-        node.detachInstance();
+        // detachInstance()는 새 FrameNode를 반환
+        const detachedFrame = node.detachInstance();
         detachedCount++;
+
+        // 반환된 프레임의 자식들도 재귀 탐색 (중첩 인스턴스 처리)
+        if (detachedFrame && 'children' in detachedFrame) {
+          for (const child of [...detachedFrame.children]) {
+            detachRecursively(child);
+          }
+        }
+        return; // 이미 자식 처리했으므로 종료
       } catch (e) {
         console.error('Detach failed:', node.name, e);
       }
@@ -349,28 +372,34 @@ function handleDeleteHiddenLayers() {
   // 저장
   pendingHiddenLayers = hiddenLayers;
 
-  // UI에 확인 요청
-  const layerNames = hiddenLayers.map(l => l.name).join('\n- ');
+  // UI에 확인 요청 (id, name 배열 전송)
   figma.ui.postMessage({
     type: 'confirm-hidden-layers',
     data: {
       count: hiddenLayers.length,
-      names: layerNames,
+      layers: hiddenLayers.map(l => ({ id: l.id, name: l.name })),
     },
   });
 }
 
 /**
- * 꺼진 레이어 삭제 확인
+ * 꺼진 레이어 삭제 확인 (선택된 ID만)
  */
-function confirmDeleteHiddenLayers() {
+function confirmDeleteHiddenLayers(selectedIds?: string[]) {
   let deletedCount = 0;
+  const idsToDelete = selectedIds ? new Set(selectedIds) : null;
 
   for (const layer of pendingHiddenLayers) {
     try {
-      if (layer.parent) {
+      // selectedIds가 없으면 전체, 있으면 선택된 것만 삭제
+      const shouldDelete = !idsToDelete || idsToDelete.has(layer.id);
+
+      if (shouldDelete && layer.parent) {
         layer.remove();
         deletedCount++;
+      } else if (!shouldDelete && layer.parent) {
+        // 선택되지 않은 레이어는 다시 숨김
+        layer.visible = false;
       }
     } catch (e) {
       console.error('Delete failed:', layer.name, e);
@@ -398,6 +427,28 @@ function cancelDeleteHiddenLayers() {
 
   pendingHiddenLayers = [];
   figma.notify('삭제가 취소되었습니다.', { timeout: 2000 });
+}
+
+/**
+ * 체크박스 선택에 따라 Figma 선택 상태 업데이트
+ */
+function updateHiddenLayerSelection(selectedIds: string[]) {
+  const selectedSet = new Set(selectedIds);
+  const selectedNodes: SceneNode[] = [];
+
+  for (const layer of pendingHiddenLayers) {
+    if (selectedSet.has(layer.id)) {
+      selectedNodes.push(layer);
+    }
+  }
+
+  // Figma 선택 상태 업데이트
+  figma.currentPage.selection = selectedNodes;
+
+  // 선택된 노드가 있으면 뷰포트 이동
+  if (selectedNodes.length > 0) {
+    figma.viewport.scrollAndZoomIntoView(selectedNodes);
+  }
 }
 
 /**

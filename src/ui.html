@@ -213,16 +213,52 @@
       margin-bottom: 16px;
     }
 
-    .modal-layers {
-      max-height: 150px;
+    .modal-select-all {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-select-all label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .modal-layers-list {
+      max-height: 200px;
       overflow-y: auto;
       background: #f5f5f5;
       border-radius: 8px;
       padding: 8px;
-      margin-top: 8px;
+    }
+
+    .layer-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 4px;
+      border-bottom: 1px solid #e5e5e5;
       font-size: 11px;
-      font-family: monospace;
-      white-space: pre-wrap;
+    }
+
+    .layer-item:last-child {
+      border-bottom: none;
+    }
+
+    .layer-item label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .layer-item input[type="checkbox"] {
+      cursor: pointer;
     }
 
     .modal-buttons {
@@ -308,11 +344,17 @@
       <div class="modal-title">꺼진 레이어 삭제</div>
       <div class="modal-content">
         <p id="modal-message"></p>
-        <div id="modal-layers" class="modal-layers"></div>
+        <div class="modal-select-all">
+          <label>
+            <input type="checkbox" id="select-all-layers" onchange="toggleSelectAll()">
+            <span>전체 선택</span>
+          </label>
+        </div>
+        <div id="modal-layers" class="modal-layers-list"></div>
       </div>
       <div class="modal-buttons">
         <button class="btn-secondary" onclick="cancelDeleteHidden()">취소</button>
-        <button class="btn-danger" onclick="confirmDeleteHidden()">삭제</button>
+        <button class="btn-danger" onclick="confirmDeleteHidden()">선택 삭제</button>
       </div>
     </div>
   </div>
@@ -434,16 +476,71 @@
     };
 
     // 꺼진 레이어 모달 표시
+    let hiddenLayersData = [];
+
     function showHiddenLayersModal(data) {
+      hiddenLayersData = data.layers || [];
+
       document.getElementById('modal-message').textContent =
-        `${data.count}개의 꺼진 레이어가 발견되었습니다. 삭제하시겠습니까?`;
-      document.getElementById('modal-layers').textContent = '- ' + data.names;
+        `${data.count}개의 꺼진 레이어가 발견되었습니다. 삭제할 레이어를 선택하세요.`;
+
+      // 체크박스 목록 생성
+      const layersContainer = document.getElementById('modal-layers');
+      layersContainer.innerHTML = hiddenLayersData.map((layer, index) => `
+        <div class="layer-item">
+          <label>
+            <input type="checkbox" class="layer-checkbox" data-index="${index}" data-id="${layer.id}" checked onchange="updateLayerSelection()">
+            <span>${layer.name}</span>
+          </label>
+        </div>
+      `).join('');
+
+      // 전체 선택 체크박스 초기화
+      document.getElementById('select-all-layers').checked = true;
+
       document.getElementById('modal-overlay').style.display = 'flex';
     }
 
+    function toggleSelectAll() {
+      const selectAll = document.getElementById('select-all-layers').checked;
+      const checkboxes = document.querySelectorAll('.layer-checkbox');
+      checkboxes.forEach(cb => cb.checked = selectAll);
+      updateLayerSelection();
+    }
+
+    function updateLayerSelection() {
+      // 선택된 레이어 ID 수집
+      const checkboxes = document.querySelectorAll('.layer-checkbox:checked');
+      const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
+
+      // Figma에 선택 상태 업데이트 요청
+      parent.postMessage({
+        pluginMessage: {
+          type: 'update-hidden-selection',
+          selectedIds: selectedIds
+        }
+      }, '*');
+    }
+
     function confirmDeleteHidden() {
+      // 선택된 레이어 ID 수집
+      const checkboxes = document.querySelectorAll('.layer-checkbox:checked');
+      const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
+
       document.getElementById('modal-overlay').style.display = 'none';
-      runCommand('confirm-delete-hidden');
+
+      if (selectedIds.length === 0) {
+        runCommand('cancel-delete-hidden');
+        return;
+      }
+
+      // 선택된 ID 전송
+      parent.postMessage({
+        pluginMessage: {
+          type: 'confirm-delete-hidden',
+          selectedIds: selectedIds
+        }
+      }, '*');
     }
 
     function cancelDeleteHidden() {
