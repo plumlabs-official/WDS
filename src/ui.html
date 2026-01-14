@@ -144,15 +144,45 @@
       font-size: 11px;
       color: #666;
     }
+
+    .server-status-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .server-status-wrapper .status {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .btn-reconnect {
+      width: auto;
+      padding: 8px 12px;
+      margin-bottom: 0;
+      background: #f3f3f3;
+      color: #666;
+      font-size: 11px;
+    }
+
+    .btn-reconnect:hover:not(:disabled) {
+      background: #e6e6e6;
+    }
   </style>
 </head>
 <body>
   <h1>Wellwe Design System</h1>
 
   <!-- Agent Server Status -->
-  <div id="server-status" class="status status-loading">
-    <div class="status-dot"></div>
-    <span>Agent Server 연결 확인 중...</span>
+  <div class="server-status-wrapper">
+    <div id="server-status" class="status status-loading">
+      <div class="status-dot"></div>
+      <span>Agent Server 연결 확인 중...</span>
+    </div>
+    <button id="btn-reconnect" class="btn-reconnect" onclick="checkServerConnection()">
+      재연결
+    </button>
   </div>
 
   <div class="section">
@@ -164,9 +194,6 @@
 
   <div class="section">
     <div class="section-title">Auto Layout</div>
-    <button class="btn-primary" onclick="runCommand('apply-autolayout')">
-      선택 영역에 Auto Layout 적용
-    </button>
     <button id="btn-autolayout-agent" class="btn-agent" onclick="runCommand('apply-autolayout-agent')" disabled>
       AI Auto Layout (Agent)
     </button>
@@ -215,10 +242,18 @@
     checkServerConnection();
 
     async function checkServerConnection() {
+      const reconnectBtn = document.getElementById('btn-reconnect');
+      const statusEl = document.getElementById('server-status');
+
+      // 로딩 상태 표시
+      reconnectBtn.disabled = true;
+      reconnectBtn.textContent = '연결 중...';
+      statusEl.className = 'status status-loading';
+      statusEl.innerHTML = '<div class="status-dot"></div><span>Agent Server 연결 확인 중...</span>';
+
       try {
         const response = await fetch(AGENT_SERVER_URL + '/health', {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
         });
 
         if (response.ok) {
@@ -226,23 +261,27 @@
           updateServerStatus(true);
           enableAgentButtons(true);
         } else {
-          throw new Error('Server not responding');
+          throw new Error('Server responded with status: ' + response.status);
         }
       } catch (error) {
         serverConnected = false;
-        updateServerStatus(false);
+        updateServerStatus(false, error.message);
         enableAgentButtons(false);
+      } finally {
+        reconnectBtn.disabled = false;
+        reconnectBtn.textContent = '재연결';
       }
     }
 
-    function updateServerStatus(connected) {
+    function updateServerStatus(connected, errorMsg) {
       const statusEl = document.getElementById('server-status');
       if (connected) {
         statusEl.className = 'status status-connected';
         statusEl.innerHTML = '<div class="status-dot"></div><span>Agent Server 연결됨 (localhost:3001)</span>';
       } else {
         statusEl.className = 'status status-disconnected';
-        statusEl.innerHTML = '<div class="status-dot"></div><span>Agent Server 연결 안됨 - Rule-based 모드</span>';
+        const msg = errorMsg ? 'Error: ' + errorMsg : 'Agent Server 연결 안됨';
+        statusEl.innerHTML = '<div class="status-dot"></div><span>' + msg + '</span>';
       }
     }
 

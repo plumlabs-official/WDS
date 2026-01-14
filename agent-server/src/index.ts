@@ -15,8 +15,12 @@ import type { NamingRequest, AutoLayoutRequest } from './types';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
+// Middleware - Figma plugin UI runs in sandbox iframe with null origin
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+}));
 app.use(express.json({ limit: '50mb' })); // 스크린샷 전송을 위해 크기 제한 늘림
 
 // Health check
