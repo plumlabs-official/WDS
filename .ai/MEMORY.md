@@ -26,13 +26,36 @@
 
 ## Naming
 
+### 버튼 네이밍 구조 개편 (2026-01-15)
+- **결정**: `Type/Intent/Shape/Size[/State][/Icon]` 구조 채택
+- **이전**: `Button/CTA/Primary/LG` (Purpose/Variant 혼재)
+- **이후**: `Button/Primary/Filled/48` (Intent/Shape 분리)
+- **이유**:
+  - Purpose(CTA)와 Variant(Primary) 의미 중복 문제 해결
+  - DS 컴포넌트 속성과 용어 1:1 일치로 매핑 단순화
+  - 디자이너 피드백 반영 (유연성, 확장성)
+- **상세 논의**: `reference/decisions/button-naming-discussion-2026-01-15.md`
+
+### Intent/Shape/Size 정의
+```
+Intent: Primary, Secondary, Danger, Warning, Success, Info, Normal
+Shape: Filled, Outlined, Ghost
+Size: 32, 44, 48, 56 (높이 px)
+State: Disabled, Loading, Focus (Default는 생략)
+Icon: IconLeft, IconRight, IconOnly
+```
+
+### Width 제외 결정
+- Width(Fixed, Fill, Hug)는 이름에서 제외
+- **이유**: 버튼 "정체성"이 아닌 "사용 방식" (레이아웃 속성)
+
 ### Layout 타입 금지
 - `Layout/Main` ❌ → `TopBar/Main` 또는 `Section/Main` ✅
 - **이유**: Layout은 너무 일반적, 구체적 타입 사용
 
-### Purpose 필수화
-- `Button/Primary` ❌ → `Button/CTA/Primary` ✅
-- **이유**: Purpose가 없으면 역할 불명확
+### ~~Purpose 필수화~~ (폐기)
+- ~~`Button/Primary` ❌ → `Button/CTA/Primary` ✅~~
+- **폐기 이유**: Intent/Shape 분리 구조로 대체됨
 
 ### Blacklist 이름 (Content, Layout 등)
 - 금지 패턴: `Content`, `Layout`, `Inner`, `Wrapper`, `Box`, `Item`
