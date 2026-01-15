@@ -10,6 +10,7 @@
 | 기술 사양/API | `.ai/SPEC.md` |
 | 아키텍처 결정 (WHY) | `.ai/MEMORY.md` |
 | 버그 패턴 (WHAT) | `.ai/lessons_learned.md` |
+| 반복 작업 패턴 | `.ai/SKILL.md` |
 | 현재 상태 | `.ai/CONTEXT.md` |
 | 네이밍 규칙 | `.ai/design-system/naming-rules.md` |
 

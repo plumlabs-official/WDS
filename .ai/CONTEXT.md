@@ -53,6 +53,7 @@ cd agent-server && npm run build && npm start
 ├── MEMORY.md          # 아키텍처 결정 (WHY)
 ├── CONTEXT.md         # 현재 상태 (이 파일)
 ├── lessons_learned.md # 버그 패턴 (WHAT)
+├── SKILL.md           # 반복 작업 패턴
 └── design-system/     # 도메인별 규칙
 
 agent-server/prompts/  # AI 프롬프트
