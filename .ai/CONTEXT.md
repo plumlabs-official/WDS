@@ -28,6 +28,9 @@
   - max_tokens: 32768
   - 스트리밍 방식 적용 (타임아웃 해결)
 - **프롬프트 캐싱 적용** (`cache_control: ephemeral`)
+- **문서 정리**
+  - lessons_learned.md: AI Agent 버그 패턴 + 작은 샘플 검증 패턴 추가
+  - coaching-issues.md: 기술적 패턴 → lessons_learned.md로 이관, 용도 명확화
 
 ### 검증 대기 (크레딧 충전 필요)
 - 부모-자식 동일 이름 후처리 (`Header/Main > Header/Main` 해결 여부)
