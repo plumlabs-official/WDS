@@ -2,65 +2,38 @@
  * Naming Agent
  *
  * 스크린샷을 분석하여 컴포넌트 타입과 시맨틱 이름을 추론
+ * - 개별 분석: analyzeNaming (기존)
+ * - 컨텍스트 기반 분석: analyzeNamingWithContext (신규)
  */
 
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { askClaudeWithImage, parseJsonResponse } from '../utils/claude';
-import type { NamingRequest, NamingResult, BaseResponse } from '../types';
+import type {
+  NamingRequest,
+  NamingResult,
+  BaseResponse,
+  ContextAwareNamingRequest,
+  ContextAwareNamingResult
+} from '../types';
 
-const NAMING_PROMPT = `당신은 UI 컴포넌트 분석 전문가입니다.
-주어진 Figma 프레임 스크린샷을 분석하여 적절한 시맨틱 이름을 제안해주세요.
+// 프롬프트 외부 파일 로드
+const PROMPTS_DIR = join(__dirname, '../../prompts');
 
-## 컴포넌트 타입 분류
-- Button: 클릭 가능한 버튼 (텍스트, 아이콘 포함 가능)
-- Input: 텍스트 입력 필드
-- Avatar: 사용자 프로필 이미지 (원형/정사각형)
-- Icon: 아이콘 (단일 벡터 그래픽)
-- Card: 정보를 담은 카드 컨테이너
-- ListItem: 리스트의 개별 항목
-- Tab: 탭 네비게이션 항목
-- Toggle: ON/OFF 스위치
-- Checkbox: 체크박스
-- Badge: 상태 표시 배지
-- Header: 상단 헤더 영역
-- BottomSheet: 하단 시트
-- Modal: 모달/다이얼로그
-- Container: 여러 요소를 담는 컨테이너
-- Frame: 분류되지 않는 일반 프레임
-
-## Variant 분류 (색상/스타일 기반)
-- Primary: 주요 액션 (녹색 #00cc61 계열)
-- Secondary: 보조 액션 (회색 계열)
-- Outline: 테두리만 있는 스타일
-- Ghost: 배경 없는 투명 스타일
-- Default: 기본 스타일 (흰색/무색)
-
-## Size 분류
-- XS, SM, MD, LG, XL, Full
-
-## 네이밍 컨벤션
-- 형식: ComponentType/Variant/Size
-- Variant가 Default면 생략: ComponentType/Size
-- 예시: Button/Primary/MD, Avatar/LG, Icon/SM
-
-## 노드 정보
-- 현재 이름: {{currentName}}
-- 타입: {{nodeType}}
-- 크기: {{width}} x {{height}}
-- 자식 요소 수: {{childrenCount}}
-
-## 응답 형식 (JSON)
-\`\`\`json
-{
-  "suggestedName": "Button/Primary/MD",
-  "componentType": "Button",
-  "variant": "Primary",
-  "size": "MD",
-  "confidence": 0.95,
-  "reasoning": "녹색 배경의 둥근 버튼으로, 텍스트가 포함되어 있음"
+function loadPrompt(filename: string): string {
+  const filepath = join(PROMPTS_DIR, filename);
+  try {
+    const content = readFileSync(filepath, 'utf-8');
+    console.log(`[Naming Agent] Loaded prompt: ${filename}`);
+    return content;
+  } catch (error) {
+    console.error(`[Naming Agent] Failed to load ${filename}:`, error);
+    throw new Error(`Prompt file not found: ${filename}`);
+  }
 }
-\`\`\`
 
-스크린샷을 분석하고 JSON 형식으로만 응답해주세요.`;
+const NAMING_PROMPT = loadPrompt('naming-single.md');
+const CONTEXT_AWARE_NAMING_PROMPT = loadPrompt('naming-context.md');
 
 export async function analyzeNaming(
   request: NamingRequest
@@ -95,6 +68,88 @@ export async function analyzeNaming(
       data: result,
     };
   } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+// ============================================
+// 컨텍스트 기반 네이밍 (전체 스크린 활용)
+// ============================================
+
+/**
+ * 노드 리스트를 프롬프트용 문자열로 변환
+ */
+function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
+  return nodes.map((node, index) => {
+    const depthLabel = node.depth === 1 ? '1단계(Screen)' :
+                       node.depth === 2 ? '2단계(Layout)' :
+                       `${node.depth}단계(Component)`;
+    return `${index + 1}. nodeId="${node.nodeId}"
+   - 현재 이름: "${node.currentName}"
+   - 타입: ${node.nodeType}
+   - 깊이: ${depthLabel}
+   - 위치: (${node.x}, ${node.y})
+   - 크기: ${node.width} x ${node.height}`;
+  }).join('\n\n');
+}
+
+/**
+ * 컨텍스트 기반 네이밍 분석
+ * - 전체 스크린 스크린샷 1장으로 여러 노드를 한번에 분석
+ * - 위치 정보를 활용하여 역할 추론
+ */
+export async function analyzeNamingWithContext(
+  request: ContextAwareNamingRequest
+): Promise<BaseResponse<ContextAwareNamingResult>> {
+  try {
+    if (!request.screenScreenshot) {
+      return {
+        success: false,
+        error: 'Screen screenshot is required',
+      };
+    }
+
+    if (!request.nodes || request.nodes.length === 0) {
+      return {
+        success: false,
+        error: 'At least one node is required',
+      };
+    }
+
+    const nodeList = formatNodeList(request.nodes);
+    const prompt = CONTEXT_AWARE_NAMING_PROMPT
+      .replace('{{screenWidth}}', String(request.screenWidth))
+      .replace('{{screenHeight}}', String(request.screenHeight))
+      .replace('{{nodeList}}', nodeList);
+
+    console.log(`[Context Naming] Analyzing ${request.nodes.length} nodes with screen context`);
+
+    const response = await askClaudeWithImage(prompt, request.screenScreenshot);
+
+    // 디버그: 응답 미리보기 (처음 500자)
+    console.log(`[Context Naming] Response preview: ${response.substring(0, 500)}...`);
+
+    const results = parseJsonResponse<ContextAwareNamingResult['results']>(response);
+
+    if (!results || !Array.isArray(results)) {
+      console.error(`[Context Naming] Parse failed. Full response:\n${response}`);
+      return {
+        success: false,
+        error: 'Failed to parse response as array',
+      };
+    }
+
+    console.log(`[Context Naming] Got ${results.length} results`);
+
+    return {
+      success: true,
+      data: { results },
+    };
+  } catch (error) {
+    console.error('[Context Naming] Error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

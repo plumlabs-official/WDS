@@ -35,6 +35,36 @@ export interface NamingResult {
   reasoning: string;
 }
 
+// 컨텍스트 기반 네이밍 (전체 스크린 활용)
+export interface ContextAwareNamingRequest {
+  screenScreenshot: string;  // 전체 스크린 (1장)
+  screenWidth: number;
+  screenHeight: number;
+  nodes: Array<{
+    nodeId: string;
+    currentName: string;
+    nodeType: string;
+    x: number;       // 스크린 내 상대 위치
+    y: number;
+    width: number;
+    height: number;
+    depth: number;   // 스크린 기준 깊이 (1=최상위, 2=Layout레벨, 3+=컴포넌트)
+  }>;
+}
+
+export interface ContextAwareNamingResult {
+  results: Array<{
+    nodeId: string;
+    suggestedName: string;
+    componentType: string;
+    purpose?: string;    // 역할/용도 (CTA, Profile, ButtonArea 등)
+    variant?: string;
+    size?: string;
+    confidence: number;
+    reasoning: string;
+  }>;
+}
+
 // AutoLayout Agent 타입
 export interface AutoLayoutRequest extends BaseRequest {
   width?: number;

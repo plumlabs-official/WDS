@@ -7,10 +7,29 @@
  */
 
 import { spacing } from '../../config/tokens';
-import { roundToNearestToken } from './autolayout';
 
 // 허용된 spacing 값 배열
 const ALLOWED_SPACING = Object.values(spacing);
+
+/**
+ * 가장 가까운 토큰 값으로 반올림
+ */
+export function roundToNearestToken(value: number): number {
+  if (value <= 0) return 0;
+
+  let closest = ALLOWED_SPACING[0];
+  let minDiff = Math.abs(value - closest);
+
+  for (const tokenValue of ALLOWED_SPACING) {
+    const diff = Math.abs(value - tokenValue);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = tokenValue;
+    }
+  }
+
+  return closest;
+}
 
 /**
  * 값이 토큰에 정의된 값인지 확인

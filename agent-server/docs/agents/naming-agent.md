@@ -4,19 +4,51 @@
 
 | 항목 | 내용 |
 |------|------|
-| **타입** | LLM 추론 |
-| **역할** | 스크린샷 분석하여 시맨틱 컴포넌트 이름 추론 |
+| **타입** | LLM 추론 (컨텍스트 기반) |
+| **역할** | 전체 스크린 기반으로 시맨틱 컴포넌트 이름 추론 |
 | **실행 순서** | 4번째 (간격 표준화 후) |
 | **소스 파일** | `agent-server/src/agents/naming.ts` |
-| **API 엔드포인트** | `POST /agents/naming` |
+| **API 엔드포인트** | `POST /agents/naming/context` |
 
 ## 목적
 
 시각적 분석을 통해:
-- 컴포넌트 타입 식별 (Button, Input, Avatar 등)
-- Variant 식별 (Primary, Secondary, Outline 등)
-- Size 식별 (XS, SM, MD, LG, XL)
-- 시맨틱 이름 생성 (`Button/Primary/MD`)
+- 컴포넌트 타입 식별 (Button, Card, Section 등)
+- **Purpose 식별 (CTA, Profile, Challenge 등)** ← 필수!
+- Variant 식별 (Primary, Secondary - 특정 타입만)
+- Size 식별 (XS, SM, MD, LG, XL - 특정 타입만)
+- 시맨틱 이름 생성 (`Button/CTA/Primary/LG`)
+
+## 네이밍 형식 (2025-01-15 업데이트)
+
+```
+ComponentType/Purpose/Variant/Size
+```
+
+**예시:**
+- `Button/CTA/Primary/LG` - 주요 행동 유도 버튼
+- `Card/Profile` - 프로필 카드
+- `Section/Challenge` - 챌린지 섹션
+- `Container/ButtonArea` - 버튼 그룹 컨테이너
+
+> **중요:** Purpose는 모든 컴포넌트에 필수입니다. `Button/Primary` ❌ → `Button/CTA/Primary` ✅
+
+## 금지 사항 🚫
+
+| 금지 항목 | 대체 |
+|----------|------|
+| `Layout/...` | `TopBar/...`, `Section/...` |
+| `Content` | `Container/[구체적역할]` |
+| Purpose 생략 | 모든 컴포넌트에 Purpose 필수 |
+| `HomeScreen/...` | `Screen/Home` |
+| `Authenticated`, `Empty` 등 | 비즈니스 상태 금지 |
+
+## Size 적용 규칙
+
+**Size 적용 O:** Button, Input, Avatar, Card, Badge, Icon, Tag
+**Size 적용 X:** Container, Section, TopBar, TabBar, ListItem, Image, Screen
+
+> 상세 규칙: `docs/NAMING-RULES.md` 참조
 
 ## 왜 LLM인가?
 
@@ -397,9 +429,293 @@ function detectVariant(node: FrameNode): VariantType {
 | `renameSelectionFrames()` | 선택 프레임 이름 변경 (진입점) | naming.ts |
 | `previewRenames(node)` | 이름 변경 미리보기 | naming.ts |
 
+## 직접 변환 로직 (AI 호출 없이)
+
+> **핵심 원칙**: 명확한 패턴은 AI 호출 없이 직접 변환하여 비용과 시간을 절약
+
+### 변환 우선순위
+
+```
+1. 아이콘 라이브러리 (carbon:xxx → Icon/Xxx)
+2. 하이픈 패턴 아이콘 (user-circle-02 → Icon/User)
+3. 한글 레이블 (홈 → TabItem/Home)
+4. 아이콘 상태 컨테이너 (on/off 자식 포함)
+5. camelCase 방어 (redDot → RedDot)
+6. 자식 키워드 기반 Section 추론 (details → Section/ActiveChallenge)
+7. AI 분석 (위 조건 모두 해당 안 되는 FRAME)
+```
+
+### 1. 아이콘 라이브러리 변환
+
+**패턴**: `prefix:icon-name`
+
+```typescript
+// 지원 prefix
+const ICON_LIBRARY_PREFIXES = [
+  'carbon:', 'la:', 'solar:', 'icon-park-solid:', 'mdi:',
+  'lucide:', 'tabler:', 'heroicons:', 'phosphor:', 'feather:',
+  // ...
+];
+
+// 변환 예시
+'carbon:ibm-watson-discovery' → 'Icon/Discovery'
+'solar:star-bold' → 'Icon/Star'
+'la:user-friends' → 'Icon/Friends'
+```
+
+**WDS 아이콘 매핑 테이블**:
+| 원본 패턴 | WDS 이름 |
+|----------|---------|
+| ibm-watson-discovery | Discovery |
+| user-friends | Friends |
+| people-circle | People |
+| user-circle | UserCircle |
+| play, pause, stop | Play, Pause, Stop |
+| chat, message, comment | Chat, Message, Comment |
+| check, close, add | Check, Close, Add |
+| star, heart, like | Star, Heart, Like |
+| settings, gear, cog | Settings |
+
+### 2. 한글 레이블 변환
+
+**탭바/네비게이션 컨텍스트 감지**:
+```typescript
+// 부모에 아래 키워드가 있으면 TabItem/ prefix 적용
+const TABBAR_KEYWORDS = ['tabbar', 'tab bar', 'navigation', 'navbar', 'bottomnav'];
+
+// 변환 예시
+'홈' (in tabbar) → 'TabItem/Home'
+'라운지' (in tabbar) → 'TabItem/Lounge'
+'마이페이지' (standalone) → 'MyPage'
+```
+
+**한글 → 영문 매핑**:
+| 한글 | 영문 |
+|-----|-----|
+| 홈 | Home |
+| 라운지 | Lounge |
+| 마이페이지 | MyPage |
+| 챌린지 | Challenge |
+| 피드 | Feed |
+| 검색 | Search |
+| 알림 | Notification |
+| 설정 | Settings |
+| 프로필 | Profile |
+| 친구 | Friends |
+| 확인/취소/다음 | Confirm/Cancel/Next |
+
+### 3. 자식 아이콘 기반 탭 이름 유추
+
+> **문제**: 원본 탭이 모두 "라운지"로 동일해도 자식 아이콘은 다를 수 있음
+
+**로직**:
+```typescript
+// TabItem/Lounge 안에 Icon/Friends가 있으면
+TabItem/Lounge (자식: Icon/Friends) → TabItem/Friends
+
+// 2차 패스로 실행 (직접 변환 후)
+// 자식 Icon/* 이름이 먼저 적용된 후에 부모 TabItem 이름 유추
+```
+
+**적용 시점**: 직접 변환 적용 후 2차 패스
+
+### 4. camelCase 방어 로직
+
+> **문제**: `redDot`, `myPage` 같은 camelCase는 네이밍 컨벤션 위반
+
+**변환**:
+```typescript
+'redDot' → 'RedDot'
+'myPageButton' → 'MyPageButton'
+'iconContainer' → 'IconContainer'
+```
+
+**감지 조건**:
+- 첫 글자가 소문자
+- 나머지에 대문자 포함
+
+### 5. 자식 키워드 기반 Section 이름 추론
+
+> **핵심 결정**: 일반 이름(details, container)을 자식 키워드로 의미 있는 이름으로 변환
+
+**문제 사례**:
+```
+details (자식: Challenge Header, Challenge List)
+  → 실제 역할: "참여 중인 챌린지 카드 영역"
+  → 적절한 이름: Section/ActiveChallenge
+```
+
+**일반 이름 목록** (변환 대상):
+```typescript
+const GENERIC_NAMES = [
+  'details', 'container', 'content', 'wrapper', 'box',
+  'frame', 'group', 'section', 'area', 'block', 'item',
+  'element', 'view', 'panel', 'row', 'column', 'cell',
+  'inner', 'outer', 'main', 'sub', 'left', 'right',
+  'top', 'bottom', 'header', 'body', 'footer',
+];
+```
+
+**도메인 키워드** (자식에서 추출):
+```typescript
+const DOMAIN_KEYWORDS = [
+  'Challenge', 'Feed', 'Profile', 'Notification', 'Message',
+  'Chat', 'User', 'Friend', 'Mission', 'Achievement', 'Ranking',
+  'Shop', 'Settings', 'Home', 'Search', 'Video', 'Photo',
+  'Comment', 'Like', 'Share', 'Progress', 'Weekly', 'Daily',
+];
+```
+
+**컨텍스트 키워드** (조상/위치에서 추출):
+| 컨텍스트 | 힌트 키워드 |
+|---------|-----------|
+| Active | active, current, ongoing, 참여, 진행 |
+| Join | join, available, new, 가입, 신규 |
+| Completed | completed, done, finished, 완료 |
+| Featured | featured, recommended, hot, 추천, 인기 |
+| My | my, mine, 나의, 내 |
+| Weekly | weekly, week, 주간 |
+| Daily | daily, day, 일간, 오늘 |
+
+**추론 로직**:
+```
+1. 자식에서 도메인 키워드 빈도 카운트 (2단계 깊이)
+2. 조상에서 컨텍스트 힌트 검색
+3. 형제 중 첫 번째면 Active로 추정
+4. Section/{Context}{Domain} 생성
+```
+
+**결과 예시**:
+```
+details (in Main Content, 첫 번째 자식)
+  → 자식에서 "Challenge" 키워드 5회 발견
+  → 형제 중 첫 번째 → Active 컨텍스트
+  → 결과: Section/ActiveChallenge
+
+content (in Join Tab)
+  → 자식에서 "Challenge" 키워드 3회 발견
+  → 부모에 "join" 키워드 발견 → Join 컨텍스트
+  → 결과: Section/JoinChallenge
+```
+
+### 6. 제외 조건
+
+**네이밍하지 않는 노드**:
+
+```typescript
+// 노드 타입
+const EXCLUDED_NODE_TYPES = [
+  'VECTOR', 'ELLIPSE', 'LINE', 'RECTANGLE',
+  'BOOLEAN_OPERATION', 'STAR', 'POLYGON',
+];
+
+// 상태값 이름 (대소문자 무시)
+const EXCLUDED_STATE_NAMES = [
+  'on', 'off', 'active', 'inactive', 'disabled', 'enabled',
+  'selected', 'unselected', 'hover', 'pressed', 'focus',
+  'default', 'normal', 'checked', 'unchecked',
+];
+```
+
+**이유**:
+- 벡터/도형: 구조적 요소, 네이밍 불필요
+- 상태값: 컴포넌트 variant 표현, 변경하면 안 됨
+
+---
+
+## 처리 흐름 요약
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    handleNamingAgent()                       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  1. 모든 노드 수집 (재귀, depth 무제한)                        │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  2. 제외 조건 필터링 (벡터, 상태값)                            │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  3. 직접 변환 시도 (tryDirectNaming)                          │
+│     ├─ 아이콘 라이브러리 → Icon/Xxx                           │
+│     ├─ 하이픈 패턴 → Icon/Xxx                                │
+│     ├─ 한글 레이블 → TabItem/Xxx 또는 Xxx                     │
+│     ├─ camelCase → PascalCase                               │
+│     └─ 일반 이름 + 자식 키워드 → Section/Xxx                  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  4. 2차 패스: TabItem 자식 아이콘 기반 이름 유추               │
+│     └─ TabItem/Lounge (자식: Icon/Friends) → TabItem/Friends │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  5. AI 분석 (직접 변환 불가 + 시맨틱 이름 없는 FRAME만)        │
+│     └─ Agent Server → Claude Vision → 컴포넌트 타입 추론     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 핵심 설계 결정 기록
+
+### 결정 1: Rule-based 네이밍 삭제
+
+**배경**: Rule-based와 AI 네이밍이 분리되어 있어 혼란
+
+**결정**: Rule-based 삭제, AI 네이밍에 직접 변환 로직 통합
+
+**이유**:
+- 단일 진입점으로 사용성 향상
+- 명확한 패턴은 직접 변환으로 비용 절감
+- 복잡한 판단만 AI에 위임
+
+### 결정 2: 자식 기반 Section 추론
+
+**배경**: `details`, `container` 같은 일반 이름이 의미 없음
+
+**결정**: 자식 키워드로 도메인 추출, 조상에서 컨텍스트 추출
+
+**이유**:
+- 같은 챌린지 카드라도 Active/Join 등 구분 가능
+- 전체 범위에서 일관된 네이밍 가능
+- AI 호출 없이 룰 베이스로 처리 가능
+
+### 결정 3: 2차 패스 TabItem 유추
+
+**배경**: 원본 탭이 모두 "라운지"로 동일해도 자식 아이콘은 다름
+
+**결정**: 직접 변환 후 2차 패스로 TabItem 이름 유추
+
+**이유**:
+- 자식 Icon/* 이 먼저 변환되어야 부모 이름 유추 가능
+- 순서 의존성 해결
+
+### 결정 4: camelCase 방어
+
+**배경**: `redDot` 같은 camelCase는 네이밍 컨벤션 위반
+
+**결정**: camelCase 감지 시 PascalCase로 자동 변환
+
+**이유**:
+- 일관된 네이밍 컨벤션 유지
+- 개발자 실수 방어
+
+---
+
 ## 개선 예정
 
 - [ ] 컴포넌트 라이브러리 학습 (프로젝트별 커스텀)
 - [ ] 배치 처리 최적화 (단일 스크린샷에 여러 노드)
 - [ ] 캐싱으로 동일 스크린샷 재처리 방지
 - [ ] 사용자 피드백 기반 학습
+- [ ] Section 컨텍스트 추론 정확도 향상
+- [ ] 도메인 키워드 확장 (프로젝트별)

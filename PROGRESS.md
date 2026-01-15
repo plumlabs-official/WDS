@@ -969,6 +969,48 @@ npm run typecheck    # 타입 체크
 
 ---
 
+## 2025-01-14 주요 변경사항
+
+### AI 네이밍 직접 변환 로직 통합
+
+Rule-based 네이밍 삭제 후 AI 네이밍에 직접 변환 로직 통합:
+
+**직접 변환 (AI 호출 없이):**
+| 패턴 | 변환 예시 |
+|-----|----------|
+| 아이콘 라이브러리 | `carbon:ibm-watson-discovery` → `Icon/Discovery` |
+| 한글 레이블 | `홈`, `라운지` → `TabItem/Home`, `TabItem/Lounge` |
+| 하이픈 패턴 | `user-circle-02` → `Icon/User` |
+
+**제외 조건:**
+- 벡터/도형 레이어 (`VECTOR`, `ELLIPSE`, `RECTANGLE` 등)
+- 상태값 이름 (`on`, `off`, `active`, `disabled` 등)
+
+**탭바 컨텍스트 감지:**
+- 부모에 `tabbar`, `navigation` 등이 있으면 `TabItem/` prefix 적용
+
+### Rule-based 코드 삭제
+
+| 삭제된 파일/함수 | 대체 |
+|----------------|------|
+| `src/modules/autolayout.ts` | AI Auto Layout만 사용 |
+| `handleApplyAutoLayout()` | `handleAutoLayoutAgent()` |
+| `handleAutoNaming()` | `handleNamingAgent()` |
+| `renameSelectionFrames()` | AI 네이밍 + 직접 변환 |
+| `detectComponentType()` 등 | 삭제 |
+
+**파일 크기 감소:** 66kb → 48.3kb
+
+### 유지되는 Rule-based 기능
+
+| 모듈 | 용도 |
+|-----|------|
+| `src/modules/cleanup.ts` | 래퍼 정리 |
+| `src/modules/spacing.ts` | 간격 표준화 |
+| `src/modules/naming.ts` | 직접 변환 유틸 함수 |
+
+---
+
 ## 현재 Phase 1 진행 상황
 
 ### 완료됨
@@ -978,19 +1020,20 @@ npm run typecheck    # 타입 체크
 | Cleanup Agent | Rule-based | ✅ 완료 | 래퍼 정리, 엣지케이스 모니터링 |
 | 컴포넌트 브레이크 | Rule-based | ✅ 완료 | 중첩 인스턴스 재귀 처리 |
 | 꺼진 레이어 삭제 | Rule-based | ✅ 완료 | 체크박스 선택 + Figma 동기화 |
+| Naming Agent | AI + 직접변환 | ✅ 완료 | 아이콘/한글/하이픈 직접 변환 |
 
 ### 진행 중
 
 | 에이전트 | 타입 | 상태 | 다음 단계 |
 |---------|------|------|----------|
-| AutoLayout Agent | LLM | 🔄 테스트 중 | 실제 디자인 테스트 필요 |
+| Naming Agent | AI | 🔄 테스트 중 | Figma 실제 테스트 필요 |
 
 ### 대기 중
 
 | 에이전트 | 타입 | 상태 |
 |---------|------|------|
-| Naming Agent | LLM | ⏳ 대기 |
 | Spacing Agent | Rule-based | ⏳ 대기 |
+| AutoLayout Agent | LLM | ⏳ 대기 |
 | Componentize Agent | Hybrid | ⏳ 대기 |
 
 ---
@@ -998,12 +1041,12 @@ npm run typecheck    # 타입 체크
 ## 다음 단계
 
 ### 즉시
-1. AutoLayout Agent 실제 디자인 테스트
-2. 테스트 결과 기반 프롬프트 조정
+1. AI 네이밍 Figma 테스트
+2. 직접 변환 로직 검증 (Section 추론 포함)
 
 ### Phase 1 완료 후
-3. Naming Agent 프롬프트 최적화
-4. Spacing Agent 토큰 매핑 검증
+3. Spacing Agent 토큰 매핑 검증
+4. AutoLayout Agent 테스트
 5. Componentize Agent 탐지 로직 구현
 
 ### Phase 2
@@ -1011,3 +1054,469 @@ npm run typecheck    # 타입 체크
 7. 파이프라인 구축 (의존성 관리)
 8. 에러 핸들링 및 폴백
 9. 통합 테스트
+
+---
+
+## 변경 이력 (2025-01-14 추가)
+
+| 시간 | 내용 |
+|-----|------|
+| 14:00 | AI 네이밍에 직접 변환 로직 통합 |
+| 14:15 | 아이콘 라이브러리 → WDS 변환 테이블 추가 |
+| 14:20 | 한글 레이블 → 영문 변환 테이블 추가 |
+| 14:25 | 하이픈 패턴 아이콘 변환 추가 |
+| 14:30 | 탭바 컨텍스트 감지 로직 추가 |
+| 14:40 | Rule-based 네이밍 코드 삭제 |
+| 14:50 | Rule-based Auto Layout 코드 삭제 |
+| 15:00 | `src/modules/autolayout.ts` 삭제 |
+| 15:05 | `roundToNearestToken()` → spacing.ts로 이동 |
+| 15:10 | docs/INDEX.md 업데이트 |
+| 15:15 | 빌드 완료 (48.3kb) |
+| 16:00 | **자식 아이콘 기반 TabItem 이름 유추** |
+| 16:00 | - `inferTabItemNameFromIcon()` 함수 추가 |
+| 16:00 | - 2차 패스로 동작 (직접 변환 후 실행) |
+| 16:10 | **camelCase 방어 로직 추가** |
+| 16:10 | - `isCamelCase()`, `convertCamelCaseToPascalCase()` |
+| 16:10 | - `redDot` → `RedDot` 변환 |
+| 16:30 | **자식 키워드 기반 Section 추론 로직** |
+| 16:30 | - `isGenericName()`: 일반 이름 감지 (details, container 등) |
+| 16:30 | - `inferSectionNameFromChildren()`: 자식에서 도메인 키워드 추출 |
+| 16:30 | - 컨텍스트 키워드 추출 (Active, Join, Completed 등) |
+| 16:30 | - `details` → `Section/ActiveChallenge` 변환 |
+| 16:45 | naming-agent.md 문서화 완료 |
+| 16:50 | 빌드 완료 (54.1kb) |
+
+---
+
+## 핵심 설계 결정 기록
+
+### 1. Rule-based 네이밍/AutoLayout 삭제
+
+**배경**: Rule-based와 AI 방식이 분리되어 혼란, 유지보수 부담
+
+**결정**: Rule-based 코드 전면 삭제, AI에 직접 변환 로직 통합
+
+**이유**:
+- 단일 진입점으로 사용성 향상
+- 명확한 패턴은 직접 변환으로 비용/시간 절감
+- 복잡한 판단만 AI에 위임
+
+### 2. 자식 아이콘 기반 TabItem 유추
+
+**배경**: 원본 탭이 모두 "라운지"로 동일해도 자식 아이콘은 다름
+
+**결정**: 직접 변환 후 2차 패스로 TabItem 이름 유추
+
+**로직**:
+```
+TabItem/Lounge (자식: Icon/Friends) → TabItem/Friends
+```
+
+**이유**:
+- 자식 Icon/* 이 먼저 변환되어야 부모 이름 유추 가능
+- 순서 의존성 해결
+
+### 3. 자식 키워드 기반 Section 추론
+
+**배경**: `details`, `container` 같은 일반 이름이 의미 없음
+
+**문제 사례**:
+```
+details (자식: Challenge Header, Challenge List)
+  → 실제 역할: "참여 중인 챌린지 카드 영역"
+  → 기대 이름: Section/ActiveChallenge
+```
+
+**결정**: 자식에서 도메인 키워드, 조상에서 컨텍스트 키워드 추출
+
+**로직**:
+```
+1. 자식 이름에서 Challenge, Feed, Profile 등 도메인 키워드 빈도 카운트
+2. 조상 이름에서 Active, Join, My 등 컨텍스트 힌트 검색
+3. 형제 중 첫 번째면 Active로 추정
+4. Section/{Context}{Domain} 생성
+```
+
+**이유**:
+- 같은 챌린지 카드라도 Active/Join 등 전체 범위에서 구분 가능
+- AI 호출 없이 룰 베이스로 처리 가능
+- 일관된 네이밍으로 개발 생산성 향상
+
+### 4. camelCase 방어
+
+**배경**: `redDot` 같은 camelCase는 네이밍 컨벤션 위반
+
+**결정**: camelCase 감지 시 PascalCase로 자동 변환
+
+**이유**:
+- 일관된 네이밍 컨벤션 유지 (PascalCase)
+- 개발자 실수 방어
+
+---
+
+## Naming Agent 직접 변환 우선순위
+
+```
+1. 아이콘 라이브러리 (carbon:xxx → Icon/Xxx)
+2. 하이픈 패턴 아이콘 (user-circle-02 → Icon/User)
+3. 한글 레이블 (홈 → TabItem/Home)
+4. 아이콘 상태 컨테이너 (on/off 자식 포함)
+5. camelCase 방어 (redDot → RedDot)
+6. 자식 키워드 기반 Section 추론 (details → Section/ActiveChallenge)
+7. [2차 패스] TabItem 자식 아이콘 기반 유추
+8. AI 분석 (위 조건 모두 해당 안 되는 FRAME)
+```
+
+---
+
+## 2025-01-15 주요 변경사항
+
+### 컨텍스트 기반 AI 네이밍 구현 ✅ 완료
+
+**문제점:**
+- 개별 노드 스크린샷으로 분석 시 맥락 부재
+- Button이 Container로, Container가 Button으로 잘못 분류
+- `HomeScreen/Unauthenticated` 같은 잘못된 타입/상태 생성
+
+**해결책: 전체 스크린 기반 분석**
+
+```
+기존: 노드별 개별 스크린샷 N장 → AI 분석 N회
+개선: 전체 스크린 1장 + 노드 위치/깊이 정보 → AI 분석 1회
+```
+
+#### 구현 내용
+
+**1. 전체 스크린 캡처 (`src/code.ts`)**
+```typescript
+findScreenFrame(node)       // 최상위 스크린 프레임 찾기
+captureScreenContext(frame) // 전체 스크린 캡처 (1x)
+getRelativePosition(node)   // 스크린 기준 상대 좌표 + depth
+getDepthFromScreen(node)    // 계층 깊이 계산
+```
+
+**2. 계층별 네이밍 규칙 (프롬프트)**
+
+| 깊이 | 타입 | 예시 |
+|------|------|------|
+| 1단계 | Screen | `Screen/Home`, `Screen/Challenge` |
+| 2단계 | Layout | `Layout/TopBar`, `Layout/Main`, `Layout/BottomBar` |
+| 3단계+ | Component | `Section/Challenge`, `Card/LG`, `TabItem/Home` |
+
+**3. 금지 사항 명시**
+- ❌ 비즈니스 상태 추론: `Authenticated`, `Empty`, `Active` 등
+- ❌ 잘못된 타입 생성: `HomeScreen`, `LoginScreen`, `UserCard` 등
+- ❌ 3단계 이하 Layout 사용
+
+**4. 유효한 시맨틱 타입 검증**
+```typescript
+const VALID_SEMANTIC_TYPES = [
+  'Screen', 'Layout', 'TopBar', 'TabBar', 'Section', 'Content', 'Container',
+  'Card', 'Button', 'Input', 'Avatar', 'Icon', 'ListItem', 'TabItem',
+  'Badge', 'Tag', 'Header', 'Toggle', 'Checkbox', 'ProgressBar',
+  'Timer', 'HomeIndicator', 'Frame',
+];
+
+function hasValidSemanticName(name: string): boolean {
+  if (!name.includes('/')) return false;
+  const firstPart = name.split('/')[0];
+  return VALID_SEMANTIC_TYPES.includes(firstPart);
+}
+```
+
+**효과:**
+- `HomeScreen/Unauthenticated` → 재분석 대상 → `Screen/Home`
+- `Button/Primary/MD` → 스킵 (유효)
+- `UserCard/Profile` → 재분석 대상
+
+#### 수정된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `src/code.ts` | `VALID_SEMANTIC_TYPES`, `hasValidSemanticName()`, depth 계산 함수 |
+| `agent-server/src/agents/naming.ts` | 계층별 프롬프트, 금지사항, depth 표시 |
+| `agent-server/src/types.ts` | `depth` 필드 추가 |
+| `agent-server/src/utils/claude.ts` | `max_tokens: 8192` (큰 응답 지원) |
+| `agent-server/src/index.ts` | `/agents/naming/context` 엔드포인트 |
+| `src/ui.html` | `handleNamingContext()` 핸들러 |
+
+#### API 엔드포인트
+
+| 엔드포인트 | 용도 |
+|-----------|------|
+| `POST /agents/naming/context` | 전체 스크린 기반 컨텍스트 네이밍 |
+
+#### 테스트 결과
+
+```
+[Context Naming] Analyzing 28 nodes with screen context (375x1330)
+[Context Naming] Response preview: Screen/Challenge (confidence: 0.95)
+[Context Naming] Got 28 results
+[Context Naming] Success: 28 names suggested
+```
+
+---
+
+## 변경 이력 (2025-01-15 추가)
+
+| 시간 | 내용 |
+|-----|------|
+| 23:00 | 컨텍스트 기반 AI 네이밍 설계 시작 |
+| 23:15 | `findScreenFrame()`, `captureScreenContext()` 구현 |
+| 23:20 | `getRelativePosition()`, `getDepthFromScreen()` 구현 |
+| 23:30 | `ContextAwareNamingRequest` 타입 정의 |
+| 23:35 | `CONTEXT_AWARE_NAMING_PROMPT` 작성 |
+| 23:40 | `analyzeNamingWithContext()` 함수 구현 |
+| 23:45 | `/agents/naming/context` 엔드포인트 추가 |
+| 23:50 | UI 핸들러 `handleNamingContext()` 추가 |
+| 23:55 | 계층별 네이밍 규칙 프롬프트 개선 |
+| 00:00 | 금지사항 명시 (비즈니스 상태, 잘못된 타입) |
+| 00:05 | `VALID_SEMANTIC_TYPES` 상수 추가 |
+| 00:10 | `hasValidSemanticName()` 검증 함수 추가 |
+| 00:15 | `max_tokens: 8192` 증가 (큰 응답 지원) |
+| 00:20 | 디버그 로그 추가 |
+| 00:25 | **테스트 성공: 28개 노드 분석 완료** |
+
+---
+
+## 2025-01-15 네이밍 컨벤션 개선 (추가)
+
+### Purpose 슬롯 추가 ✅ 완료
+
+**기존 형식:**
+```
+ComponentType/Variant/Size
+예: Button/Primary/LG
+```
+
+**새 형식:**
+```
+ComponentType/Purpose/Variant/Size
+예: Button/CTA/Primary/LG
+```
+
+**Purpose 추론 규칙:**
+
+| 컴포넌트 | Purpose 예시 |
+|---------|-------------|
+| Button | CTA, Submit, Cancel, Close, Back, Next, Share, Like, More |
+| Card | Profile, Product, Feed, Challenge, Stats, Banner |
+| Container | ButtonArea, IconGroup, ActionBar, InfoSection, ImageArea |
+| Section | Challenge, Feed, Stats, Profile, Carousel, Banner |
+| ListItem | Challenge, Feed, Product, User, Setting, Rank |
+| Icon | Close, Back, Share, Like, More, Search, Settings |
+| Image | Avatar, Banner, Product, Thumbnail, Background, Logo |
+
+### Section vs Card vs ListItem 구분 규칙
+
+| 타입 | 역할 | 예시 |
+|------|------|------|
+| **Section** | 여러 아이템을 **그룹화하는 컨테이너** | `Section/Challenge` (목록 전체) |
+| **Card** | **독립적인 정보 단위** (개별 아이템) | `Card/Challenge` (개별 카드) |
+| **ListItem** | **리스트 내 개별 행** 항목 | `ListItem/Challenge` (리스트 항목) |
+
+**계층 구조 예시:**
+```
+Section/Challenge (컨테이너)
+├── Card/Challenge (개별 카드 1)
+├── Card/Challenge (개별 카드 2)
+└── Card/Challenge (개별 카드 3)
+```
+
+### Size 적용 컴포넌트 제한 ✅ 완료
+
+디자인 시스템 베스트 프랙티스에 따라 Size를 특정 컴포넌트에만 적용:
+
+**Size 적용 O:**
+- Button, Input, Avatar, Card, Badge, Icon, Tag
+- 예: `Button/CTA/Primary/LG`, `Card/Profile/LG`, `Avatar/User/MD`
+
+**Size 적용 X:**
+- Container, Section, TopBar, TabBar, ListItem, Image, Screen, Header, Frame
+- 예: `Container/ButtonArea`, `Section/Challenge`, `ListItem/Feed`
+
+**참고:** Morningstar Design System 등 주요 디자인 시스템에서 Layout Grid, Container, Navigation 등은 "Default Size Only"로 분류
+
+### Image 컴포넌트 타입 추가 ✅ 완료
+
+**컴포넌트 타입 목록에 Image 추가:**
+```
+UI 컴포넌트: Card, Button, Input, Avatar, Icon, Image, ListItem, TabItem, Badge, Tag, Header
+```
+
+**Image Purpose:**
+- Avatar: 프로필/사용자 이미지
+- Banner: 배너/프로모션 이미지
+- Product: 상품 이미지
+- Thumbnail: 썸네일 이미지
+- Background: 배경 이미지
+- Logo: 로고 이미지
+
+### Layout 타입 완전 금지 ✅ 완료
+
+**기존:** 2단계에서 Layout 허용 (`Layout/TopBar`, `Layout/Main`)
+**변경:** 모든 깊이에서 Layout 금지 → 구체적 컴포넌트 타입 사용
+
+**대체 예시:**
+- `Layout/Main` ❌ → `TopBar/Main` ✓ 또는 `Section/Main` ✓
+- `Layout/BottomBar` ❌ → `TabBar/Main` ✓
+
+### 수정된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `agent-server/src/agents/naming.ts` | Purpose 규칙, Size 제한, Image 타입, Section/Card/ListItem 구분 |
+| `agent-server/src/types.ts` | `purpose` 필드 추가 |
+
+---
+
+## 변경 이력 (2025-01-15 추가 - 컨벤션 개선)
+
+| 시간 | 내용 |
+|-----|------|
+| 오전 | Purpose 슬롯 추가 (`ComponentType/Purpose/Variant/Size`) |
+| 오전 | Purpose 추론 가이드라인 추가 (Button, Card, Container, Section, ListItem, Icon) |
+| 오전 | Layout 타입 완전 금지 (모든 깊이에서) |
+| 오전 | Content 사용 완전 금지 |
+| 오전 | Section vs Card vs ListItem 구분 규칙 추가 |
+| 오전 | Image 컴포넌트 타입 및 Purpose 추가 |
+| 오전 | Size 적용 컴포넌트 제한 (디자인 시스템 베스트 프랙티스 기반) |
+| 오전 | - Size 적용: Button, Input, Avatar, Card, Badge, Icon, Tag |
+| 오전 | - Size 미적용: Container, Section, TopBar, TabBar, ListItem, Image 등 |
+
+---
+
+## 참조 문서
+
+- `docs/INDEX.md` - 기능별 참조 맵
+- `agent-server/docs/agents/naming-agent.md` - Naming Agent 상세 가이드
+- `docs/DEVELOPMENT-GUIDE.md` - 개발 패턴 가이드
+- `docs/NAMING-RULES.md` - 네이밍 규칙 가이드 (신규)
+
+---
+
+## 2026-01-15 Cleanup 모듈 개선
+
+### 단일 자식 래퍼 병합 기능 수정 ✅ 완료
+
+**문제점:**
+- `isMeaninglessWrapper` 함수에서 크기 체크 (2px 허용 오차)로 인해 크기가 다른 단일 자식 래퍼가 병합되지 않음
+- `findSingleChildChain` 함수에서 크기 체크 (5px 허용 오차)로 인해 체인 탐지 실패
+- 예: `Section/Challenge (375px) > Item (343px)` 구조 (32px 차이) → 병합 대상에서 제외됨
+
+**해결:**
+- `isMeaninglessWrapper`: 크기 체크 완전 제거, 스타일만 검사
+- `findSingleChildChain`: 크기 체크 완전 제거
+- 단일 자식 프레임이면 크기와 관계없이 병합 대상으로 인식
+
+**수정 파일:**
+- `src/modules/cleanup.ts`
+  - Line 59-101: `isMeaninglessWrapper` 함수 - 크기 체크 제거
+  - Line 487-530: `findSingleChildChain` 함수 - 크기 체크 제거
+  - Line 505, 528: while 루프 내 크기 체크 제거
+
+**변경 전:**
+```typescript
+// isMeaninglessWrapper 내
+const sameWidth = Math.abs(node.width - child.width) <= sizeTolerance;
+const sameHeight = Math.abs(node.height - child.height) <= sizeTolerance;
+if (!sameWidth || !sameHeight) return false;
+
+// findSingleChildChain 내
+if (!isSimilarSize(node, child as FrameNode)) return null;
+```
+
+**변경 후:**
+```typescript
+// 크기 체크 완전 제거
+// 단일 자식 + 스타일 없음 조건만 검사
+```
+
+### 아이콘 위치 계산 버그 수정 ✅ 완료
+
+**문제점:**
+- `unwrapNode` 함수에서 자식 위치를 잘못 계산
+- `child.x = wrapperX`로 설정하여 래퍼 내 상대 좌표를 무시
+- 결과: 아이콘이 원래 위치에서 이탈
+
+**해결:**
+- 절대 위치 = 래퍼 위치 + 자식의 래퍼 내 상대 위치
+- `child.x = wrapper.x + child.x`
+- `child.y = wrapper.y + child.y`
+
+**수정 파일:**
+- `src/modules/cleanup.ts` Line 133-144
+
+**변경 전:**
+```typescript
+child.x = wrapperX;  // 상대 좌표 무시
+child.y = wrapperY;
+```
+
+**변경 후:**
+```typescript
+var absoluteX = wrapper.x + child.x;
+var absoluteY = wrapper.y + child.y;
+// ...
+child.x = absoluteX;
+child.y = absoluteY;
+```
+
+### 테스트 결과
+
+| 테스트 케이스 | 결과 |
+|-------------|------|
+| 동일 이름 + 동일 크기 | ✅ 병합됨 |
+| 동일 이름 + 다른 크기 | ✅ 병합됨 (신규) |
+| 다른 이름 + 동일 크기 | ✅ 병합됨 |
+| 다른 이름 + 다른 크기 | ✅ 병합됨 (신규) |
+| 아이콘 위치 보존 | ✅ 정상 |
+| 부모 크기 유지 | ✅ 정상 |
+
+---
+
+## 변경 이력 (2026-01-15 추가)
+
+| 시간 | 내용 |
+|-----|------|
+| 오후 | `isMeaninglessWrapper` 크기 체크 제거 |
+| 오후 | `findSingleChildChain` 크기 체크 제거 |
+| 오후 | `unwrapNode` 절대 위치 계산 수정 |
+| 오후 | 단일 자식 래퍼 병합 테스트 완료 |
+| 오후 | PROGRESS.md 업데이트 |
+| 오후 | 실수 방지 가이드 작성 예정 |
+
+---
+
+## 핵심 교훈 (2026-01-15)
+
+### 크기 체크가 의도치 않은 제한을 만든 사례
+
+**원인:**
+- 래퍼 판단 시 "크기가 비슷해야 의미 없는 래퍼"라는 가정
+- 이 가정이 실제 사용 사례와 맞지 않음
+
+**교훈:**
+- 사용자 요구사항: "단일 자식이면 크기와 관계없이 병합"
+- 구현 시 명시적으로 확인하지 않은 조건이 숨어 있었음
+- 크기 체크 같은 "방어적 조건"이 오히려 기능을 제한함
+
+**방어 전략:**
+1. 새 기능 구현 시 모든 조건 명시적으로 나열
+2. 조건 변경 시 영향받는 함수 전체 검토
+3. 테스트 케이스에 경계 조건 포함
+
+### 위치 계산 버그 패턴
+
+**원인:**
+- 래퍼 위치만 저장하고 자식의 상대 좌표 무시
+- `child.x = wrapperX` 대신 `child.x = wrapperX + childRelativeX` 필요
+
+**교훈:**
+- Figma 노드 좌표는 부모 기준 상대 좌표
+- 언래핑 시 반드시 절대 위치 = 부모 위치 + 상대 위치
+
+**방어 전략:**
+1. 좌표 계산 시 항상 "절대 vs 상대" 명확히 구분
+2. 언래핑 로직에서 `wrapper.x + child.x` 패턴 사용
+3. 테스트 시 위치 이동 검증 포함

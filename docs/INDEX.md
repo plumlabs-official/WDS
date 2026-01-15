@@ -9,9 +9,17 @@ Figma 플러그인 + Agent Server 기반 디자인 시스템 자동화 도구
 
 ---
 
-## 🚦 명령 실행 전 필수 확인
+## AI 전용 문서 (.ai/)
 
-**모든 기능 수정/실행 전에 해당 기능의 문서와 구현 파일을 확인합니다.**
+| 파일 | 설명 |
+|------|------|
+| `.ai/PRD.md` | 제품 요구사항 |
+| `.ai/MEMORY.md` | 빠른 요약 (1페이지) |
+| `.ai/CONTEXT.md` | 현재 작업 상태 |
+| `.ai/lessons_learned.md` | **결정 + 실수 패턴 (도메인별)** |
+| `.ai/design-system/naming-rules.md` | 네이밍 규칙 (SSOT) |
+| `.ai/design-system/autolayout-rules.md` | 오토레이아웃 규칙 |
+| `.ai/design-system/figma-mcp-rules.md` | 피그마-코드 매핑 |
 
 ---
 
@@ -29,19 +37,29 @@ Figma 플러그인 + Agent Server 기반 디자인 시스템 자동화 도구
 
 ---
 
-### 2. 네이밍 (Naming)
+### 2. 네이밍 (AI Only)
+
+> **Note:** Rule-based 네이밍은 삭제됨. AI 네이밍만 사용.
 
 | 명령 | 문서 (.md) | 구현 (.ts) |
 |------|-----------|-----------|
-| `auto-naming-agent` | `agent-server/docs/agents/naming-agent.md` | `agent-server/src/agents/naming.ts` |
+| `auto-naming-agent` | `agent-server/docs/agents/naming-agent.md` | `src/code.ts` → `handleNamingAgent()` |
+| (직접 변환) | - | `src/modules/naming.ts` (유틸 함수) |
+
+**직접 변환 (AI 호출 없이):**
+- 아이콘 라이브러리 → `Icon/Discovery`
+- 한글 레이블 → `TabItem/Home`
+- 하이픈 패턴 → `Icon/User`
 
 ---
 
-### 3. Auto Layout
+### 3. Auto Layout (AI Only)
+
+> **Note:** Rule-based Auto Layout은 삭제됨. AI Auto Layout만 사용.
 
 | 명령 | 문서 (.md) | 구현 (.ts) |
 |------|-----------|-----------|
-| `apply-autolayout-agent` | `agent-server/docs/agents/autolayout-agent.md` | `agent-server/src/agents/autolayout.ts` |
+| `apply-autolayout-agent` | `agent-server/docs/agents/autolayout-agent.md` | `src/code.ts` → `handleAutoLayoutAgent()` |
 | `standardize-spacing` | `agent-server/docs/agents/spacing-agent.md` | `src/modules/spacing.ts` |
 
 ---
@@ -59,7 +77,7 @@ Figma 플러그인 + Agent Server 기반 디자인 시스템 자동화 도구
 
 | 명령 | 설명 |
 |------|------|
-| `run-all-agent` | 네이밍 → Auto Layout → 간격 표준화 (전처리 제외) |
+| `run-all-agent` | AI 네이밍 → AI Auto Layout → 간격 표준화 (전처리 제외) |
 
 ---
 
@@ -72,7 +90,7 @@ Figma 플러그인 + Agent Server 기반 디자인 시스템 자동화 도구
        └─ 의미 없는 래퍼 제거
 
 [자동] 2. 전체 실행 (with AI Agent)
-       ├─ AI 네이밍
+       ├─ AI 네이밍 (직접 변환 + LLM)
        ├─ AI Auto Layout
        └─ 간격 표준화
 ```
@@ -80,6 +98,12 @@ Figma 플러그인 + Agent Server 기반 디자인 시스템 자동화 도구
 ---
 
 ## 핵심 원칙
+
+### AI 네이밍
+
+1. **제외 조건** - 벡터, 도형, 상태값(on/off) 제외
+2. **직접 변환** - 아이콘 라이브러리, 한글 레이블, 하이픈 패턴
+3. **AI 분석** - 직접 변환 불가능한 FRAME만 Agent Server 호출
 
 ### Auto Layout Agent
 
@@ -103,29 +127,47 @@ Figma 플러그인 + Agent Server 기반 디자인 시스템 자동화 도구
 ├── src/                          # Figma 플러그인
 │   ├── code.ts                   # 메인 엔트리
 │   ├── ui.html                   # UI 패널
-│   └── modules/                  # 룰 베이스 모듈
-│       ├── cleanup.ts
-│       ├── spacing.ts
-│       ├── naming.ts
-│       └── componentize.ts
+│   └── modules/
+│       ├── cleanup.ts            # 래퍼 정리 (Rule-based)
+│       ├── spacing.ts            # 간격 표준화 (Rule-based)
+│       ├── naming.ts             # 네이밍 유틸 (직접 변환용)
+│       └── componentize.ts       # 컴포넌트화
 │
 ├── agent-server/                 # Agent Server
+│   ├── prompts/                  # 프롬프트 파일 (외부화)
+│   │   ├── naming-context.md     # 컨텍스트 기반 네이밍
+│   │   ├── naming-single.md      # 단일 노드 네이밍
+│   │   └── autolayout.md         # Auto Layout
 │   ├── src/
 │   │   ├── index.ts              # Express 서버
-│   │   ├── agents/               # LLM 에이전트
-│   │   │   ├── naming.ts
-│   │   │   └── autolayout.ts
+│   │   ├── agents/
+│   │   │   ├── naming.ts         # AI 네이밍 (LLM)
+│   │   │   └── autolayout.ts     # AI Auto Layout (LLM)
 │   │   └── utils/
 │   │       └── claude.ts         # Claude API 래퍼
-│   └── docs/agents/              # 에이전트 문서
-│       ├── preprocessing/        # 전처리 문서
-│       ├── naming-agent.md
-│       ├── autolayout-agent.md
-│       └── ...
+│   └── docs/agents/
 │
-└── docs/
-    └── INDEX.md                  # 이 파일 (최상위 참조)
+├── .ai/                          # AI 전용 지식 저장소
+│   ├── PRD.md                    # 제품 요구사항
+│   ├── MEMORY.md                 # 빠른 요약
+│   ├── CONTEXT.md                # 현재 상태
+│   ├── lessons_learned.md        # 결정 + 실수 패턴
+│   └── design-system/            # 디자인 시스템 규칙
+│
+├── docs/                         # 인간용 문서
+│   ├── INDEX.md                  # 이 파일
+│   └── DEVELOPMENT-GUIDE.md      # 개발 가이드
+│
+└── reference/                    # 참고 자료 (PDF, 가이드)
 ```
+
+---
+
+## 삭제된 기능
+
+- ~~`auto-naming`~~ → `auto-naming-agent` 사용
+- ~~`apply-autolayout`~~ → `apply-autolayout-agent` 사용
+- ~~`src/modules/autolayout.ts`~~ → 삭제됨
 
 ---
 

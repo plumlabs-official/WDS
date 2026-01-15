@@ -6,7 +6,15 @@
  * - Component로 변환 및 네이밍 적용
  */
 
-import { generateSemanticName, detectComponentType } from './naming';
+// Note: Rule-based naming 함수들이 삭제됨. 간단한 폴백 로직 사용.
+function getSimpleComponentName(node: FrameNode): string {
+  // 이미 시맨틱 이름이 있으면 사용
+  if (node.name.includes('/')) {
+    return node.name;
+  }
+  // 그렇지 않으면 Component/Frame 형식으로 반환
+  return `Component/${node.name}`;
+}
 
 /**
  * 프레임의 구조적 시그니처 생성
@@ -149,14 +157,13 @@ export function detectComponentCandidates(
 
   for (const [signature, frames] of groups) {
     if (frames.length >= minOccurrences) {
-      // 대표 프레임으로 컴포넌트 타입과 이름 결정
+      // 대표 프레임으로 이름 결정
       const representative = frames[0];
-      const componentType = detectComponentType(representative);
-      const suggestedName = generateSemanticName(representative);
+      const suggestedName = getSimpleComponentName(representative);
 
       candidates.push({
         signature,
-        componentType,
+        componentType: 'Component', // 간단히 Component로 통일
         suggestedName,
         frames,
         count: frames.length,

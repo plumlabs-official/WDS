@@ -145,6 +145,57 @@
       color: #666;
     }
 
+    /* 진행 상태 패널 */
+    .progress-panel {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .progress-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .progress-steps {
+      margin: 8px 0 12px 0;
+    }
+
+    .progress-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      font-size: 11px;
+    }
+
+    .progress-step.completed { color: #10b981; }
+    .progress-step.active { color: #6366f1; font-weight: 500; }
+    .progress-step.pending { color: #9ca3af; }
+
+    .progress-bar-container {
+      height: 4px;
+      background: #e5e7eb;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #6366f1;
+      transition: width 0.3s ease;
+    }
+
+    .progress-percent {
+      font-size: 10px;
+      color: #6b7280;
+      text-align: right;
+    }
+
     .server-status-wrapper {
       display: flex;
       align-items: center;
@@ -287,46 +338,49 @@
 
   <div class="section">
     <div class="section-title">1. 전처리</div>
-    <button class="btn-secondary" onclick="runCommand('cleanup-wrappers')">
-      의미 없는 래퍼 제거
-    </button>
-    <button class="btn-secondary" onclick="runCommand('detach-components')">
+    <button id="btn-detach-components" class="btn-secondary" onclick="runCommandWithProgress('detach-components', this)">
       컴포넌트 브레이크
     </button>
-    <button class="btn-secondary" onclick="runCommand('delete-hidden-layers')">
+    <button id="btn-delete-hidden-layers" class="btn-secondary" onclick="runCommand('delete-hidden-layers')">
       꺼진 레이어 삭제
+    </button>
+    <button id="btn-cleanup-wrappers" class="btn-secondary" onclick="runCommandWithProgress('cleanup-wrappers', this)">
+      의미 없는 래퍼 제거
+    </button>
+    <button id="btn-flatten-same-name" class="btn-secondary" onclick="runCommandWithProgress('flatten-same-name', this)">
+      중첩 레이어 병합
     </button>
   </div>
 
   <div class="section">
     <div class="section-title">2. 네이밍</div>
-    <button id="btn-naming-agent" class="btn-agent" onclick="runCommand('auto-naming-agent')" disabled>
+    <button id="btn-naming-agent" class="btn-agent" onclick="runCommandWithProgress('auto-naming-agent', this)" disabled>
       AI 네이밍 (Agent)
     </button>
   </div>
 
   <div class="section">
     <div class="section-title">3. Auto Layout</div>
-    <button id="btn-autolayout-agent" class="btn-agent" onclick="runCommand('apply-autolayout-agent')" disabled>
+    <button id="btn-autolayout-agent" class="btn-agent" onclick="runCommandWithProgress('apply-autolayout-agent', this)" disabled>
       AI Auto Layout (Agent)
     </button>
-    <button class="btn-secondary" onclick="runCommand('standardize-spacing')">
+    <button id="btn-standardize-spacing" class="btn-secondary" onclick="runCommandWithProgress('standardize-spacing', this)">
       간격 표준화
     </button>
   </div>
 
   <div class="section">
     <div class="section-title">4. 컴포넌트</div>
-    <button class="btn-secondary" onclick="runCommand('componentize')">
+    <button id="btn-componentize" class="btn-secondary" onclick="runCommand('componentize')">
       컴포넌트 후보 탐지
     </button>
-    <button class="btn-primary" onclick="runCommand('componentize-convert')">
+    <button id="btn-componentize-convert" class="btn-primary" onclick="runCommand('componentize-convert')">
       컴포넌트로 변환
     </button>
   </div>
 
   <div class="section">
-    <button id="btn-run-all-agent" class="btn-agent" onclick="runCommand('run-all-agent')" disabled>
+    <button id="btn-run-all-agent" class="btn-agent" onclick="runCommandWithProgress('run-all-agent', this)" disabled>
       전체 실행 (with AI Agent)
     </button>
   </div>
@@ -337,6 +391,16 @@
   </div>
 
   <div id="progress" class="progress" style="display: none;"></div>
+
+  <!-- 진행 상태 패널 -->
+  <div id="progress-panel" class="progress-panel" style="display: none;">
+    <div class="progress-title">진행 상태</div>
+    <div id="progress-steps" class="progress-steps"></div>
+    <div class="progress-bar-container">
+      <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
+    </div>
+    <div id="progress-percent" class="progress-percent">0%</div>
+  </div>
 
   <!-- 확인 모달 -->
   <div id="modal-overlay" class="modal-overlay" style="display: none;">
@@ -362,6 +426,102 @@
   <script>
     const AGENT_SERVER_URL = 'http://localhost:3001';
     let serverConnected = false;
+
+    // ============================================
+    // 진행 상태 관리
+    // ============================================
+    let currentPipeline = null;
+
+    function showPipelineProgress(steps) {
+      currentPipeline = {
+        steps: steps,
+        currentStep: 0,
+        completed: []
+      };
+      insertProgressPanelAfterButton();
+      renderProgress();
+      document.getElementById('progress-panel').style.display = 'block';
+    }
+
+    function updatePipelineStep(stepIndex, status) {
+      if (!currentPipeline) return;
+
+      if (status === 'completed') {
+        if (!currentPipeline.completed.includes(stepIndex)) {
+          currentPipeline.completed.push(stepIndex);
+        }
+      }
+      currentPipeline.currentStep = stepIndex;
+      renderProgress();
+    }
+
+    function renderProgress() {
+      if (!currentPipeline) return;
+
+      const stepsEl = document.getElementById('progress-steps');
+      const barEl = document.getElementById('progress-bar');
+      const percentEl = document.getElementById('progress-percent');
+
+      const { steps, currentStep, completed } = currentPipeline;
+
+      stepsEl.innerHTML = steps.map((step, i) => {
+        let icon = '○';
+        let className = 'pending';
+
+        if (completed.includes(i)) {
+          icon = '✓';
+          className = 'completed';
+        } else if (i === currentStep) {
+          icon = '→';
+          className = 'active';
+        }
+
+        return '<div class="progress-step ' + className + '">' + icon + ' ' + (i + 1) + '. ' + step + '</div>';
+      }).join('');
+
+      const percent = Math.round((completed.length / steps.length) * 100);
+      barEl.style.width = percent + '%';
+      percentEl.textContent = percent + '%';
+    }
+
+    function hidePipelineProgress() {
+      document.getElementById('progress-panel').style.display = 'none';
+      currentPipeline = null;
+      activeButton = null;
+    }
+
+    // 진행 상태 패널을 버튼 아래에 삽입
+    function insertProgressPanelAfterButton() {
+      const panel = document.getElementById('progress-panel');
+      if (activeButton && activeButton.parentNode) {
+        // 버튼 바로 다음에 삽입
+        activeButton.parentNode.insertBefore(panel, activeButton.nextSibling);
+      }
+    }
+
+    // 단일 작업 진행 상태 표시
+    function showSingleTaskProgress(taskName) {
+      currentPipeline = {
+        steps: [taskName],
+        currentStep: 0,
+        completed: []
+      };
+      insertProgressPanelAfterButton();
+      renderProgress();
+      document.getElementById('progress-panel').style.display = 'block';
+    }
+
+    function completeSingleTaskProgress() {
+      if (currentPipeline && currentPipeline.steps.length === 1) {
+        currentPipeline.completed.push(0);
+        renderProgress();
+        // 1초 후 숨김
+        setTimeout(() => {
+          hidePipelineProgress();
+          activeButton = null;
+        }, 1000);
+      }
+    }
 
     // Check server connection on load
     checkServerConnection();
@@ -441,6 +601,14 @@
       parent.postMessage({ pluginMessage: { type: command } }, '*');
     }
 
+    // 클릭한 버튼 참조 저장
+    let activeButton = null;
+
+    function runCommandWithProgress(command, buttonElement) {
+      activeButton = buttonElement;
+      parent.postMessage({ pluginMessage: { type: command } }, '*');
+    }
+
     // Listen for messages from main code
     window.onmessage = async (event) => {
       const msg = event.data.pluginMessage;
@@ -453,6 +621,10 @@
 
         case 'agent-naming-batch':
           await handleNamingBatch(msg.data);
+          break;
+
+        case 'agent-naming-context':
+          await handleNamingContext(msg.data);
           break;
 
         case 'agent-autolayout':
@@ -471,6 +643,28 @@
 
         case 'confirm-hidden-layers':
           showHiddenLayersModal(msg.data);
+          break;
+
+        // 파이프라인 진행 상태
+        case 'pipeline-start':
+          showPipelineProgress(msg.steps);
+          break;
+
+        case 'pipeline-step':
+          updatePipelineStep(msg.stepIndex, msg.status);
+          break;
+
+        case 'pipeline-complete':
+          hidePipelineProgress();
+          break;
+
+        // 단일 작업 진행 상태
+        case 'task-start':
+          showSingleTaskProgress(msg.taskName);
+          break;
+
+        case 'task-complete':
+          completeSingleTaskProgress();
           break;
       }
     };
@@ -633,6 +827,49 @@
         parent.postMessage({
           pluginMessage: {
             type: 'naming-batch-result',
+            success: false,
+            error: error.message
+          }
+        }, '*');
+      } finally {
+        hideProgress();
+      }
+    }
+
+    // Context-aware Naming Agent API call (전체 스크린 기반)
+    async function handleNamingContext(data) {
+      if (!serverConnected) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-context-result',
+            success: false,
+            error: 'Agent server not connected'
+          }
+        }, '*');
+        return;
+      }
+
+      showProgress('AI 컨텍스트 네이밍 분석 중... (' + data.nodes.length + '개 노드)');
+
+      try {
+        const response = await fetch(AGENT_SERVER_URL + '/agents/naming/context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-context-result',
+            ...result
+          }
+        }, '*');
+      } catch (error) {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'naming-context-result',
             success: false,
             error: error.message
           }
