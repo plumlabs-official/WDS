@@ -19,8 +19,14 @@
 
 ## 현재 작업
 
+### 완료됨 (2026-01-15)
+- 버튼 네이밍 구조 개편: Intent/Shape/Size 분리
+  - 상세 논의: `reference/decisions/button-naming-discussion-2026-01-15.md`
+- 문서 구조 간소화 (가이드 기준 88점)
+- SPEC.md, SKILL.md 추가
+
 ### 대기 중
-- 없음
+- Figma에서 새 네이밍 구조 테스트
 
 ### 보류됨
 - GPT 리서치 추가 제안 (`reference/DS/GPT-리서치-요약.md`)
@@ -63,6 +69,7 @@ agent-server/prompts/  # AI 프롬프트
 
 ## 다음 세션 참고
 
-1. **규칙 확인 순서**: MEMORY.md → design-system/*.md
-2. **버그 패턴**: lessons_learned.md
-3. **프롬프트**: agent-server/prompts/*.md
+1. **버튼 네이밍**: `Button/Intent/Shape/Size` 구조 (기존 Purpose/Variant 폐기)
+2. **규칙 확인 순서**: MEMORY.md → design-system/*.md
+3. **버그 패턴**: lessons_learned.md
+4. **결정 히스토리**: reference/decisions/
