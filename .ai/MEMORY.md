@@ -32,13 +32,13 @@
 - `Button/Primary` ❌ → `Button/CTA/Primary` ✅
 - **이유**: Purpose가 없으면 역할 불명확
 
-### Container 대신 Content
-- `Container/...` → `Content/...`
-- **이유**: Content가 더 의미 있고 일관됨
+### Content 금지, Container 사용
+- `Content` ❌ → `Container/[역할]` ✅
+- **이유**: Content는 모호함, Container + Purpose가 명확
 
 ### 최상위 스크린 프레임
-- PAGE 바로 아래 프레임은 prefix 제거
-- `Container/HomeScreen` → `HomeScreen`
+- PAGE 바로 아래 프레임은 `Screen/[Purpose]` 사용
+- 예: `Screen/Home`, `Screen/Profile`
 
 ---
 

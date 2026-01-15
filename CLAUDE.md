@@ -39,24 +39,6 @@
 - 긴 파일 전체 읽기 금지
 - 읽지 않은 파일 수정 제안 금지
 
-## 네이밍 규칙 (요약)
-
-```
-형식: ComponentType/Purpose/Variant/Size
-```
-
-### 허용된 타입
-- 최상위: `Screen`
-- 구조: `TopBar`, `TabBar`, `Section`, `Container`
-- UI: `Card`, `Button`, `Input`, `Avatar`, `Icon`, `Image`
-
-### 절대 금지
-- `Layout/...` ❌
-- `Content/...` ❌
-- `Button/Primary` ❌ (Purpose 누락)
-
-**상세 규칙**: `.ai/design-system/naming-rules.md` 참조
-
 ## Agent Server
 
 ```bash

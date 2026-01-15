@@ -48,6 +48,11 @@
 - `naming-single.md`: 141줄 → 74줄
 - `token-structure.md`: 484줄 → 184줄
 
+#### 문서 중복 제거 ✅
+- `CLAUDE.md`: 네이밍 규칙 요약 제거 (17줄)
+- `MEMORY.md`: 잘못된 Content 규칙 수정
+- `PRD.md`: "Project Overview"로 역할 명확화
+
 #### 이전 세션 완료
 - 프롬프트 외부화
 - 문서 통합 정리 (lessons_learned.md)

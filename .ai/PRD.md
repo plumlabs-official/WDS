@@ -1,10 +1,12 @@
-# Product Requirements Document (PRD)
+# Project Overview
 
 > Wellwe Design System Automator
+>
+> **기능별 상세 스펙**: `docs/INDEX.md` → 해당 기능 문서 참조
 
 ---
 
-## Overview
+## Summary
 
 Figma 디자인 파일을 자동으로 정리하고 디자인 시스템 규격에 맞게 변환하는 플러그인 + Agent Server.
 

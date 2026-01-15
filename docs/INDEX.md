@@ -13,7 +13,7 @@ Figma 플러그인 + Agent Server 기반 디자인 시스템 자동화 도구
 
 | 파일 | 설명 |
 |------|------|
-| `.ai/PRD.md` | 제품 요구사항 |
+| `.ai/PRD.md` | 프로젝트 개요 |
 | `.ai/MEMORY.md` | 빠른 요약 (1페이지) |
 | `.ai/CONTEXT.md` | 현재 작업 상태 |
 | `.ai/lessons_learned.md` | **결정 + 실수 패턴 (도메인별)** |
