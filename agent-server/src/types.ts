@@ -48,7 +48,9 @@ export interface ContextAwareNamingRequest {
     y: number;
     width: number;
     height: number;
-    depth: number;   // 스크린 기준 깊이 (1=최상위, 2=Layout레벨, 3+=컴포넌트)
+    depth?: number;   // 스크린 기준 깊이 (1=최상위, 2=Layout레벨, 3+=컴포넌트)
+    texts?: string[];      // 자식 TEXT 노드의 텍스트 (Purpose 추론용)
+    iconHints?: string[];  // 자식 Icon/* 이름 (Purpose 추론용)
   }>;
 }
 
@@ -114,4 +116,30 @@ export interface PipelineRequest {
 export interface PipelineResult {
   results: Record<AgentType, BaseResponse>;
   summary: string;
+}
+
+// Cleanup Validator 타입
+export interface CleanupValidationRequest {
+  beforeScreenshot: string;  // base64
+  afterScreenshot: string;   // base64
+  nodeId: string;
+  nodeName: string;
+  operationType: 'flatten' | 'cleanup';
+}
+
+export interface CleanupDifference {
+  element: string;
+  issue: 'position' | 'size' | 'visibility' | 'style';
+  description: string;
+  fix: {
+    nodeId: string;
+    action: 'move' | 'resize' | 'show' | 'setStyle';
+    params: Record<string, number | string>;
+  };
+}
+
+export interface CleanupValidationResult {
+  isIdentical: boolean;
+  differences?: CleanupDifference[];
+  summary?: string;
 }

@@ -76,6 +76,97 @@ export async function analyzeNaming(
 }
 
 // ============================================
+// 네이밍 규칙 Validator
+// ============================================
+
+/**
+ * 금지된 네이밍 패턴
+ */
+const BLACKLIST_PATTERNS = ['Content', 'Layout', 'Inner', 'Wrapper', 'Box', 'Item'];
+
+/**
+ * Size 적용 불가 타입
+ */
+const NO_SIZE_TYPES = ['Container', 'Section', 'TopBar', 'TabBar', 'ListItem', 'Image', 'Screen', 'Header', 'Frame'];
+
+/**
+ * 유효한 Size 값
+ */
+const VALID_SIZES = ['XS', 'SM', 'MD', 'LG', 'XL'];
+
+interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * 네이밍 결과 검증
+ */
+function validateNamingResult(suggestedName: string): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const slots = suggestedName.split('/');
+
+  // 1. Purpose 필수 (최소 2슬롯)
+  if (slots.length < 2) {
+    errors.push(`Purpose 누락: "${suggestedName}" (최소 ComponentType/Purpose 필요)`);
+  }
+
+  // 2. 금지 패턴 검사
+  const componentType = slots[0];
+  if (BLACKLIST_PATTERNS.includes(componentType)) {
+    errors.push(`금지된 타입: "${componentType}" in "${suggestedName}"`);
+  }
+  for (const pattern of BLACKLIST_PATTERNS) {
+    if (suggestedName.startsWith(pattern + '/')) {
+      errors.push(`금지된 패턴: "${suggestedName}"`);
+      break;
+    }
+  }
+
+  // 3. Size 규칙 검사
+  if (NO_SIZE_TYPES.includes(componentType)) {
+    const hasSize = slots.some(s => VALID_SIZES.includes(s));
+    if (hasSize) {
+      warnings.push(`Size 적용 불가 타입에 Size 포함: "${suggestedName}"`);
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+/**
+ * 배열 결과 전체 검증
+ */
+function validateResults(results: Array<{ suggestedName: string; nodeId: string }>): void {
+  let errorCount = 0;
+  let warningCount = 0;
+
+  for (const result of results) {
+    const validation = validateNamingResult(result.suggestedName);
+
+    for (const error of validation.errors) {
+      console.error(`[Validator] ERROR (${result.nodeId}): ${error}`);
+      errorCount++;
+    }
+
+    for (const warning of validation.warnings) {
+      console.warn(`[Validator] WARN (${result.nodeId}): ${warning}`);
+      warningCount++;
+    }
+  }
+
+  if (errorCount > 0 || warningCount > 0) {
+    console.log(`[Validator] Summary: ${errorCount} errors, ${warningCount} warnings`);
+  }
+}
+
+// ============================================
 // 컨텍스트 기반 네이밍 (전체 스크린 활용)
 // ============================================
 
@@ -87,12 +178,21 @@ function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
     const depthLabel = node.depth === 1 ? '1단계(Screen)' :
                        node.depth === 2 ? '2단계(Layout)' :
                        `${node.depth}단계(Component)`;
+
+    // 텍스트/아이콘 힌트 (있으면 표시)
+    const textsInfo = node.texts && node.texts.length > 0
+      ? `\n   - 텍스트: ${node.texts.slice(0, 3).map(t => `"${t}"`).join(', ')}${node.texts.length > 3 ? '...' : ''}`
+      : '';
+    const iconsInfo = node.iconHints && node.iconHints.length > 0
+      ? `\n   - 아이콘 힌트: ${node.iconHints.join(', ')}`
+      : '';
+
     return `${index + 1}. nodeId="${node.nodeId}"
    - 현재 이름: "${node.currentName}"
    - 타입: ${node.nodeType}
    - 깊이: ${depthLabel}
    - 위치: (${node.x}, ${node.y})
-   - 크기: ${node.width} x ${node.height}`;
+   - 크기: ${node.width} x ${node.height}${textsInfo}${iconsInfo}`;
   }).join('\n\n');
 }
 
@@ -143,6 +243,9 @@ export async function analyzeNamingWithContext(
     }
 
     console.log(`[Context Naming] Got ${results.length} results`);
+
+    // Validator 실행
+    validateResults(results);
 
     return {
       success: true,

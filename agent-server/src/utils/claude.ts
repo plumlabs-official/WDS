@@ -74,6 +74,51 @@ export async function askClaudeWithImage(
 }
 
 /**
+ * Claude API 호출 (다중 이미지 포함)
+ * - Cleanup Validator 등에서 before/after 스크린샷 비교에 사용
+ */
+export async function askClaudeWithImages(
+  prompt: string,
+  imagesBase64: string[],
+  mediaType: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' = 'image/png'
+): Promise<string> {
+  const content: Anthropic.Messages.ContentBlockParam[] = [];
+
+  // 이미지들 추가
+  for (const imageBase64 of imagesBase64) {
+    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+    content.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: mediaType,
+        data: base64Data,
+      },
+    });
+  }
+
+  // 프롬프트 추가
+  content.push({
+    type: 'text',
+    text: prompt,
+  });
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 8192,
+    messages: [
+      {
+        role: 'user',
+        content,
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((block) => block.type === 'text');
+  return textBlock?.type === 'text' ? textBlock.text : '';
+}
+
+/**
  * JSON 응답 파싱
  */
 export function parseJsonResponse<T>(response: string): T | null {

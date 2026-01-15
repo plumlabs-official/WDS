@@ -6,10 +6,11 @@
 
 | 용도 | 파일 |
 |------|------|
-| 프로젝트 구조 | `docs/INDEX.md` |
+| 프로젝트 헌법 | `AGENTS.md` |
 | 네이밍 규칙 | `.ai/design-system/naming-rules.md` |
 | 결정 + 실수 패턴 | `.ai/lessons_learned.md` |
 | 빠른 요약 | `.ai/MEMORY.md` |
+| 현재 상태 | `.ai/CONTEXT.md` |
 
 ## Workflow
 

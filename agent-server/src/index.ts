@@ -11,7 +11,8 @@ import express from 'express';
 import cors from 'cors';
 import { analyzeNaming, analyzeNamingWithContext } from './agents/naming';
 import { analyzeAutoLayout } from './agents/autolayout';
-import type { NamingRequest, AutoLayoutRequest, ContextAwareNamingRequest } from './types';
+import { validateCleanup } from './agents/cleanup-validator';
+import type { NamingRequest, AutoLayoutRequest, ContextAwareNamingRequest, CleanupValidationRequest } from './types';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -139,6 +140,33 @@ app.post('/agents/naming/context', async (req, res) => {
   }
 });
 
+/**
+ * Cleanup Validator 엔드포인트
+ * POST /agents/cleanup/validate
+ */
+app.post('/agents/cleanup/validate', async (req, res) => {
+  try {
+    const request: CleanupValidationRequest = req.body;
+    console.log(`[Cleanup Validator] Comparing screenshots for: ${request.nodeName}`);
+
+    const result = await validateCleanup(request);
+
+    if (result.success) {
+      console.log(`[Cleanup Validator] isIdentical: ${result.data?.isIdentical}`);
+    } else {
+      console.log(`[Cleanup Validator] Failed: ${result.error}`);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('[Cleanup Validator] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 // Start server - bind to 0.0.0.0 for IPv4 support
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
@@ -147,11 +175,12 @@ app.listen(PORT, '0.0.0.0', () => {
 ║       Running on http://localhost:${PORT}         ║
 ╠════════════════════════════════════════════════╣
 ║  Endpoints:                                    ║
-║  - GET  /health              Health check      ║
-║  - POST /agents/naming       Naming Agent      ║
-║  - POST /agents/autolayout   AutoLayout Agent  ║
-║  - POST /agents/naming/batch Batch naming      ║
+║  - GET  /health                Health check    ║
+║  - POST /agents/naming         Naming Agent    ║
+║  - POST /agents/autolayout     AutoLayout      ║
+║  - POST /agents/naming/batch   Batch naming    ║
 ║  - POST /agents/naming/context Context naming  ║
+║  - POST /agents/cleanup/validate Cleanup AI    ║
 ╚════════════════════════════════════════════════╝
   `);
 });

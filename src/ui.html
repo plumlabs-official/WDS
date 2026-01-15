@@ -849,7 +849,11 @@
         return;
       }
 
-      showProgress('AI 컨텍스트 네이밍 분석 중... (' + data.nodes.length + '개 노드)');
+      // 진행 패널에 상세 정보 업데이트 (task-start로 패널이 이미 표시됨)
+      if (currentPipeline && currentPipeline.steps.length === 1) {
+        currentPipeline.steps[0] = 'AI 컨텍스트 네이밍 분석 중... (' + data.nodes.length + '개 노드)';
+        renderProgress();
+      }
 
       try {
         const response = await fetch(AGENT_SERVER_URL + '/agents/naming/context', {
@@ -874,8 +878,6 @@
             error: error.message
           }
         }, '*');
-      } finally {
-        hideProgress();
       }
     }
 
@@ -892,7 +894,11 @@
         return;
       }
 
-      showProgress('AI Auto Layout 분석 중...');
+      // 진행 패널에 상세 정보 업데이트 (task-start로 패널이 이미 표시됨)
+      if (currentPipeline && currentPipeline.steps.length === 1) {
+        currentPipeline.steps[0] = 'AI Auto Layout 분석 중...';
+        renderProgress();
+      }
 
       try {
         const response = await fetch(AGENT_SERVER_URL + '/agents/autolayout', {
@@ -917,8 +923,6 @@
             error: error.message
           }
         }, '*');
-      } finally {
-        hideProgress();
       }
     }
   </script>
