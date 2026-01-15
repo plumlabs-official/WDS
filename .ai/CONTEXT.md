@@ -49,6 +49,7 @@ cd agent-server && npm run build && npm start
 ```
 .ai/
 ├── PRD.md             # 제품 요구사항
+├── SPEC.md            # 기술 사양 및 API
 ├── MEMORY.md          # 아키텍처 결정 (WHY)
 ├── CONTEXT.md         # 현재 상태 (이 파일)
 ├── lessons_learned.md # 버그 패턴 (WHAT)

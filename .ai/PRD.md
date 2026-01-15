@@ -2,7 +2,7 @@
 
 > Wellwe Design System Automator
 >
-> **기능별 상세 스펙**: `docs/INDEX.md` → 해당 기능 문서 참조
+> **기술 사양**: `SPEC.md` 참조
 
 ---
 

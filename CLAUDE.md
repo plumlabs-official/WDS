@@ -7,10 +7,11 @@
 | 용도 | 파일 |
 |------|------|
 | 프로젝트 헌법 | `AGENTS.md` |
-| 네이밍 규칙 | `.ai/design-system/naming-rules.md` |
-| 결정 + 실수 패턴 | `.ai/lessons_learned.md` |
-| 빠른 요약 | `.ai/MEMORY.md` |
+| 기술 사양/API | `.ai/SPEC.md` |
+| 아키텍처 결정 (WHY) | `.ai/MEMORY.md` |
+| 버그 패턴 (WHAT) | `.ai/lessons_learned.md` |
 | 현재 상태 | `.ai/CONTEXT.md` |
+| 네이밍 규칙 | `.ai/design-system/naming-rules.md` |
 
 ## Workflow
 
