@@ -30,27 +30,112 @@ const EXCLUDED_STATE_NAMES = [
 ];
 
 /**
- * 제외할 노드 타입 (벡터, 도형)
+ * 항상 제외할 노드 타입 (벡터, 기본 도형)
  */
-const EXCLUDED_NODE_TYPES: string[] = [
+const ALWAYS_EXCLUDED_NODE_TYPES: string[] = [
   'VECTOR',
   'ELLIPSE',
   'LINE',
-  'RECTANGLE',
   'BOOLEAN_OPERATION',
   'STAR',
   'POLYGON',
 ];
 
 /**
+ * 조건부 포함 노드 타입
+ * - TEXT: 자동생성/placeholder 이름이면 포함
+ * - RECTANGLE: 이미지 fill 있거나 50px+ 이면 포함
+ */
+const CONDITIONAL_NODE_TYPES: string[] = [
+  'TEXT',
+  'RECTANGLE',
+];
+
+/**
+ * placeholder/의미없는 텍스트 이름 패턴
+ */
+const PLACEHOLDER_TEXT_NAMES = [
+  'text',
+  'video title',
+  'users count',
+  'label',
+  'title',
+  'subtitle',
+  'description',
+  'placeholder',
+  'caption',
+  'heading',
+];
+
+/**
+ * TEXT 노드가 네이밍 대상인지 확인
+ * - 자동생성 이름 (Text 1, Text) → 대상
+ * - placeholder 이름 (Video Title, Users Count) → 대상
+ * - 의미 있는 이름 ("확인", "33/50") → 제외
+ */
+function shouldIncludeTextNode(node: SceneNode): boolean {
+  if (node.type !== 'TEXT') return false;
+
+  const nameLower = node.name.toLowerCase().trim();
+
+  // 자동생성 패턴 (Text, Text 1, Text 123)
+  if (/^text\s*\d*$/i.test(node.name)) {
+    return true;
+  }
+
+  // placeholder 이름
+  if (PLACEHOLDER_TEXT_NAMES.includes(nameLower)) {
+    return true;
+  }
+
+  // 공백 포함된 일반적 placeholder (Video Title 등)
+  for (const placeholder of PLACEHOLDER_TEXT_NAMES) {
+    if (nameLower.includes(placeholder) && nameLower.split(' ').length <= 3) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * RECTANGLE 노드가 네이밍 대상인지 확인
+ * - 이미지 fill이 있는 경우 → 대상
+ * - 50px 이상 크기 → 대상
+ * - 작은 장식 요소 → 제외
+ */
+function shouldIncludeRectangleNode(node: SceneNode): boolean {
+  if (node.type !== 'RECTANGLE') return false;
+
+  const rect = node as RectangleNode;
+
+  // 이미지 fill 확인
+  const fills = rect.fills;
+  if (Array.isArray(fills)) {
+    const hasImageFill = fills.some(f => f.type === 'IMAGE' && f.visible !== false);
+    if (hasImageFill) {
+      return true;
+    }
+  }
+
+  // 50px 이상 크기 (가로 또는 세로)
+  // 예: 배경, 구분선, 넓은 요소 등 한 쪽만 큰 요소도 포함
+  if (rect.width >= 50 || rect.height >= 50) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * 노드가 네이밍 제외 대상인지 확인
- * - 제외 조건 1: 벡터 레이어
+ * - 제외 조건 1: 벡터 레이어 (항상)
  * - 제외 조건 2: 상태값 이름 (on, off 등)
- * - 제외 조건 5: 도형 레이어
+ * - 조건부 포함: TEXT (자동생성/placeholder), RECTANGLE (이미지/50px+)
  */
 export function shouldSkipNaming(node: SceneNode): boolean {
-  // 1 & 5: 벡터/도형 레이어 제외
-  if (EXCLUDED_NODE_TYPES.includes(node.type)) {
+  // 1: 항상 제외 (벡터, 기본 도형)
+  if (ALWAYS_EXCLUDED_NODE_TYPES.includes(node.type)) {
     return true;
   }
 
@@ -58,6 +143,16 @@ export function shouldSkipNaming(node: SceneNode): boolean {
   const nameLower = node.name.toLowerCase().trim();
   if (EXCLUDED_STATE_NAMES.includes(nameLower)) {
     return true;
+  }
+
+  // 3: TEXT - 조건부 포함
+  if (node.type === 'TEXT') {
+    return !shouldIncludeTextNode(node);
+  }
+
+  // 4: RECTANGLE - 조건부 포함
+  if (node.type === 'RECTANGLE') {
+    return !shouldIncludeRectangleNode(node);
   }
 
   return false;

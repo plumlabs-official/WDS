@@ -35,7 +35,8 @@ export async function askClaude(prompt: string): Promise<string> {
 }
 
 /**
- * Claude API 호출 (이미지 포함)
+ * Claude API 호출 (이미지 포함) - 스트리밍 사용
+ * 100+ 노드 처리 시 10분 이상 걸릴 수 있어 스트리밍 필수
  */
 export async function askClaudeWithImage(
   prompt: string,
@@ -45,9 +46,12 @@ export async function askClaudeWithImage(
   // data:image/xxx;base64, prefix 제거
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-  const response = await client.messages.create({
+  // 스트리밍으로 응답 수집
+  let fullText = '';
+
+  const stream = client.messages.stream({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 8192,  // 큰 응답을 위해 증가
+    max_tokens: 32768,  // 150+ 노드 처리를 위해 증가
     messages: [
       {
         role: 'user',
@@ -63,14 +67,21 @@ export async function askClaudeWithImage(
           {
             type: 'text',
             text: prompt,
-          },
+            cache_control: { type: 'ephemeral' },  // 프롬프트 캐싱 (90% 비용 절감)
+          } as Anthropic.Messages.TextBlockParam & { cache_control: { type: string } },
         ],
       },
     ],
   });
 
-  const textBlock = response.content.find((block) => block.type === 'text');
-  return textBlock?.type === 'text' ? textBlock.text : '';
+  // 스트림에서 텍스트 수집
+  for await (const event of stream) {
+    if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+      fullText += event.delta.text;
+    }
+  }
+
+  return fullText;
 }
 
 /**

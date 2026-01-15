@@ -241,6 +241,66 @@ for (const child of frame.children) {
 
 ---
 
+## AI Agent 버그 패턴
+
+### 1. max_tokens 부족으로 JSON 파싱 실패
+**문제**: 100+ 노드 처리 시 응답이 잘려서 `Failed to parse response as array`
+
+```typescript
+// ❌ 기본값 부족
+max_tokens: 8192
+
+// ✅ 대량 노드용
+max_tokens: 32768
+```
+
+**증상**: JSON 응답이 중간에 잘림 (`"nodeId": "14436:7119` 로 끝남)
+
+### 2. 대량 토큰 요청 시 SDK 타임아웃
+**문제**: max_tokens가 크면 SDK가 10분 이상 걸릴 것으로 예측하고 에러
+
+```typescript
+// ❌ 일반 요청
+const response = await client.messages.create({ max_tokens: 32768, ... });
+
+// ✅ 스트리밍 사용
+const stream = client.messages.stream({ max_tokens: 32768, ... });
+let fullText = '';
+for await (const event of stream) {
+  if (event.type === 'content_block_delta') {
+    fullText += event.delta.text;
+  }
+}
+```
+
+**에러 메시지**: `Streaming is strongly recommended for operations that may token longer than 10 minutes`
+
+### 3. 후처리에서 "원래 이름" vs "AI 제안 이름" 혼동
+**문제**: 부모-자식 동일 이름 검사 시 원래 부모 이름과 비교하면 작동 안 함
+
+```typescript
+// ❌ 잘못된 로직 - 원래 부모 이름과 비교
+const parentName = node.parentName;  // "header" (원래 이름)
+if (suggestedName === parentName) { ... }  // "Header/Main" !== "header"
+
+// ✅ 올바른 로직 - 부모의 AI 제안 이름과 비교
+const parentSuggestedName = suggestedNameMap.get(parentNodeId);  // "Header/Main"
+if (suggestedName === parentSuggestedName) { ... }  // "Header/Main" === "Header/Main" ✓
+```
+
+**핵심**: 후처리 로직은 항상 **변환 후** 데이터 기준으로 설계
+
+### 4. API 비용 예측
+| 노드 수 | 입력 토큰 | 출력 토큰 | 예상 비용 |
+|---------|-----------|-----------|-----------|
+| 50개 | ~7K | ~5K | ~$0.10 |
+| 100개 | ~12K | ~10K | ~$0.18 |
+| 150개 | ~15K | ~15K | ~$0.27 |
+
+**교훈**: 테스트는 작은 프레임(30~50노드)으로 먼저 검증
+
+---
+
 ## 변경 이력
 
 | 날짜 | 도메인 | 내용 |
@@ -253,3 +313,7 @@ for (const child of frame.children) {
 | 2026-01-15 | Component Break | 크기 복원 로직 추가 |
 | 2026-01-15 | Component Break | 중첩 보조 레이어 스케일링 추가 |
 | 2026-01-15 | 문서 | 가이드 기준 역할 분리 (결정→MEMORY, 버그→여기) |
+| 2026-01-16 | AI Agent | max_tokens 부족 패턴 추가 |
+| 2026-01-16 | AI Agent | 스트리밍 필수 패턴 추가 |
+| 2026-01-16 | AI Agent | 후처리 원래/제안 이름 혼동 패턴 추가 |
+| 2026-01-16 | AI Agent | API 비용 예측 가이드 추가 |

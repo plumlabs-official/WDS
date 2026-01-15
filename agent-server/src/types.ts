@@ -43,6 +43,8 @@ export interface ContextAwareNamingRequest {
   nodes: Array<{
     nodeId: string;
     currentName: string;
+    parentNodeId?: string | null;  // 부모 노드 ID (후처리에서 부모 suggestedName 찾기용)
+    parentName?: string | null;  // 부모 노드 이름 (AI 프롬프트용)
     nodeType: string;
     x: number;       // 스크린 내 상대 위치
     y: number;

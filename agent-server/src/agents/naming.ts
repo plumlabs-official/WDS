@@ -95,9 +95,9 @@ const VALID_INTENTS = ['Primary', 'Secondary', 'Danger', 'Warning', 'Success', '
 const VALID_SHAPES = ['Filled', 'Outlined', 'Ghost'];
 
 /**
- * 버튼 Size 값 (픽셀)
+ * 버튼 Size - 실측치 사용 (숫자만 허용)
+ * 표준값 검증 제거: 나중에 DS 생성 시 빈도수 기반으로 통합
  */
-const VALID_BUTTON_SIZES = ['32', '36', '44', '48', '56'];
 
 /**
  * 버튼 State 값
@@ -141,9 +141,9 @@ function validateButtonNaming(suggestedName: string): ValidationResult {
     errors.push(`잘못된 Shape: "${shape}" in "${suggestedName}"`);
   }
 
-  // Size 검증 (숫자)
-  if (!VALID_BUTTON_SIZES.includes(size)) {
-    warnings.push(`비표준 Size: "${size}" in "${suggestedName}" (권장: 32, 44, 48, 56)`);
+  // Size 검증 (숫자인지만 확인, 실측치 허용)
+  if (!/^\d+$/.test(size)) {
+    errors.push(`Size는 숫자여야 함: "${size}" in "${suggestedName}"`);
   }
 
   // 추가 슬롯 검증 (State, Icon)
@@ -238,6 +238,104 @@ function validateResults(results: Array<{ suggestedName: string; nodeId: string 
 }
 
 // ============================================
+// 후처리 (Post-processing)
+// ============================================
+
+/**
+ * 언더스코어를 슬래시로 변환
+ * Card_Header → Card/Header
+ */
+function convertUnderscoreToSlash(name: string): string {
+  // 이미 슬래시가 있으면 언더스코어 부분만 변환
+  // 예: Card/Header_Left → Card/Header/Left
+  return name.replace(/_/g, '/');
+}
+
+/**
+ * 부모-자식 동일 이름 수정
+ * 부모가 "Section/Main"이고 자식도 "Section/Main"이면 → "Container/Inner" 등으로 변경
+ */
+function fixParentChildSameName(
+  suggestedName: string,
+  parentName: string | null | undefined
+): string {
+  if (!parentName) return suggestedName;
+
+  // 동일 이름인지 확인
+  if (suggestedName === parentName) {
+    // 타입 추출 (첫 번째 슬래시 전)
+    const parts = suggestedName.split('/');
+    const type = parts[0];
+
+    // 대체 이름 생성
+    // Section → Container/Content
+    // Header → Container/HeaderContent
+    // Card → Container/CardContent
+    const typeToReplacement: Record<string, string> = {
+      'Section': 'Container/Content',
+      'Header': 'Container/HeaderContent',
+      'Card': 'Container/CardContent',
+      'TabBar': 'Container/TabItems',
+      'TopBar': 'Container/TopContent',
+    };
+
+    const replacement = typeToReplacement[type] || `Container/${type}Content`;
+    console.log(`[PostProcess] 부모-자식 동일 이름 수정: "${suggestedName}" → "${replacement}"`);
+    return replacement;
+  }
+
+  return suggestedName;
+}
+
+/**
+ * 결과 후처리
+ * - 언더스코어→슬래시 변환
+ * - 부모-자식 동일 이름 수정
+ */
+function postProcessResults(
+  results: ContextAwareNamingResult['results'],
+  nodes: ContextAwareNamingRequest['nodes']
+): ContextAwareNamingResult['results'] {
+  // nodeId → parentNodeId 맵 생성
+  const parentNodeIdMap = new Map<string, string | null | undefined>();
+  for (const node of nodes) {
+    parentNodeIdMap.set(node.nodeId, node.parentNodeId);
+  }
+
+  // nodeId → suggestedName 맵 생성 (부모의 AI 제안 이름 찾기용)
+  const suggestedNameMap = new Map<string, string>();
+  for (const result of results) {
+    suggestedNameMap.set(result.nodeId, result.suggestedName);
+  }
+
+  return results.map(result => {
+    let name = result.suggestedName;
+
+    // 1. 언더스코어 → 슬래시 변환
+    const beforeUnderscore = name;
+    name = convertUnderscoreToSlash(name);
+    if (name !== beforeUnderscore) {
+      console.log(`[PostProcess] 언더스코어 변환: "${beforeUnderscore}" → "${name}"`);
+    }
+
+    // 2. 부모-자식 동일 이름 수정 (부모의 AI 제안 이름과 비교)
+    const parentNodeId = parentNodeIdMap.get(result.nodeId);
+    if (parentNodeId) {
+      const parentSuggestedName = suggestedNameMap.get(parentNodeId);
+      name = fixParentChildSameName(name, parentSuggestedName);
+    }
+
+    // 결과 맵 업데이트 (다른 노드의 부모가 될 수 있으므로)
+    suggestedNameMap.set(result.nodeId, name);
+
+    return {
+      ...result,
+      suggestedName: name,
+    };
+  });
+}
+
+// ============================================
 // 컨텍스트 기반 네이밍 (전체 스크린 활용)
 // ============================================
 
@@ -257,13 +355,17 @@ function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
     const iconsInfo = node.iconHints && node.iconHints.length > 0
       ? `\n   - 아이콘 힌트: ${node.iconHints.join(', ')}`
       : '';
+    // 부모 이름 (있으면 표시 - 동일 이름 방지용)
+    const parentInfo = node.parentName
+      ? `\n   - 부모 이름: "${node.parentName}" ⚠️ 이 이름과 동일하면 안됨`
+      : '';
 
     return `${index + 1}. nodeId="${node.nodeId}"
    - 현재 이름: "${node.currentName}"
    - 타입: ${node.nodeType}
    - 깊이: ${depthLabel}
    - 위치: (${node.x}, ${node.y})
-   - 크기: ${node.width} x ${node.height}${textsInfo}${iconsInfo}`;
+   - 크기: ${node.width} x ${node.height}${parentInfo}${textsInfo}${iconsInfo}`;
   }).join('\n\n');
 }
 
@@ -315,12 +417,15 @@ export async function analyzeNamingWithContext(
 
     console.log(`[Context Naming] Got ${results.length} results`);
 
+    // 후처리 실행 (언더스코어 변환, 부모-자식 동일 이름 수정)
+    const processedResults = postProcessResults(results, request.nodes);
+
     // Validator 실행
-    validateResults(results);
+    validateResults(processedResults);
 
     return {
       success: true,
-      data: { results },
+      data: { results: processedResults },
     };
   } catch (error) {
     console.error('[Context Naming] Error:', error);

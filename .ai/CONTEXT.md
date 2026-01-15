@@ -2,7 +2,7 @@
 
 > 현재 작업 상태 및 세션 정보
 >
-> 마지막 업데이트: 2026-01-15
+> 마지막 업데이트: 2026-01-16
 
 ---
 
@@ -10,27 +10,37 @@
 
 | 항목 | 값 |
 |------|-----|
-| URL | https://www.figma.com/design/s4GdImD87fQsWwnRYQVbWV/App?node-id=13563-1488 |
+| URL | https://www.figma.com/design/s4GdImD87fQsWwnRYQVbWV/App?node-id=14436-6854 |
 | fileKey | `s4GdImD87fQsWwnRYQVbWV` |
-| nodeId | `13563:1488` |
+| nodeId | `14436:6854` (테스트용 챌린지 선택 화면) |
 | 페이지 | [All] (전체 플로우 모음) |
 
 ---
 
 ## 현재 작업
 
-### 완료됨 (2026-01-15)
-- 버튼 네이밍 구조 개편: Intent/Shape/Size 분리
-  - 상세 논의: `reference/decisions/button-naming-discussion-2026-01-15.md`
-- 문서 구조 간소화 (가이드 기준 88점)
-- SPEC.md, SKILL.md 추가
+### 완료됨 (2026-01-16)
+- **네이밍 5개 이슈 수정** (검증 대기)
+  - parentNodeId 전달 → 부모 suggestedName과 비교
+  - 언더스코어→슬래시 후처리
+  - RECTANGLE 조건 완화 (`&&` → `||`)
+- **API 안정화**
+  - max_tokens: 32768
+  - 스트리밍 방식 적용 (타임아웃 해결)
+- **프롬프트 캐싱 적용** (`cache_control: ephemeral`)
 
-### 대기 중
-- Figma에서 새 네이밍 구조 테스트
+### 검증 대기 (크레딧 충전 필요)
+- 부모-자식 동일 이름 후처리 (`Header/Main > Header/Main` 해결 여부)
+- 프롬프트 캐싱 작동 확인
+
+### 다음 세션 TODO
+1. API 크레딧 충전
+2. 네이밍 후처리 검증
+3. Haiku 모델 테스트 (67% 비용 절감)
+4. 남은 이슈: Icon/User 오분류, 자동생성 이름
 
 ### 보류됨
-- GPT 리서치 추가 제안 (`reference/DS/GPT-리서치-요약.md`)
-  - Patterns 레이어, StateLayer 토큰 → 실무 필요 시 검토
+- GPT 리서치 추가 제안 → 실무 필요 시 검토
 
 ---
 
@@ -69,7 +79,8 @@ agent-server/prompts/  # AI 프롬프트
 
 ## 다음 세션 참고
 
-1. **버튼 네이밍**: `Button/Intent/Shape/Size` 구조 (기존 Purpose/Variant 폐기)
-2. **규칙 확인 순서**: MEMORY.md → design-system/*.md
-3. **버그 패턴**: lessons_learned.md
-4. **결정 히스토리**: reference/decisions/
+1. **API 크레딧 충전 필수** (Anthropic 콘솔)
+2. **버튼 네이밍**: `Button/Intent/Shape/Size` 구조
+3. **비용 절약 플랜**: `.claude/plans/gentle-exploring-quill.md`
+4. **버그 패턴**: lessons_learned.md (AI Agent 섹션 추가됨)
+5. **Haiku 모델**: $1/$5 (Sonnet $3/$15의 1/3 가격)
