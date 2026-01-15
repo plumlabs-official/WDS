@@ -85,14 +85,29 @@ export async function analyzeNaming(
 const BLACKLIST_PATTERNS = ['Content', 'Layout', 'Inner', 'Wrapper', 'Box', 'Item'];
 
 /**
- * Size 적용 불가 타입
+ * 버튼 Intent 값
  */
-const NO_SIZE_TYPES = ['Container', 'Section', 'TopBar', 'TabBar', 'ListItem', 'Image', 'Screen', 'Header', 'Frame'];
+const VALID_INTENTS = ['Primary', 'Secondary', 'Danger', 'Warning', 'Success', 'Info', 'Normal'];
 
 /**
- * 유효한 Size 값
+ * 버튼 Shape 값
  */
-const VALID_SIZES = ['XS', 'SM', 'MD', 'LG', 'XL'];
+const VALID_SHAPES = ['Filled', 'Outlined', 'Ghost'];
+
+/**
+ * 버튼 Size 값 (픽셀)
+ */
+const VALID_BUTTON_SIZES = ['32', '36', '44', '48', '56'];
+
+/**
+ * 버튼 State 값
+ */
+const VALID_STATES = ['Disabled', 'Loading', 'Focus', 'Pressed', 'Hover'];
+
+/**
+ * 버튼 Icon 값
+ */
+const VALID_ICONS = ['IconLeft', 'IconRight', 'IconOnly'];
 
 interface ValidationResult {
   valid: boolean;
@@ -101,35 +116,40 @@ interface ValidationResult {
 }
 
 /**
- * 네이밍 결과 검증
+ * 버튼 네이밍 검증 (Intent/Shape/Size 구조)
  */
-function validateNamingResult(suggestedName: string): ValidationResult {
+function validateButtonNaming(suggestedName: string): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const slots = suggestedName.split('/');
 
-  // 1. Purpose 필수 (최소 2슬롯)
-  if (slots.length < 2) {
-    errors.push(`Purpose 누락: "${suggestedName}" (최소 ComponentType/Purpose 필요)`);
+  // Button/Intent/Shape/Size[/State][/Icon]
+  if (slots.length < 4) {
+    errors.push(`버튼 형식 오류: "${suggestedName}" (Button/Intent/Shape/Size 필요)`);
+    return { valid: false, errors, warnings };
   }
 
-  // 2. 금지 패턴 검사
-  const componentType = slots[0];
-  if (BLACKLIST_PATTERNS.includes(componentType)) {
-    errors.push(`금지된 타입: "${componentType}" in "${suggestedName}"`);
-  }
-  for (const pattern of BLACKLIST_PATTERNS) {
-    if (suggestedName.startsWith(pattern + '/')) {
-      errors.push(`금지된 패턴: "${suggestedName}"`);
-      break;
-    }
+  const [type, intent, shape, size, ...rest] = slots;
+
+  // Intent 검증
+  if (!VALID_INTENTS.includes(intent)) {
+    errors.push(`잘못된 Intent: "${intent}" in "${suggestedName}"`);
   }
 
-  // 3. Size 규칙 검사
-  if (NO_SIZE_TYPES.includes(componentType)) {
-    const hasSize = slots.some(s => VALID_SIZES.includes(s));
-    if (hasSize) {
-      warnings.push(`Size 적용 불가 타입에 Size 포함: "${suggestedName}"`);
+  // Shape 검증
+  if (!VALID_SHAPES.includes(shape)) {
+    errors.push(`잘못된 Shape: "${shape}" in "${suggestedName}"`);
+  }
+
+  // Size 검증 (숫자)
+  if (!VALID_BUTTON_SIZES.includes(size)) {
+    warnings.push(`비표준 Size: "${size}" in "${suggestedName}" (권장: 32, 44, 48, 56)`);
+  }
+
+  // 추가 슬롯 검증 (State, Icon)
+  for (const slot of rest) {
+    if (!VALID_STATES.includes(slot) && !VALID_ICONS.includes(slot)) {
+      warnings.push(`알 수 없는 슬롯: "${slot}" in "${suggestedName}"`);
     }
   }
 
@@ -138,6 +158,57 @@ function validateNamingResult(suggestedName: string): ValidationResult {
     errors,
     warnings,
   };
+}
+
+/**
+ * 일반 컴포넌트 네이밍 검증
+ */
+function validateGeneralNaming(suggestedName: string): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const slots = suggestedName.split('/');
+
+  // 최소 2슬롯 (Type/Context)
+  if (slots.length < 2) {
+    errors.push(`Context 누락: "${suggestedName}" (최소 Type/Context 필요)`);
+  }
+
+  // 금지 패턴 검사
+  const componentType = slots[0];
+  if (BLACKLIST_PATTERNS.includes(componentType)) {
+    errors.push(`금지된 타입: "${componentType}" in "${suggestedName}"`);
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+/**
+ * 네이밍 결과 검증 (타입에 따라 분기)
+ */
+function validateNamingResult(suggestedName: string): ValidationResult {
+  const slots = suggestedName.split('/');
+  const componentType = slots[0];
+
+  // 금지 패턴 먼저 검사
+  if (BLACKLIST_PATTERNS.includes(componentType)) {
+    return {
+      valid: false,
+      errors: [`금지된 타입: "${componentType}" in "${suggestedName}"`],
+      warnings: [],
+    };
+  }
+
+  // 버튼은 별도 검증
+  if (componentType === 'Button') {
+    return validateButtonNaming(suggestedName);
+  }
+
+  // 일반 컴포넌트 검증
+  return validateGeneralNaming(suggestedName);
 }
 
 /**

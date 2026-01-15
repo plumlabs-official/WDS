@@ -60,10 +60,14 @@ const VALID_SEMANTIC_TYPES = [
   'Screen',
   // 구조 컨테이너 (Layout, Content 금지!)
   'TopBar', 'TabBar', 'Section', 'Container',
-  // UI 컴포넌트 (Image 추가)
+  // UI 컴포넌트
   'Card', 'Button', 'Input', 'Avatar', 'Icon', 'Image', 'ListItem', 'TabItem',
   'Badge', 'Tag', 'Header', 'Toggle', 'Checkbox', 'ProgressBar',
   'Timer', 'HomeIndicator', 'Frame',
+  // 피드백
+  'Toast', 'Modal', 'Snackbar', 'Overlay',
+  // 로딩
+  'Skeleton', 'Spinner',
 ];
 
 /**

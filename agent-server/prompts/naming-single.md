@@ -2,53 +2,75 @@
 Figma 프레임 스크린샷을 분석하여 시맨틱 이름을 제안해주세요.
 
 ## 네이밍 형식
-```
-ComponentType/Purpose/Variant/Size/State
-```
-| 슬롯 | 필수 | 설명 |
-|------|------|------|
-| ComponentType | ✅ | 컴포넌트 타입 |
-| Purpose | ✅ | 역할/용도 |
-| Variant | ❌ | 시각적 스타일 (Default 생략) |
-| Size | ❌ | 크기 (특정 타입만, MD 생략) |
-| State | ❌ | UI 상태 (Default 생략) |
 
-## 컴포넌트 타입
+### 버튼 (Button)
+```
+Button/Intent/Shape/Size[/State][/Icon]
+```
 
+### 일반 컴포넌트
+```
+Type/Context[/State]
+```
+
+---
+
+## 버튼 네이밍
+
+### Intent (의미/중요도)
+| Intent | 의미 | 시각적 특징 |
+|--------|------|------------|
+| Primary | 주요 행동 | 메인 컬러, 강조 |
+| Secondary | 보조 행동 | 보조 컬러 |
+| Danger | 위험/삭제 | 빨간색 계열 |
+| Warning | 경고 | 노란색 계열 |
+| Success | 성공 | 초록색 계열 |
+| Info | 정보 | 파란색 계열 |
+| Normal | 일반 | 회색/무채색 |
+
+### Shape (시각적 스타일)
+| Shape | 특징 |
+|-------|------|
+| Filled | 배경색 채워짐 |
+| Outlined | 테두리만 |
+| Ghost | 배경/테두리 없음 |
+
+### Size (높이 px)
+- 32, 44, 48, 56
+
+### State/Icon (선택)
+- State: Disabled, Loading, Focus
+- Icon: IconLeft, IconRight, IconOnly
+
+---
+
+## 일반 컴포넌트
+
+### 타입
 | 카테고리 | 타입 |
 |---------|------|
 | 최상위 | Screen |
 | 구조 | TopBar, TabBar, Section, Container |
-| UI | Card, Button, Input, Avatar, Icon, Image, ListItem, TabItem, Badge, Tag, Header |
+| UI | Card, Input, Avatar, Icon, Image, ListItem, TabItem, Badge, Tag, Header |
 | 피드백 | Toast, Modal, Snackbar, Overlay |
 | 로딩 | Skeleton, Spinner |
 | 기타 | Toggle, Checkbox, ProgressBar, Timer, HomeIndicator, Frame |
 
-## Purpose 추론
-
-| 타입 | Purpose |
+### Context 예시
+| 타입 | Context |
 |------|---------|
-| Button | CTA, Submit, Cancel, Close, Back, Next, Share, Like, More |
-| Card/Section | Profile, Product, Feed, Challenge, Stats, Banner |
-| Container | ButtonArea, IconGroup, ActionBar, InfoSection |
-| Image | Avatar, Banner, Product, Thumbnail, Background, Logo |
+| Card/Section | Profile, Product, Feed, Challenge |
+| Container | ButtonArea, IconGroup, ActionBar |
+| Image | Avatar, Banner, Thumbnail |
 
-## Variant
-Primary (녹색 #00cc61), Secondary (회색), Outline (테두리), Ghost (투명)
-
-## Size 규칙
-- **적용 O**: Button, Input, Avatar, Card, Badge, Icon, Tag
-- **적용 X**: Container, Section, TopBar, TabBar, ListItem, Image, Screen
-
-## UI 상태
-- **허용**: Default, Pressed, Hover, Disabled, Loading, Focus
-- **금지**: Authenticated, Empty, Success (비즈니스 상태)
+---
 
 ## 금지 사항
 1. `Layout/...` ❌ → TopBar/Main ✓
 2. `Content` ❌ → Container/[역할] ✓
-3. Purpose 생략 ❌ → Button/CTA/Primary ✓
-4. 비즈니스 상태 ❌
+3. 모호한 이름 ❌ → Inner, Item, Wrapper 금지
+
+---
 
 ## 노드 정보
 - 현재 이름: {{currentName}}
@@ -57,16 +79,31 @@ Primary (녹색 #00cc61), Secondary (회색), Outline (테두리), Ghost (투명
 - 자식 수: {{childrenCount}}
 
 ## 응답 형식
+
+### 버튼인 경우
 ```json
 {
-  "suggestedName": "Button/CTA/Primary/LG",
+  "suggestedName": "Button/Primary/Filled/48",
   "componentType": "Button",
-  "purpose": "CTA",
-  "variant": "Primary",
-  "size": "LG",
+  "intent": "Primary",
+  "shape": "Filled",
+  "size": "48",
   "state": null,
+  "icon": null,
   "confidence": 0.95,
-  "reasoning": "녹색 배경의 주요 행동 유도 버튼"
+  "reasoning": "녹색 배경의 주요 행동 버튼"
+}
+```
+
+### 일반 컴포넌트인 경우
+```json
+{
+  "suggestedName": "Card/Profile",
+  "componentType": "Card",
+  "context": "Profile",
+  "state": null,
+  "confidence": 0.90,
+  "reasoning": "프로필 정보를 담은 카드"
 }
 ```
 
