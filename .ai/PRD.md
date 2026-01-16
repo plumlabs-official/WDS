@@ -2,6 +2,8 @@
 
 > Wellwe Design System Automator
 >
+> Last updated: 2026-01-16 | v2.0.0
+>
 > **기술 사양**: `SPEC.md` 참조
 
 ---
@@ -115,8 +117,12 @@ Free layout → Vertical, gap=16, padding=16
 
 ---
 
-## References
+---
 
-- `docs/INDEX.md`: 프로젝트 구조
-- `.ai/MEMORY.md`: 의사결정 기록
-- `reference/`: 베스트 프랙티스 PDF
+## 관련 문서
+
+| 문서 | 역할 |
+|------|------|
+| [SPEC.md](SPEC.md) | 기술 사양 및 API 명세 |
+| [MEMORY.md](MEMORY.md) | 의사결정 기록 |
+| [design-system/naming-rules.md](design-system/naming-rules.md) | 네이밍 규칙 |

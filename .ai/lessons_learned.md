@@ -2,6 +2,8 @@
 
 > 버그 패턴 및 실수 방지 기록 (WHAT)
 >
+> Last updated: 2026-01-16 | v2.0.0
+>
 > **결정사항(WHY)은 `MEMORY.md` 참조**
 
 ---
@@ -559,29 +561,7 @@ for (const child of frame.children) {
 
 ## 체크리스트
 
-### 네이밍 작업 전
-- [ ] Layout 타입 사용하지 않았는가?
-- [ ] 모든 컴포넌트에 Purpose가 있는가?
-- [ ] Size가 적용 가능한 컴포넌트에만 적용했는가?
-
-### 코드 수정 전
-- [ ] 해당 파일을 먼저 읽었는가?
-- [ ] ES6+ 전용 문법 사용하지 않았는가?
-
-### 빌드 후 테스트 전
-- [ ] **Figma 플러그인 빌드**: `npm run build` (루트)
-- [ ] **Agent Server 빌드**: `cd agent-server && npm run build`
-- [ ] **통합 빌드**: `npm run build:all` (둘 다)
-- [ ] **서버 재시작**: 포트 3001 프로세스 종료 후 재시작
-
-> ⚠️ UI 변경 후 Figma 플러그인 빌드 누락 주의!
-
-### Cleanup 작업 전
-- [ ] 좌표 계산에서 절대/상대 구분했는가?
-- [ ] children 배열 복사 후 순회하는가?
-- [ ] 노드 삭제 후 접근할 속성은 미리 저장했는가?
-- [ ] `getNodeById` 대신 `getNodeByIdAsync` 사용했는가? (dynamic-page 모드)
-- [ ] 캐시 clear가 진입점 함수에만 있는가? (반복 호출 함수 내부 금지)
+> 작업 전 체크리스트는 `CLAUDE.md` 참조 (세션 시작 시 자동 로드)
 
 ---
 
@@ -715,3 +695,13 @@ npm run build:all  # 플러그인 + 서버
 | 2026-01-16 | Cleanup | 병합 후 삭제된 노드 접근 패턴 추가 |
 | 2026-01-16 | Cleanup | getNodeByIdAsync 필수 사용 패턴 추가 |
 | 2026-01-16 | Cleanup | 캐시 clear 위치 패턴 추가 |
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|------|------|
+| [MEMORY.md](MEMORY.md) | 의사결정 배경 (WHY) |
+| [SKILL.md](SKILL.md) | 반복 작업 패턴 |
+| [SPEC.md](SPEC.md) | API 명세 |

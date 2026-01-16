@@ -1,6 +1,9 @@
 # Naming Rules - 네이밍 규칙 가이드
 
 > 이 문서는 AI 네이밍 에이전트와 개발자가 **반드시 준수해야 하는** 네이밍 규칙을 정의합니다.
+>
+> Last updated: 2026-01-16 | v2.0.0
+>
 > **2026-01-15 개편**: Intent/Shape 분리 구조로 변경
 
 ---
@@ -209,3 +212,12 @@ Section/Challenge (컨테이너)
 | 2026-01-15 | Purpose/Variant 구조 폐기 |
 | 2026-01-15 | 버튼 전용 상세 규칙 추가 |
 | 2026-01-15 | Focus 상태 추가, Ghost Shape 추가 |
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|------|------|
+| [../MEMORY.md](../MEMORY.md) | 규칙 결정 배경 (WHY) |
+| [../lessons_learned.md](../lessons_learned.md) | 네이밍 버그 패턴 |

@@ -2,6 +2,8 @@
 
 > 이 프로젝트의 반복 작업 패턴
 >
+> Last updated: 2026-01-16 | v2.0.0
+>
 > AI가 `/advise` 또는 자동으로 참조
 
 ---
@@ -149,3 +151,13 @@ const base64 = figma.base64Encode(bytes);
 ### 릴리즈 전
 - [ ] CONTEXT.md 현재 상태 업데이트
 - [ ] lessons_learned.md 버그 패턴 추가
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|------|------|
+| [lessons_learned.md](lessons_learned.md) | 버그 패턴 주의사항 |
+| [SPEC.md](SPEC.md) | API 명세 |
+| [CONTEXT.md](CONTEXT.md) | 현재 작업 상태 |

@@ -1,6 +1,8 @@
 # Figma MCP Rules
 
 > 피그마 레이어 → 코드 매핑 규칙
+>
+> Last updated: 2026-01-16 | v2.0.0
 
 ---
 

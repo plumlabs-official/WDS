@@ -1,6 +1,8 @@
 # Project Constitution
 
 > Wellwe Design System Automator - AI 행동 지침
+>
+> Last updated: 2026-01-16 | v2.0.0
 
 ## Tech Stack
 
@@ -18,10 +20,7 @@
 ## Forbidden
 
 ### 네이밍 금지 사항
-- `Layout` 타입 사용 금지
-- `Content` 단독 사용 금지
-- Purpose 없는 네이밍 금지 (예: `Button/Primary` ❌)
-- 비즈니스 상태 추론 금지 (Authenticated, Empty, Loading 등)
+> 상세: `.ai/design-system/naming-rules.md` → "절대 금지 사항" 섹션
 
 ### 코드 작성 금지 사항
 - 읽지 않은 파일 수정 제안
@@ -51,10 +50,11 @@
 
 ## Quick Commands
 
+> 상세: `.ai/SKILL.md` → "빌드" 섹션
+
 | 명령 | 설명 |
 |------|------|
-| `npm run build` | Figma 플러그인 빌드 |
-| `cd agent-server && npm start` | Agent Server 실행 |
+| `npm run build:all` | 통합 빌드 (플러그인 + 서버) |
 | `/context` | 토큰 사용량 확인 |
 
 ---
@@ -92,3 +92,14 @@
 - 모호하면 추측 말고 **질문**
 - 시니어 개발자처럼 품질 체크
 - 테스트 작성 → 문서화 병행
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|------|------|
+| [CLAUDE.md](CLAUDE.md) | 작업 지침 및 체크리스트 |
+| [.ai/MEMORY.md](.ai/MEMORY.md) | 의사결정 기록 (WHY) |
+| [.ai/lessons_learned.md](.ai/lessons_learned.md) | 버그 패턴 및 해결책 (WHAT) |
+| [.ai/design-system/naming-rules.md](.ai/design-system/naming-rules.md) | 네이밍 규칙 상세 |

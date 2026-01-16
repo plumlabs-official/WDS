@@ -2,6 +2,8 @@
 
 > 장기 의사결정 기록 (WHY)
 >
+> Last updated: 2026-01-16 | v2.0.0
+>
 > 참조: `reference/PM/바이브 코딩 및 WDS 프로젝트 문서 관리 가이드.pdf`
 
 ---
@@ -37,13 +39,7 @@
 - **상세 논의**: `reference/decisions/button-naming-discussion-2026-01-15.md`
 
 ### Intent/Shape/Size 정의
-```
-Intent: Primary, Secondary, Danger, Warning, Success, Info, Normal
-Shape: Filled, Outlined, Ghost
-Size: 32, 44, 48, 56 (높이 px)
-State: Disabled, Loading, Focus (Default는 생략)
-Icon: IconLeft, IconRight, IconOnly
-```
+> 상세 규칙: `.ai/design-system/naming-rules.md` 참조
 
 ### Width 제외 결정
 - Width(Fixed, Fill, Hug)는 이름에서 제외
@@ -78,11 +74,9 @@ Icon: IconLeft, IconRight, IconOnly
 ```
 
 ### Section vs Card vs ListItem 구분
-| 타입 | 역할 | 예시 |
-|------|------|------|
-| Section | 여러 아이템을 그룹화 | `Section/Challenge` |
-| Card | 독립적인 정보 단위 | `Card/Challenge` |
-| ListItem | 리스트 내 개별 행 | `ListItem/Challenge` |
+> 상세 기준: `.ai/design-system/naming-rules.md` 참조
+
+- **이유**: 디자인 시스템에서 명확한 컴포넌트 분류 필요
 
 ### AI 대상 노드 타입 확대
 - 기존: FRAME only → 변경: FRAME, GROUP, COMPONENT, INSTANCE
@@ -182,3 +176,13 @@ direction = horizontalDiff > verticalDiff ? 'HORIZONTAL' : 'VERTICAL';
 - 보조 레이어 (Ratio, Constraints, Spacer): 삭제
 - 일반 레이어 (Shape 등): 원본 크기 기준 스케일 다운
 - cleanup 전 Auto Layout 해제로 HUG 방지
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|------|------|
+| [lessons_learned.md](lessons_learned.md) | 구현 시 발생한 버그 패턴 |
+| [SPEC.md](SPEC.md) | 기술 사양 및 API 명세 |
+| [design-system/naming-rules.md](design-system/naming-rules.md) | 네이밍 규칙 상세 |

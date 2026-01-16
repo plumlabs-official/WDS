@@ -1,6 +1,8 @@
 # Auto Layout Rules
 
 > AI Auto Layout 에이전트가 준수해야 하는 규칙
+>
+> Last updated: 2026-01-16 | v2.0.0
 
 ---
 

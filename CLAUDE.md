@@ -1,6 +1,8 @@
 # Claude Code Instructions
 
 > 이 파일은 Claude Code 세션 시작 시 자동으로 로드됩니다.
+>
+> Last updated: 2026-01-16 | v2.0.0
 
 ## Quick Reference
 
@@ -13,6 +15,21 @@
 | 반복 작업 패턴 | `.ai/SKILL.md` |
 | 현재 상태 | `.ai/CONTEXT.md` |
 | 네이밍 규칙 | `.ai/design-system/naming-rules.md` |
+
+## Auto Reference Rules
+
+> 작업 유형에 따라 **먼저 읽어야 할 문서**. 실수 방지를 위한 자동 참조.
+
+| 요청 유형 | 문서 | 읽을 범위 |
+|----------|------|----------|
+| Cleanup/병합 작업 | `.ai/lessons_learned.md` | "Cleanup 버그 패턴" 섹션 |
+| Naming 작업 | `.ai/design-system/naming-rules.md` | 전체 |
+| AI Agent/서버 수정 | `.ai/lessons_learned.md` | "AI Agent 버그 패턴" 섹션 |
+| 빌드/디버깅 | `.ai/SKILL.md` | "빌드", "디버깅" 섹션 |
+| 문서 구조 변경 | `AGENTS.md` | "문서 관리 원칙" 섹션 |
+| 새 기능 설계 | `.ai/MEMORY.md` | 관련 도메인 섹션 |
+
+**규칙**: 해당 작업 시작 전, 위 문서의 지정 섹션을 먼저 읽고 진행
 
 ## Workflow
 
@@ -38,21 +55,22 @@
 - [ ] 좌표 계산에서 절대/상대 구분
 
 ### Naming 작업 시
-- [ ] "Layout" 타입 사용 금지 → TopBar, Section 등 구체적 이름
-- [ ] Purpose 필수: `Button/Primary` ❌ → `Button/CTA/Primary` ✅
-- [ ] Container에 Size 적용 금지: `Container/ButtonArea/LG` ❌
-- [ ] **비즈니스 상태 추론 금지**: Authenticated, Empty, Loading 등 사용 금지
+> 상세: `.ai/design-system/naming-rules.md`
+
+- [ ] Layout, Content 타입 금지
+- [ ] 비즈니스 상태 추론 금지 (Authenticated, Empty 등)
 
 ### AI Agent 작업 시 (agent-server 수정)
-- [ ] max_tokens: 32768 (100+ 노드 처리 시)
-- [ ] 대량 요청 시 스트리밍 필수 (`client.messages.stream`)
-- [ ] 후처리: **원래 이름** vs **AI 제안 이름** 구분 (제안 이름끼리 비교)
+> 상세: `.ai/lessons_learned.md` → "AI Agent 버그 패턴"
+
+- [ ] max_tokens: 32768 (100+ 노드)
+- [ ] 스트리밍 필수
 
 ### 빌드 후 테스트 전
-- [ ] UI/플러그인 변경 → `npm run build` (루트)
-- [ ] 서버 변경 → `cd agent-server && npm run build && npm start`
+> 상세: `.ai/SKILL.md` → "빌드"
+
+- [ ] `npm run build:all` (통합 빌드)
 - [ ] **플러그인 리로드 확인** (Figma에서 Reload)
-- [ ] 변경 미적용 시 → 빌드/리로드 먼저 의심
 
 ### 디버깅 시
 - [ ] **추측 → 수정** 금지
@@ -74,12 +92,4 @@
 
 ## Agent Server
 
-```bash
-# 실행
-cd agent-server && npm run build && npm start
-
-# 엔드포인트
-# GET  /health              - 헬스체크
-# POST /agents/naming/context - 컨텍스트 기반 네이밍
-# POST /agents/autolayout   - 오토레이아웃 분석
-```
+> 상세: `.ai/SKILL.md` → "빌드", `.ai/SPEC.md` → "Agent Server API"

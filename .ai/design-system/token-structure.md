@@ -1,5 +1,7 @@
 # Token Structure - 디자인 토큰 계층 구조
 
+> Last updated: 2026-01-16 | v2.0.0
+>
 > 출처: Gemini 리서치, Carbon Design System, Material Design 3
 
 ---

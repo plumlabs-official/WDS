@@ -2,6 +2,8 @@
 
 > 기술 사양 및 API 명세
 >
+> Last updated: 2026-01-16 | v2.0.0
+>
 > **결정사항(WHY)은 `MEMORY.md` 참조**
 
 ---
@@ -286,3 +288,13 @@ UI 버튼 클릭
 | ES6+ 일부 미지원 | esbuild 타겟 es6 |
 | base64 이미지 prefix | `data:image` prefix 제거 후 전송 |
 | JSON body 크기 | Express limit 50mb 설정 |
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|------|------|
+| [MEMORY.md](MEMORY.md) | 설계 의사결정 배경 |
+| [PRD.md](PRD.md) | 제품 요구사항 |
+| [lessons_learned.md](lessons_learned.md) | Edge case 및 버그 패턴 |
