@@ -48,6 +48,24 @@
 - 추측하지 말고 **질문 먼저**
 - "이해가 맞나요?" 확인
 
+### 슬래시 커맨드 생성 시 (필수)
+> `/coach`, `/record` 같은 커맨드 만들 때
+
+- [ ] **YAML frontmatter 필수** (파일 맨 위에):
+  ```yaml
+  ---
+  description: 커맨드 설명
+  allowed-tools: [Read, Edit, Bash, ...]
+  ---
+  ```
+- [ ] **두 곳에 파일 생성**:
+  - `.claude/commands/커맨드명.md` (프로젝트용)
+  - `~/.claude/commands/커맨드명.md` (전역용)
+- [ ] 생성 후 `/커맨드명` 입력해서 인식 테스트
+
+**frontmatter 없으면** → "Unknown skill" 에러
+**홈 디렉토리에 없으면** → 인식 안 됨
+
 ### Cleanup 작업 시 (cleanup.ts 수정 전)
 - [ ] `getNodeByIdAsync` 사용 (getNodeById 금지, dynamic-page 모드)
 - [ ] 캐시 clear는 진입점 함수에서만 (반복 함수 내부 금지)

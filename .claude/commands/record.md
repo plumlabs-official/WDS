@@ -1,3 +1,8 @@
+---
+description: 완료된 작업을 기록하는 표준 사후정리 도구 (CHANGELOG + SESSION.md)
+allowed-tools: [Read, Edit, Glob, Grep, Bash]
+---
+
 # /record Command
 
 완료된 작업을 기록하는 표준 사후정리 도구.
