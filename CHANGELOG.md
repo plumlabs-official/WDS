@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.0] - 2026-01-17
+
+### Added
+- 패턴 라이브러리 Backend API (`/patterns`, `/patterns/match`)
+- 구조 기반 유사 패턴 매칭 (score 0-1)
+
+## [2.4.0] - 2026-01-17
+
+### Added
+- zod 런타임 검증 (LLM 응답 스키마 체크)
+- 부분 데이터 fallback (검증 실패 시 유효 항목만 사용)
+
+## [2.3.0] - 2026-01-17
+
+### Changed
+- `modules/naming.ts` → `naming/helpers/` 분리 (5개 파일)
+- 순환참조 방지 import 정책 적용
+
+## [2.2.0] - 2026-01-17
+
+### Changed
+- `code.ts` → `naming/` 모듈 분리 (30% 라인 감소)
+- handler, direct, helpers 책임 분리
+
+## [2.1.0] - 2026-01-17
+
+### Changed
+- 문서 구조 Diátaxis 방식 적용
+- SSOT 정책 도입 (`docs/specs/` = 유일한 규칙 원천)
+- API 중복 제거 (api-contract.md가 API SSOT)
+
 ## [2.0.0] - 2026-01-16
 
 ### Added
