@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 | v2.5.0
+> Last updated: 2026-01-17 14:30 | v2.5.0
 
 ---
 
@@ -42,17 +42,17 @@
 - **coach 스킬 v4 완성** - 초보 친화 규칙 추가
 - **커밋 후 자동 기록 시스템** - 3중 안전망
 - **문서 역할 경계 규칙** - HOW/WHAT/WHY 분리
+- api-usage.json → .gitignore 추가
+- **hook matcher 패턴 수정**: `Bash(*git commit*)` (세션 재시작 필요)
 
-**커밋:** `17f69de` → `5c14cb4` (6개 추가)
+**커밋:** `17f69de` → `45f63c4` (10개)
 
-**이번 세션 주요 커밋:**
-- `2b900e0` feat: coach 스킬 v4 - 초보 친화 규칙 추가
-- `678d537` feat: 커밋 후 자동 기록 시스템 (3중 안전망)
-- `71ac9aa` docs: 슬래시 커맨드 생성 체크리스트 추가
-- `5c14cb4` docs: 문서 역할 경계 규칙 + lessons-learned 사건 추가
+**최근 커밋:**
+- `3ccfc96` chore: api-usage.json을 .gitignore에 추가
+- `45f63c4` fix: hook matcher 패턴 수정 (*git commit*)
 
 **자동 기록 시스템:**
-- A: PostToolUse hook → 리마인드 메시지 (테스트 필요)
+- A: PostToolUse hook → 리마인드 메시지 (**세션 재시작 후 테스트 필요**)
 - B: `.claude/scripts/auto-changelog.sh` → CHANGELOG 자동 업데이트 ✅
 - C: CLAUDE.md 체크리스트 ✅
 
@@ -66,8 +66,8 @@
 ## 다음 작업
 
 ### 즉시 (세션 재시작 후)
-- [ ] **hook 테스트**: 커밋 시 리마인드 메시지 뜨는지 확인
-- [ ] hook 안 되면 git post-commit hook으로 대체
+- [ ] **hook 테스트**: matcher 패턴 수정됨, 재시작 후 확인
+- [ ] 안 되면 git post-commit hook으로 대체
 
 ### 이후
 | 옵션 | 설명 | 추천 이유 |
