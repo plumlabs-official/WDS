@@ -23,6 +23,14 @@ WellWe Design System Automator 프로젝트에 기여해주셔서 감사합니�
 | 버그 패턴 추가 | `docs/architecture/lessons-learned.md` | X |
 | 가이드 업데이트 | `docs/how-to/*.md` | X |
 
+### API 변경 시
+
+```
+API 변경 → api-contract.md만 수정
+         → technical-spec.md는 링크 유지 (상세 작성 금지)
+         → 중요 변경은 ADR 작성
+```
+
 ---
 
 ## 개발 환경 설정

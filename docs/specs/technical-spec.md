@@ -1,10 +1,13 @@
 # Technical Specification
 
-> 기술 사양 및 API 명세
+> 시스템 아키텍처 및 기술 정책
 >
-> Last updated: 2026-01-16 | v2.0.0
->
-> **결정사항(WHY)은 `MEMORY.md` 참조**
+> Last updated: 2026-01-17 | v2.1.2
+
+---
+
+> **Note**: API 상세(endpoint/schema/에러코드)는 [`api-contract.md`](api-contract.md)가 SSOT입니다.
+> 이 문서에는 API 목록을 재작성하지 않고, 아키텍처/정책/흐름만 정의합니다.
 
 ---
 
@@ -40,143 +43,25 @@
 
 ## Agent Server API
 
-### Base URL
-```
-http://localhost:3001
-```
+> **상세는 [`api-contract.md`](api-contract.md) 참조**
 
-### 공통 응답 형식
-```typescript
-interface BaseResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-```
+### 제공 API 목록
 
----
+| Endpoint | 목적 |
+|----------|------|
+| `GET /health` | 헬스체크 |
+| `POST /agents/naming/context` | 컨텍스트 기반 네이밍 |
+| `POST /agents/autolayout` | Auto Layout 분석 |
+| `POST /agents/cleanup/validate` | 병합 전후 검증 |
 
-### GET /health
-헬스체크
+### 비기능 요구사항
 
-**Response**
-```json
-{ "status": "ok", "timestamp": "2026-01-15T12:00:00.000Z" }
-```
-
----
-
-### POST /agents/naming/context
-컨텍스트 기반 네이밍 (권장)
-
-**Request**
-```typescript
-interface ContextAwareNamingRequest {
-  screenScreenshot: string;  // base64 (전체 스크린 1장)
-  screenWidth: number;
-  screenHeight: number;
-  nodes: Array<{
-    nodeId: string;
-    currentName: string;
-    nodeType: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    depth?: number;      // 1=최상위, 2=Layout, 3+=컴포넌트
-    texts?: string[];    // 자식 TEXT 노드 텍스트
-    iconHints?: string[]; // 자식 Icon/* 이름
-  }>;
-}
-```
-
-**Response**
-```typescript
-interface ContextAwareNamingResult {
-  results: Array<{
-    nodeId: string;
-    suggestedName: string;  // "Button/CTA/Primary/LG"
-    componentType: string;  // "Button"
-    purpose?: string;       // "CTA"
-    variant?: string;       // "Primary"
-    size?: string;          // "LG"
-    confidence: number;     // 0.0 ~ 1.0
-    reasoning: string;
-  }>;
-}
-```
-
----
-
-### POST /agents/autolayout
-Auto Layout 분석
-
-**Request**
-```typescript
-interface AutoLayoutRequest {
-  nodeId: string;
-  screenshot?: string;  // base64
-  width?: number;
-  height?: number;
-  children: Array<{
-    id: string;
-    name?: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }>;
-}
-```
-
-**Response**
-```typescript
-interface AutoLayoutResult {
-  direction: 'HORIZONTAL' | 'VERTICAL' | 'NONE';
-  gap: number;
-  paddingTop: number;
-  paddingRight: number;
-  paddingBottom: number;
-  paddingLeft: number;
-  primaryAxisSizing?: 'HUG' | 'FIXED';
-  counterAxisSizing?: 'HUG' | 'FIXED';
-  childrenSizing?: Array<{
-    index: number;
-    layoutAlign: 'INHERIT' | 'STRETCH';
-    layoutGrow: 0 | 1;
-  }>;
-  reasoning: string;
-}
-```
-
----
-
-### POST /agents/cleanup/validate
-병합 전후 스크린샷 비교 (AI 검증)
-
-**Request**
-```typescript
-interface CleanupValidationRequest {
-  beforeScreenshot: string;  // base64
-  afterScreenshot: string;   // base64
-  nodeId: string;
-  nodeName: string;
-  operationType: 'flatten' | 'cleanup';
-}
-```
-
-**Response**
-```typescript
-interface CleanupValidationResult {
-  isIdentical: boolean;
-  differences?: Array<{
-    element: string;
-    issue: 'position' | 'size' | 'visibility' | 'style';
-    description: string;
-  }>;
-  summary?: string;
-}
-```
+| 항목 | 정책 |
+|------|------|
+| Timeout | 60초 (Claude API 응답 대기) |
+| Retry | 실패 시 1회 재시도 |
+| Logging | 요청/응답 로깅 (개발 모드) |
+| Body Size | 50MB 제한 (base64 이미지) |
 
 ---
 
@@ -196,10 +81,10 @@ if (Math.abs(detached.width - originalWidth) > 1) {
 
 ### children 배열 순회
 ```typescript
-// ❌ 직접 순회 - 삭제 시 에러
+// 직접 순회 - 삭제 시 에러
 for (const child of node.children) { ... }
 
-// ✅ 복사 후 순회
+// 복사 후 순회
 for (const child of [...node.children]) { ... }
 ```
 
@@ -258,7 +143,7 @@ UI 버튼 클릭
 1. shouldSkipNaming() → 스킵 (VECTOR, LINE, 상태값)
   ↓ (통과)
 2. shouldSkipForParentComponent() → 스킵 (Button/Card/Icon 내부)
-   ⚠️ 예외: 언더스코어 포함 노드는 스킵 안 함
+   예외: 언더스코어 포함 노드는 스킵 안 함
   ↓ (통과)
 3. 언더스코어 포함? → AI 위임 (무조건)
   ↓ (아니면)
@@ -295,6 +180,6 @@ UI 버튼 클릭
 
 | 문서 | 역할 |
 |------|------|
-| [MEMORY.md](MEMORY.md) | 설계 의사결정 배경 |
-| [PRD.md](PRD.md) | 제품 요구사항 |
-| [lessons_learned.md](lessons_learned.md) | Edge case 및 버그 패턴 |
+| [api-contract.md](api-contract.md) | API 상세 (SSOT) |
+| [../architecture/prd.md](../architecture/prd.md) | 제품 요구사항 |
+| [../architecture/lessons-learned.md](../architecture/lessons-learned.md) | Edge case 및 버그 패턴 |

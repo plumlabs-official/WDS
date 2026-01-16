@@ -1,6 +1,15 @@
 # API Contract
 
 > Agent Server API 명세
+>
+> Last updated: 2026-01-17 | v2.1.2
+
+---
+
+> **SSOT**: API 변경 시 이 문서가 유일한 정답입니다.
+> `technical-spec.md`에는 API 상세를 작성하지 않고, 이 문서로 링크합니다.
+
+---
 
 ## Base URL
 
