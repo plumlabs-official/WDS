@@ -2,3 +2,4 @@
 
 export * from './types';
 export * from './naming-schema';
+export * from './pattern-schema';

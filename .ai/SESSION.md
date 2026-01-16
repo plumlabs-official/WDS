@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 | v2.4.0
+> Last updated: 2026-01-17 | v2.5.0
 
 ---
 
@@ -129,10 +129,50 @@ NamingResultItemSchema = {
 
 ---
 
+## 완료됨 (2026-01-17) - Phase 4 MVP ✅
+
+### 네이밍 패턴 라이브러리 (Backend Only)
+
+| 버전 | 작업 | 커밋 |
+|------|------|------|
+| v2.5.0 | 패턴 API + 매칭 로직 | `72a1bde` |
+
+**구현 범위 (Backend Only):**
+- common: `pattern-schema.ts` - 스키마 정의
+- agent-server: `patterns/` 모듈 - 저장/매칭 로직
+- agent-server: API 엔드포인트 추가
+
+**API 엔드포인트:**
+| 메소드 | 경로 | 설명 |
+|--------|------|------|
+| GET | /patterns | 목록 조회 (sort: recent/frequent) |
+| GET | /patterns/:id | 단건 조회 |
+| POST | /patterns | 생성/업데이트 (Upsert) |
+| DELETE | /patterns/:id | 삭제 |
+| POST | /patterns/:id/use | 사용 기록 |
+| PATCH | /patterns/:id | 이름 변경 |
+| POST | /patterns/match | 유사 패턴 매칭 |
+| GET | /patterns/history | 변경 히스토리 |
+
+**매칭 가중치:**
+| 요소 | 가중치 |
+|------|--------|
+| 자식 수 | 20% |
+| 자식 타입 | 25% |
+| 레이아웃 | 15% |
+| 위치 영역 | 15% |
+| 비율 | 15% |
+| 자식 이름 | 10% |
+
+**저장소:** JSON 파일 기반 (data/naming-patterns.json)
+
+---
+
 ## 다음 작업
 
-### Phase 4: 네이밍 패턴 라이브러리 (MVP)
-- visual 유사도 제외하고 구조 기반 매칭만 먼저
+### Phase 4 후속: Figma 플러그인 UI 통합
+- 패턴 매칭 결과 표시
+- 사용자 확인 UI
 
 ---
 

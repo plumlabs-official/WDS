@@ -12,6 +12,19 @@ import cors from 'cors';
 import { analyzeNaming, analyzeNamingWithContext } from './agents/naming';
 import { analyzeAutoLayout } from './agents/autolayout';
 import { validateCleanup } from './agents/cleanup-validator';
+import {
+  getAllPatterns,
+  getPatternById,
+  getRecentPatterns,
+  getFrequentPatterns,
+  upsertPattern,
+  deletePattern,
+  recordPatternUsage,
+  renamePattern,
+  getHistory,
+} from './patterns';
+import { findSimilarPatterns } from './patterns';
+import { CreatePatternRequestSchema, MatchPatternRequestSchema } from '@wellwe/common';
 import type { NamingRequest, AutoLayoutRequest, ContextAwareNamingRequest, CleanupValidationRequest } from './types';
 
 const app = express();
@@ -167,6 +180,229 @@ app.post('/agents/cleanup/validate', async (req, res) => {
   }
 });
 
+// ============================================
+// Pattern API 엔드포인트
+// ============================================
+
+/**
+ * 패턴 목록 조회
+ * GET /patterns
+ * Query params:
+ *   - sort: 'recent' | 'frequent' (기본: recent)
+ *   - limit: number (기본: 20)
+ */
+app.get('/patterns', (req, res) => {
+  try {
+    const sort = (req.query.sort as string) || 'recent';
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    let patterns;
+    if (sort === 'frequent') {
+      patterns = getFrequentPatterns(limit);
+    } else {
+      patterns = getRecentPatterns(limit);
+    }
+
+    console.log(`[Patterns] List: ${patterns.length} patterns (sort: ${sort})`);
+    res.json({ success: true, data: patterns });
+  } catch (error) {
+    console.error('[Patterns] List error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 패턴 단건 조회
+ * GET /patterns/:id
+ */
+app.get('/patterns/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const pattern = getPatternById(id);
+
+    if (!pattern) {
+      res.status(404).json({ success: false, error: 'Pattern not found' });
+      return;
+    }
+
+    console.log(`[Patterns] Get: "${pattern.name}"`);
+    res.json({ success: true, data: pattern });
+  } catch (error) {
+    console.error('[Patterns] Get error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 패턴 생성/업데이트 (Upsert)
+ * POST /patterns
+ */
+app.post('/patterns', (req, res) => {
+  try {
+    const validated = CreatePatternRequestSchema.safeParse(req.body);
+
+    if (!validated.success) {
+      console.error('[Patterns] Validation error:', validated.error);
+      res.status(400).json({
+        success: false,
+        error: 'Invalid request',
+        details: validated.error.errors,
+      });
+      return;
+    }
+
+    const pattern = upsertPattern(validated.data);
+    console.log(`[Patterns] Upsert: "${pattern.name}" (id: ${pattern.id})`);
+    res.json({ success: true, data: pattern });
+  } catch (error) {
+    console.error('[Patterns] Upsert error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 패턴 삭제
+ * DELETE /patterns/:id
+ */
+app.delete('/patterns/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = deletePattern(id);
+
+    if (!deleted) {
+      res.status(404).json({ success: false, error: 'Pattern not found' });
+      return;
+    }
+
+    console.log(`[Patterns] Deleted: ${id}`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[Patterns] Delete error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 패턴 사용 기록
+ * POST /patterns/:id/use
+ */
+app.post('/patterns/:id/use', (req, res) => {
+  try {
+    const { id } = req.params;
+    const pattern = recordPatternUsage(id);
+
+    if (!pattern) {
+      res.status(404).json({ success: false, error: 'Pattern not found' });
+      return;
+    }
+
+    console.log(`[Patterns] Usage recorded: "${pattern.name}" (count: ${pattern.usageCount})`);
+    res.json({ success: true, data: pattern });
+  } catch (error) {
+    console.error('[Patterns] Usage error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 패턴 이름 변경
+ * PATCH /patterns/:id
+ */
+app.patch('/patterns/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name || typeof name !== 'string') {
+      res.status(400).json({ success: false, error: 'Name is required' });
+      return;
+    }
+
+    const pattern = renamePattern(id, name);
+
+    if (!pattern) {
+      res.status(404).json({ success: false, error: 'Pattern not found' });
+      return;
+    }
+
+    console.log(`[Patterns] Renamed: ${id} → "${name}"`);
+    res.json({ success: true, data: pattern });
+  } catch (error) {
+    console.error('[Patterns] Rename error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 유사 패턴 매칭
+ * POST /patterns/match
+ */
+app.post('/patterns/match', (req, res) => {
+  try {
+    const validated = MatchPatternRequestSchema.safeParse(req.body);
+
+    if (!validated.success) {
+      console.error('[Patterns] Match validation error:', validated.error);
+      res.status(400).json({
+        success: false,
+        error: 'Invalid request',
+        details: validated.error.errors,
+      });
+      return;
+    }
+
+    const { structure, limit, minScore } = validated.data;
+    const result = findSimilarPatterns(structure, { limit, minScore });
+
+    console.log(`[Patterns] Match: ${result.candidates.length} candidates found`);
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('[Patterns] Match error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 패턴 히스토리 조회
+ * GET /patterns/history
+ */
+app.get('/patterns/history', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 50;
+    const history = getHistory(limit);
+
+    console.log(`[Patterns] History: ${history.length} entries`);
+    res.json({ success: true, data: history });
+  } catch (error) {
+    console.error('[Patterns] History error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 // Start server - bind to 0.0.0.0 for IPv4 support
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
@@ -181,6 +417,10 @@ app.listen(PORT, '0.0.0.0', () => {
 ║  - POST /agents/naming/batch   Batch naming    ║
 ║  - POST /agents/naming/context Context naming  ║
 ║  - POST /agents/cleanup/validate Cleanup AI    ║
+║  - GET  /patterns              List patterns   ║
+║  - POST /patterns              Create pattern  ║
+║  - POST /patterns/match        Match patterns  ║
+║  - GET  /patterns/history      View history    ║
 ╚════════════════════════════════════════════════╝
   `);
 });
