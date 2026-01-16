@@ -20,6 +20,9 @@ dist/
 *.log
 npm-debug.log*
 
+# API usage tracking
+api-usage.json
+
 # TypeScript cache
 *.tsbuildinfo
 
