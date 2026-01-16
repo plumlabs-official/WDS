@@ -2,25 +2,26 @@
 
 > Wellwe Design System Automator - AI 행동 지침
 >
-> Last updated: 2026-01-16 | v2.0.0
+> Last updated: 2026-01-17 | v2.1.0
 
 ## Tech Stack
 
-- **Figma Plugin**: TypeScript 기반 플러그인
-- **Agent Server**: Express + Claude API (localhost:3001)
+- **Figma Plugin**: TypeScript 기반 플러그인 (`packages/figma-plugin/`)
+- **Agent Server**: Express + Claude API (`packages/agent-server/`, localhost:3001)
+- **Common**: 공유 타입/스키마 (`packages/common/`)
 - **Design System**: 자동화된 네이밍, 오토레이아웃, 컴포넌트화
 
 ## Core Rules
 
-1. **문서 우선**: 모든 작업 전 `.ai/` 폴더 문서 참조
-2. **네이밍 규칙 준수**: `.ai/design-system/naming-rules.md` 필수 참조
+1. **문서 우선**: 모든 작업 전 `docs/`, `.ai/` 문서 참조
+2. **네이밍 규칙 준수**: `docs/specs/naming-schema.md` 필수 참조
 3. **Read First**: 코드 수정 전 반드시 해당 파일 Read 먼저
 4. **작은 단위**: 한 번에 50줄 이상 작성 금지
 
 ## Forbidden
 
 ### 네이밍 금지 사항
-> 상세: `.ai/design-system/naming-rules.md` → "절대 금지 사항" 섹션
+> 상세: `docs/specs/naming-schema.md` → "절대 금지 사항" 섹션
 
 ### 코드 작성 금지 사항
 - 읽지 않은 파일 수정 제안
@@ -31,10 +32,10 @@
 
 | 용도 | 파일 |
 |------|------|
-| 장기 결정 | `.ai/MEMORY.md` |
-| 실패 패턴 | `.ai/lessons_learned.md` |
-| 현재 상태 | `.ai/CONTEXT.md` |
-| 네이밍 규칙 | `.ai/design-system/naming-rules.md` |
+| 장기 결정 | `.ai/DECISIONS.md` |
+| 실패 패턴 | `docs/architecture/lessons-learned.md` |
+| 현재 상태 | `.ai/SESSION.md` |
+| 네이밍 규칙 | `docs/specs/naming-schema.md` |
 
 ## Project Structure
 
@@ -42,19 +43,32 @@
 /
 ├── AGENTS.md               # 프로젝트 헌법 (이 파일)
 ├── CLAUDE.md               # Claude Code 지침
-├── src/                    # Figma 플러그인
-├── agent-server/           # AI Agent Server + 프롬프트
-├── .ai/                    # AI 전용 지식 저장소
-└── reference/              # 참고 자료 (PDF)
+├── docs/                   # 문서 (Diátaxis 구조)
+│   ├── tutorials/          # 시작 가이드
+│   ├── guides/             # 작업별 가이드
+│   ├── specs/              # 규칙/사양 (SSOT)
+│   └── architecture/       # 아키텍처/ADR
+├── packages/
+│   ├── figma-plugin/       # Figma 플러그인
+│   ├── agent-server/       # AI Agent Server
+│   └── common/             # 공유 타입/스키마
+├── .ai/                    # AI 전용 메모리
+│   ├── SESSION.md          # 세션 단기 기억
+│   ├── DECISIONS.md        # 의사결정 요약
+│   └── RECIPES/            # 반복 작업 레시피
+└── reference/              # 외부 참고 자료
 ```
 
 ## Quick Commands
 
-> 상세: `.ai/SKILL.md` → "빌드" 섹션
+> 상세: `.ai/RECIPES/workflows.md` → "빌드" 섹션
 
 | 명령 | 설명 |
 |------|------|
-| `npm run build:all` | 통합 빌드 (플러그인 + 서버) |
+| `npm run build:all` | 통합 빌드 (common + plugin + server) |
+| `npm run build:plugin` | Figma 플러그인만 빌드 |
+| `npm run build:server` | Agent Server만 빌드 |
+| `npm run server` | Agent Server 실행 |
 | `/context` | 토큰 사용량 확인 |
 
 ---
@@ -63,23 +77,24 @@
 
 > 출처: `reference/PM/` 바이브 코딩 가이드
 
-### 1. 지식 분산
-- 중앙 README에 몰아넣지 않음
-- 도메인별 `.ai/design-system/*.md`로 분리
-- AI 주의력 최적화
+### 1. Diátaxis 구조
+- `docs/tutorials/`: 처음 따라 하는 가이드
+- `docs/guides/`: 목적 기반 레시피
+- `docs/specs/`: 규칙/사양 (SSOT)
+- `docs/architecture/`: 의사결정/아키텍처
 
 ### 2. 프롬프트 관리
-- Agent Server 프롬프트: `agent-server/prompts/`
-- 규칙 문서(`.ai/design-system/`)와 동기화 유지
+- Agent Server 프롬프트: `packages/agent-server/prompts/`
+- 규칙 문서(`docs/specs/`)와 동기화 유지
 - 변경 시 **양쪽 모두 업데이트**
 
 ### 3. 플랜 모드 활용
 - 복잡한 작업 전 `plan mode`로 설계 승인
-- plan 파일 → 프로젝트 내 `plans/` 폴더 보관
+- plan 파일 → `.claude/plans/` 폴더 보관
 - 코드 작성 전 아키텍처 검토
 
 ### 4. 회고 문화
-- 실패 패턴 즉시 `.ai/lessons_learned.md` 기록
+- 실패 패턴 즉시 `docs/architecture/lessons-learned.md` 기록
 - AI 실수도 기록 → 다음 세션에서 방지
 - 형식: 문제 → 원인 → 해결 → 재발 방지
 
@@ -100,6 +115,6 @@
 | 문서 | 역할 |
 |------|------|
 | [CLAUDE.md](CLAUDE.md) | 작업 지침 및 체크리스트 |
-| [.ai/MEMORY.md](.ai/MEMORY.md) | 의사결정 기록 (WHY) |
-| [.ai/lessons_learned.md](.ai/lessons_learned.md) | 버그 패턴 및 해결책 (WHAT) |
-| [.ai/design-system/naming-rules.md](.ai/design-system/naming-rules.md) | 네이밍 규칙 상세 |
+| [.ai/DECISIONS.md](.ai/DECISIONS.md) | 의사결정 기록 (WHY) |
+| [docs/architecture/lessons-learned.md](docs/architecture/lessons-learned.md) | 버그 패턴 및 해결책 (WHAT) |
+| [docs/specs/naming-schema.md](docs/specs/naming-schema.md) | 네이밍 규칙 상세 |

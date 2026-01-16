@@ -2,19 +2,19 @@
 
 > 이 파일은 Claude Code 세션 시작 시 자동으로 로드됩니다.
 >
-> Last updated: 2026-01-16 | v2.0.0
+> Last updated: 2026-01-17 | v2.1.0
 
 ## Quick Reference
 
 | 용도 | 파일 |
 |------|------|
 | 프로젝트 헌법 | `AGENTS.md` |
-| 기술 사양/API | `.ai/SPEC.md` |
-| 아키텍처 결정 (WHY) | `.ai/MEMORY.md` |
-| 버그 패턴 (WHAT) | `.ai/lessons_learned.md` |
-| 반복 작업 패턴 | `.ai/SKILL.md` |
-| 현재 상태 | `.ai/CONTEXT.md` |
-| 네이밍 규칙 | `.ai/design-system/naming-rules.md` |
+| 기술 사양/API | `docs/specs/technical-spec.md` |
+| 아키텍처 결정 (WHY) | `.ai/DECISIONS.md` |
+| 버그 패턴 (WHAT) | `docs/architecture/lessons-learned.md` |
+| 반복 작업 패턴 | `.ai/RECIPES/workflows.md` |
+| 현재 상태 | `.ai/SESSION.md` |
+| 네이밍 규칙 | `docs/specs/naming-schema.md` |
 
 ## Auto Reference Rules
 
@@ -22,12 +22,12 @@
 
 | 요청 유형 | 문서 | 읽을 범위 |
 |----------|------|----------|
-| Cleanup/병합 작업 | `.ai/lessons_learned.md` | "Cleanup 버그 패턴" 섹션 |
-| Naming 작업 | `.ai/design-system/naming-rules.md` | 전체 |
-| AI Agent/서버 수정 | `.ai/lessons_learned.md` | "AI Agent 버그 패턴" 섹션 |
-| 빌드/디버깅 | `.ai/SKILL.md` | "빌드", "디버깅" 섹션 |
+| Cleanup/병합 작업 | `docs/architecture/lessons-learned.md` | "Cleanup 버그 패턴" 섹션 |
+| Naming 작업 | `docs/specs/naming-schema.md` | 전체 |
+| AI Agent/서버 수정 | `docs/architecture/lessons-learned.md` | "AI Agent 버그 패턴" 섹션 |
+| 빌드/디버깅 | `.ai/RECIPES/workflows.md` | "빌드", "디버깅" 섹션 |
 | 문서 구조 변경 | `AGENTS.md` | "문서 관리 원칙" 섹션 |
-| 새 기능 설계 | `.ai/MEMORY.md` | 관련 도메인 섹션 |
+| 새 기능 설계 | `.ai/DECISIONS.md` | 관련 도메인 섹션 |
 
 **규칙**: 해당 작업 시작 전, 위 문서의 지정 섹션을 먼저 읽고 진행
 
@@ -55,19 +55,19 @@
 - [ ] 좌표 계산에서 절대/상대 구분
 
 ### Naming 작업 시
-> 상세: `.ai/design-system/naming-rules.md`
+> 상세: `docs/specs/naming-schema.md`
 
 - [ ] Layout, Content 타입 금지
 - [ ] 비즈니스 상태 추론 금지 (Authenticated, Empty 등)
 
 ### AI Agent 작업 시 (agent-server 수정)
-> 상세: `.ai/lessons_learned.md` → "AI Agent 버그 패턴"
+> 상세: `docs/architecture/lessons-learned.md` → "AI Agent 버그 패턴"
 
 - [ ] max_tokens: 32768 (100+ 노드)
 - [ ] 스트리밍 필수
 
 ### 빌드 후 테스트 전
-> 상세: `.ai/SKILL.md` → "빌드"
+> 상세: `.ai/RECIPES/workflows.md` → "빌드"
 
 - [ ] `npm run build:all` (통합 빌드)
 - [ ] **플러그인 리로드 확인** (Figma에서 Reload)
@@ -82,7 +82,7 @@
 
 ### DO
 - 필요한 파일/부분만 읽기
-- `.ai/` 문서 링크로 규칙 참조
+- `docs/`, `.ai/` 문서 링크로 규칙 참조
 - 한 번에 완결되는 작업 단위로 진행
 
 ### DON'T
@@ -90,6 +90,20 @@
 - 긴 파일 전체 읽기 금지
 - 읽지 않은 파일 수정 제안 금지
 
+## Context Management
+
+> 토큰 사용량 90% 초과 시 자동 실행
+
+**감지 시 즉시:**
+1. `.ai/SESSION.md` 업데이트 (현재 작업 상태 기록)
+2. 유저에게 `/compact` 제안
+3. 다음 작업 계획 간략히 명시
+
+**SESSION.md 업데이트 내용:**
+- 완료된 작업
+- 진행 중인 작업
+- 다음 단계 (compact 후 이어서 진행할 내용)
+
 ## Agent Server
 
-> 상세: `.ai/SKILL.md` → "빌드", `.ai/SPEC.md` → "Agent Server API"
+> 상세: `.ai/RECIPES/workflows.md` → "빌드", `docs/specs/api-contract.md`

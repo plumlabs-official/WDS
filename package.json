@@ -2,14 +2,19 @@
   "name": "wellwe-design-system-automator",
   "version": "2.0.0",
   "description": "Wellwe 디자인 시스템 자동화 Figma 플러그인",
-  "main": "dist/code.js",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "esbuild src/code.ts --bundle --outfile=dist/code.js --format=iife --target=es6 && cp src/ui.html dist/ui.html",
-    "build:all": "npm run build && cd agent-server && npm run build",
-    "watch": "esbuild src/code.ts --bundle --outfile=dist/code.js --format=iife --target=es6 --watch",
-    "build:ui": "cp src/ui.html dist/ui.html",
-    "typecheck": "tsc --noEmit",
-    "server": "cd agent-server && npm start"
+    "build": "npm run build --workspace=@wellwe/common && npm run build --workspace=@wellwe/figma-plugin",
+    "build:all": "npm run build && npm run build --workspace=@wellwe/agent-server",
+    "build:plugin": "npm run build --workspace=@wellwe/figma-plugin",
+    "build:server": "npm run build --workspace=@wellwe/agent-server",
+    "build:common": "npm run build --workspace=@wellwe/common",
+    "watch": "npm run watch --workspace=@wellwe/figma-plugin",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "server": "npm run start --workspace=@wellwe/agent-server"
   },
   "keywords": [
     "figma",
@@ -20,8 +25,6 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@figma/plugin-typings": "^1.90.0",
-    "esbuild": "^0.20.0",
     "typescript": "^5.3.0"
   }
 }
