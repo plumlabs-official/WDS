@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 | v2.2.1
+> Last updated: 2026-01-17 | v2.3.0
 
 ---
 
@@ -56,18 +56,46 @@ packages/figma-plugin/src/
 ├── naming/
 │   ├── index.ts         # 통합 export
 │   ├── handler.ts       # AI 핸들러 + 타입 + 상태
-│   └── direct.ts        # 직접 네이밍 로직
+│   ├── direct.ts        # 직접 네이밍 로직
+│   └── helpers/         # Step 2에서 분리됨
 └── modules/
-    └── naming.ts        # 헬퍼 함수 (Step 2에서 분리 예정)
+    └── naming.ts        # shim (Step 2에서 변환)
 ```
 
 ---
 
-## 다음 작업
+## 완료됨 (2026-01-17) - Phase 2 Step 2 ✅
 
-### Phase 2 Step 2: helpers 분리 (다음)
-- modules/naming.ts → naming/helpers/ (classify.ts, infer.ts, normalize.ts, validate.ts)
-- 우선순위: 낮음 (현재 구조로도 작동)
+### Helpers 코드 분리
+
+| 버전 | 작업 | 커밋 |
+|------|------|------|
+| v2.3.0 | helpers 분리 (5개 파일) | `9bb1ab9` |
+
+**결과:**
+- modules/naming.ts: 1,745줄 → 10줄 (shim)
+- helpers로 분리: 5개 파일
+
+**helpers 구조:**
+```
+naming/helpers/
+├── constants.ts   # 601줄 - 모든 상수/매핑
+├── classify.ts    # 347줄 - 판별 함수
+├── validate.ts    # 235줄 - 검증/컨텍스트 체크
+├── normalize.ts   # 170줄 - 정규화/중복 해결
+├── infer.ts       # 494줄 - 이름 추론
+└── index.ts       # 142줄 - re-export
+```
+
+**가드레일 적용:**
+- infer.ts는 classify/validate 호출만 (중복 구현 금지)
+- 순환참조 방지: constants(아래) → classify/validate/normalize → infer(위)
+- named export만, default 금지
+- modules/naming.ts는 shim (하위 호환성 유지)
+
+---
+
+## 다음 작업
 
 ### Phase 3: zod 런타임 검증
 - schemaVersion 필드 추가 (GPT 피드백)
