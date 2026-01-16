@@ -31,42 +31,28 @@
 
 ---
 
-## 이번 세션 (2026-01-17)
+## 이번 세션 (2026-01-17 #2)
 
 **완료:**
-- Phase 2 Step 2: helpers 5개 파일 분리
-- Phase 3: zod 런타임 검증
-- Phase 4 MVP: 패턴 API Backend
-- 3겹 기록 체계 확립 (ADR + CHANGELOG + SESSION)
-- `/record` 커맨드 생성
-- **coach 스킬 v4 완성** - 초보 친화 규칙 추가
-- **커밋 후 자동 기록 시스템** - 3중 안전망
-- **문서 역할 경계 규칙** - HOW/WHAT/WHY 분리
-- api-usage.json → .gitignore 추가
-- **hook matcher 패턴 수정**: `Bash(*git commit*)` (세션 재시작 필요)
+- **Hook matcher 근본 수정**: `Bash(*git commit*)` → `Bash`
+  - matcher는 regex로 **툴 이름만** 매칭 (커맨드 인자 X)
+  - `post-bash-hook.sh` 생성 (커맨드 필터링 로직 분리)
+- 디버그 로깅 추가 (`/tmp/claude-hook-debug.log`)
 
-**커밋:** `17f69de` → `45f63c4` (10개)
+**커밋:** `45f63c4` → `48d7e26` (3개)
 
 **최근 커밋:**
-- `3ccfc96` chore: api-usage.json을 .gitignore에 추가
-- `45f63c4` fix: hook matcher 패턴 수정 (*git commit*)
-
-**자동 기록 시스템:**
-- A: PostToolUse hook → 리마인드 메시지 (**세션 재시작 후 테스트 필요**)
-- B: `.claude/scripts/auto-changelog.sh` → CHANGELOG 자동 업데이트 ✅
-- C: CLAUDE.md 체크리스트 ✅
-
-**문서 역할 경계:**
-- `CLAUDE.md` = HOW (체크리스트 + 근거 링크)
-- `lessons-learned.md` = WHAT (사건 + 맥락)
-- `ADR` = WHY (팀 규칙 변경)
+- `745ed31` test: hook 동작 테스트
+- `e1f8778` chore: hook 동작 테스트 2
+- `48d7e26` fix: PostToolUse hook matcher 수정 (Bash만 매칭)
 
 ---
 
 ## 다음 작업
 
 ### 즉시 (세션 재시작 후)
-- [ ] **hook 테스트**: matcher 패턴 수정됨, 재시작 후 확인
+- [ ] **hook 테스트**: 간단한 bash 명령어 실행 → `/tmp/claude-hook-debug.log` 확인
+- [ ] git commit 테스트 → CHANGELOG 자동 업데이트 확인
 - [ ] 안 되면 git post-commit hook으로 대체
 
 ### 이후
