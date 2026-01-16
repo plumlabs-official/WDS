@@ -201,8 +201,15 @@ export async function handleNamingAgent(): Promise<void> {
   let skippedCount = 0;
 
   for (const node of allNodes) {
+    // 디버그: 최상위 프레임 체크
+    const isTopLevel = node.parent?.type === 'PAGE';
+    if (isTopLevel) {
+      console.log(`[Naming Debug] 최상위 프레임 감지: "${node.name}" (type: ${node.type})`);
+    }
+
     // 제외 조건 확인
     if (shouldSkipNaming(node)) {
+      if (isTopLevel) console.log(`[Naming Debug] 최상위 프레임 스킵됨 (shouldSkipNaming)`);
       skippedCount++;
       continue;
     }
@@ -210,6 +217,7 @@ export async function handleNamingAgent(): Promise<void> {
     // 부모 컴포넌트 체크 (Button/*, Card/* 내부면 스킵)
     const parentCheck = shouldSkipForParentComponent(node);
     if (parentCheck.shouldSkip) {
+      if (isTopLevel) console.log(`[Naming Debug] 최상위 프레임 스킵됨 (shouldSkipForParentComponent): ${parentCheck.reason}`);
       skippedCount++;
       console.log(`[Naming] 스킵: "${node.name}" - ${parentCheck.reason}`);
       continue;
@@ -217,6 +225,7 @@ export async function handleNamingAgent(): Promise<void> {
 
     // 직접 변환 시도
     const directName = tryDirectNaming(node);
+    if (isTopLevel) console.log(`[Naming Debug] 최상위 프레임 directName: ${directName}`);
 
     // AI 네이밍 대상 타입 확장 (TEXT, RECTANGLE 포함)
     const AI_TARGET_TYPES = ['FRAME', 'GROUP', 'COMPONENT', 'INSTANCE', 'TEXT', 'RECTANGLE'];

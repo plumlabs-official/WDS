@@ -4,8 +4,8 @@ import * as path from 'path';
 
 const client = new Anthropic();
 
-// 토큰 사용량 저장 경로
-const USAGE_FILE = path.join(process.cwd(), 'api-usage.json');
+// 토큰 사용량 저장 경로 (__dirname 기준으로 agent-server 루트)
+const USAGE_FILE = path.join(__dirname, '../../api-usage.json');
 
 // 모델 ID 매핑
 export const MODEL_MAP = {
