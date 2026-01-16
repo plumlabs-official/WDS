@@ -24,6 +24,8 @@
 | 2: 코드 분리 | v2.2-2.3 | [ADR-0003](../docs/architecture/ADRs/ADR-0003-naming-module-split.md) | `3a0735a`, `17f69de` |
 | 3: zod 검증 | v2.4.0 | - | `c4c1b5c` |
 | 4: 패턴 API | v2.5.0 | - | `ffd41da` |
+| 문서화 | - | ADR-0002, ADR-0003 생성 | `4448cc9` |
+| /record 커맨드 | - | [record.md](../.claude/commands/record.md) | `3118488` |
 
 상세: [CHANGELOG.md](../CHANGELOG.md)
 
