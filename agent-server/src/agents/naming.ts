@@ -296,6 +296,8 @@ function postProcessResults(
   results: ContextAwareNamingResult['results'],
   nodes: ContextAwareNamingRequest['nodes']
 ): ContextAwareNamingResult['results'] {
+  console.log(`[PostProcess] Starting post-processing for ${results.length} results`);
+
   // nodeId → parentNodeId 맵 생성
   const parentNodeIdMap = new Map<string, string | null | undefined>();
   for (const node of nodes) {
@@ -306,6 +308,13 @@ function postProcessResults(
   const suggestedNameMap = new Map<string, string>();
   for (const result of results) {
     suggestedNameMap.set(result.nodeId, result.suggestedName);
+  }
+
+  // 언더스코어 포함 결과 미리 체크
+  const underscoreResults = results.filter(r => r.suggestedName.includes('_'));
+  if (underscoreResults.length > 0) {
+    console.log(`[PostProcess] Found ${underscoreResults.length} results with underscores:`);
+    underscoreResults.forEach(r => console.log(`  - ${r.nodeId}: "${r.suggestedName}"`));
   }
 
   return results.map(result => {
@@ -333,6 +342,149 @@ function postProcessResults(
       suggestedName: name,
     };
   });
+}
+
+// ============================================
+// 의심 케이스 필터링 (2단계 파이프라인용)
+// ============================================
+
+interface SuspiciousResult {
+  result: ContextAwareNamingResult['results'][0];
+  node: ContextAwareNamingRequest['nodes'][0];
+  reasons: string[];
+}
+
+/**
+ * 의심 케이스 필터링
+ * - confidence < 0.8
+ * - 검증 실패 (에러)
+ * - Container로 변환됨 (부모-자식 동일 이름)
+ * - 언더스코어 포함 (네이밍 규칙 위반)
+ * - 부모와 동일한 이름 (중복)
+ */
+function filterSuspiciousResults(
+  results: ContextAwareNamingResult['results'],
+  nodes: ContextAwareNamingRequest['nodes']
+): SuspiciousResult[] {
+  const nodeMap = new Map(nodes.map(n => [n.nodeId, n]));
+  // nodeId → suggestedName 맵 (부모 이름 비교용)
+  const suggestedNameMap = new Map(results.map(r => [r.nodeId, r.suggestedName]));
+  const suspicious: SuspiciousResult[] = [];
+
+  for (const result of results) {
+    const reasons: string[] = [];
+    const node = nodeMap.get(result.nodeId);
+    if (!node) continue;
+
+    // 1. confidence 낮음
+    if (result.confidence < 0.8) {
+      reasons.push(`낮은 confidence: ${result.confidence}`);
+    }
+
+    // 2. 검증 실패
+    const validation = validateNamingResult(result.suggestedName);
+    if (!validation.valid) {
+      reasons.push(`검증 실패: ${validation.errors.join(', ')}`);
+    }
+
+    // 3. Container로 변환됨 (부모-자식 동일 이름 후처리 결과)
+    if (result.suggestedName.startsWith('Container/') &&
+        result.componentType !== 'Container') {
+      reasons.push('부모-자식 동일 이름으로 Container 변환됨');
+    }
+
+    // 4. 언더스코어 포함 (네이밍 규칙 위반)
+    if (result.suggestedName.includes('_')) {
+      reasons.push(`언더스코어 포함: "${result.suggestedName}"`);
+    }
+
+    // 5. 부모와 동일한 이름 (중복 방지)
+    if (node.parentNodeId) {
+      const parentSuggestedName = suggestedNameMap.get(node.parentNodeId);
+      if (parentSuggestedName && parentSuggestedName === result.suggestedName) {
+        reasons.push(`부모와 동일한 이름: "${result.suggestedName}"`);
+      }
+    }
+
+    if (reasons.length > 0) {
+      suspicious.push({ result, node, reasons });
+    }
+  }
+
+  return suspicious;
+}
+
+/**
+ * 2단계 파이프라인: Haiku(주니어) → 필터 → Sonnet(시니어)
+ */
+async function runTwoStagePipeline(
+  request: ContextAwareNamingRequest
+): Promise<BaseResponse<ContextAwareNamingResult>> {
+  console.log(`[Two-Stage] Starting pipeline for ${request.nodes.length} nodes`);
+
+  // === Stage 1: Haiku로 전체 분석 ===
+  console.log('[Two-Stage] Stage 1: Haiku analysis');
+  const stage1Request: ContextAwareNamingRequest = { ...request, model: 'haiku' };
+  const stage1Response = await runSingleModelAnalysis(stage1Request);
+
+  if (!stage1Response.success || !stage1Response.data) {
+    console.error('[Two-Stage] Stage 1 failed');
+    return stage1Response;
+  }
+
+  const stage1Results = stage1Response.data.results;
+  console.log(`[Two-Stage] Stage 1 complete: ${stage1Results.length} results`);
+
+  // === 의심 케이스 필터링 ===
+  const suspicious = filterSuspiciousResults(stage1Results, request.nodes);
+  console.log(`[Two-Stage] Found ${suspicious.length} suspicious results`);
+
+  if (suspicious.length === 0) {
+    console.log('[Two-Stage] No suspicious results, using Haiku results as-is');
+    return stage1Response;
+  }
+
+  // 의심 케이스 로그
+  for (const s of suspicious) {
+    console.log(`[Two-Stage] Suspicious: ${s.result.nodeId} "${s.result.suggestedName}" - ${s.reasons.join(', ')}`);
+  }
+
+  // === Stage 2: Sonnet으로 의심 케이스만 재분석 ===
+  console.log(`[Two-Stage] Stage 2: Sonnet review of ${suspicious.length} nodes`);
+  const suspiciousNodes = suspicious.map(s => s.node);
+  const stage2Request: ContextAwareNamingRequest = {
+    ...request,
+    nodes: suspiciousNodes,
+    model: 'sonnet',
+  };
+
+  const stage2Response = await runSingleModelAnalysis(stage2Request);
+
+  if (!stage2Response.success || !stage2Response.data) {
+    console.warn('[Two-Stage] Stage 2 failed, using Stage 1 results');
+    return stage1Response;
+  }
+
+  const stage2Results = stage2Response.data.results;
+  console.log(`[Two-Stage] Stage 2 complete: ${stage2Results.length} reviewed`);
+
+  // === 결과 병합 ===
+  const stage2Map = new Map(stage2Results.map(r => [r.nodeId, r]));
+  const mergedResults = stage1Results.map(r => {
+    const reviewed = stage2Map.get(r.nodeId);
+    if (reviewed) {
+      console.log(`[Two-Stage] Merged: ${r.nodeId} "${r.suggestedName}" → "${reviewed.suggestedName}"`);
+      return reviewed;
+    }
+    return r;
+  });
+
+  console.log(`[Two-Stage] Pipeline complete. Haiku: ${stage1Results.length}, Sonnet reviewed: ${stage2Results.length}`);
+
+  return {
+    success: true,
+    data: { results: mergedResults },
+  };
 }
 
 // ============================================
@@ -370,9 +522,64 @@ function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
 }
 
 /**
+ * 단일 모델로 네이밍 분석 (내부 함수)
+ */
+async function runSingleModelAnalysis(
+  request: ContextAwareNamingRequest
+): Promise<BaseResponse<ContextAwareNamingResult>> {
+  const nodeList = formatNodeList(request.nodes);
+  const prompt = CONTEXT_AWARE_NAMING_PROMPT
+    .replace('{{screenWidth}}', String(request.screenWidth))
+    .replace('{{screenHeight}}', String(request.screenHeight))
+    .replace('{{nodeList}}', nodeList);
+
+  const modelType = (request.model || 'sonnet') as ModelType;
+  console.log(`[Context Naming] Analyzing ${request.nodes.length} nodes with screen context (${request.screenWidth}x${request.screenHeight})`);
+  console.log(`[Context Naming] Analyzing ${request.nodes.length} nodes with screen context (model: ${modelType})`);
+
+  // 디버그: 언더스코어 포함 노드 확인
+  const underscoreNodes = request.nodes.filter(n => n.currentName.includes('_'));
+  if (underscoreNodes.length > 0) {
+    console.log(`[Context Naming] Found ${underscoreNodes.length} nodes with underscores in input:`);
+    underscoreNodes.forEach(n => console.log(`  - ${n.nodeId}: "${n.currentName}"`));
+  } else {
+    console.log(`[Context Naming] No underscore nodes in input (checked ${request.nodes.length} nodes)`);
+  }
+
+  const response = await askClaudeWithImage(prompt, request.screenScreenshot, modelType);
+
+  // 디버그: 응답 미리보기 (처음 500자)
+  console.log(`[Context Naming] Response preview: ${response.substring(0, 500)}...`);
+
+  const results = parseJsonResponse<ContextAwareNamingResult['results']>(response);
+
+  if (!results || !Array.isArray(results)) {
+    console.error(`[Context Naming] Parse failed. Full response:\n${response}`);
+    return {
+      success: false,
+      error: 'Failed to parse response as array',
+    };
+  }
+
+  console.log(`[Context Naming] Got ${results.length} results`);
+
+  // 후처리 실행 (언더스코어 변환, 부모-자식 동일 이름 수정)
+  const processedResults = postProcessResults(results, request.nodes);
+
+  // Validator 실행
+  validateResults(processedResults);
+
+  return {
+    success: true,
+    data: { results: processedResults },
+  };
+}
+
+/**
  * 컨텍스트 기반 네이밍 분석
  * - 전체 스크린 스크린샷 1장으로 여러 노드를 한번에 분석
  * - 위치 정보를 활용하여 역할 추론
+ * - model: 'two-stage' 시 Haiku→Sonnet 2단계 파이프라인 실행
  */
 export async function analyzeNamingWithContext(
   request: ContextAwareNamingRequest
@@ -392,42 +599,13 @@ export async function analyzeNamingWithContext(
       };
     }
 
-    const nodeList = formatNodeList(request.nodes);
-    const prompt = CONTEXT_AWARE_NAMING_PROMPT
-      .replace('{{screenWidth}}', String(request.screenWidth))
-      .replace('{{screenHeight}}', String(request.screenHeight))
-      .replace('{{nodeList}}', nodeList);
-
-    const modelType = (request.model || 'sonnet') as ModelType;
-    console.log(`[Context Naming] Analyzing ${request.nodes.length} nodes with screen context (model: ${modelType})`);
-
-    const response = await askClaudeWithImage(prompt, request.screenScreenshot, modelType);
-
-    // 디버그: 응답 미리보기 (처음 500자)
-    console.log(`[Context Naming] Response preview: ${response.substring(0, 500)}...`);
-
-    const results = parseJsonResponse<ContextAwareNamingResult['results']>(response);
-
-    if (!results || !Array.isArray(results)) {
-      console.error(`[Context Naming] Parse failed. Full response:\n${response}`);
-      return {
-        success: false,
-        error: 'Failed to parse response as array',
-      };
+    // two-stage 모드: Haiku → 필터 → Sonnet
+    if (request.model === 'two-stage') {
+      return await runTwoStagePipeline(request);
     }
 
-    console.log(`[Context Naming] Got ${results.length} results`);
-
-    // 후처리 실행 (언더스코어 변환, 부모-자식 동일 이름 수정)
-    const processedResults = postProcessResults(results, request.nodes);
-
-    // Validator 실행
-    validateResults(processedResults);
-
-    return {
-      success: true,
-      data: { results: processedResults },
-    };
+    // 단일 모델 모드
+    return await runSingleModelAnalysis(request);
   } catch (error) {
     console.error('[Context Naming] Error:', error);
     return {

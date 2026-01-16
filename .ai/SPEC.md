@@ -249,6 +249,24 @@ UI 버튼 클릭
 - 이미지만 있는 프레임: `Image/[추론된 용도]`
 - 텍스트만 있는 프레임: `Text/[역할]`
 
+### 네이밍 노드 분류 흐름
+```
+노드 순회
+  ↓
+1. shouldSkipNaming() → 스킵 (VECTOR, LINE, 상태값)
+  ↓ (통과)
+2. shouldSkipForParentComponent() → 스킵 (Button/Card/Icon 내부)
+   ⚠️ 예외: 언더스코어 포함 노드는 스킵 안 함
+  ↓ (통과)
+3. 언더스코어 포함? → AI 위임 (무조건)
+  ↓ (아니면)
+4. tryDirectNaming() → 직접 변환 (성공 시)
+  ↓ (null 반환)
+5. hasValidSemanticName() → 유지 (이미 시맨틱)
+  ↓ (아니면)
+6. AI 위임
+```
+
 ### Auto Layout
 - 자식 1개: NONE 반환 (Auto Layout 불필요)
 - 겹치는 자식: NONE 반환 (Free layout 유지)

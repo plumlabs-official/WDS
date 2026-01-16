@@ -5,6 +5,9 @@
 // AI 모델 타입
 export type ModelType = 'haiku' | 'sonnet' | 'opus';
 
+// 네이밍 모드 타입 (단일 모델 또는 2단계 파이프라인)
+export type NamingMode = ModelType | 'two-stage';
+
 // 에이전트 타입
 export type AgentType = 'naming' | 'autolayout' | 'componentize';
 
@@ -43,7 +46,7 @@ export interface ContextAwareNamingRequest {
   screenScreenshot: string;  // 전체 스크린 (1장)
   screenWidth: number;
   screenHeight: number;
-  model?: ModelType;  // AI 모델 선택 (기본값: sonnet)
+  model?: NamingMode;  // AI 모델 선택 (기본값: sonnet, two-stage: Haiku→Sonnet 검증)
   nodes: Array<{
     nodeId: string;
     currentName: string;

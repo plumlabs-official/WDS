@@ -336,16 +336,6 @@
     </button>
   </div>
 
-  <!-- AI Model Selection -->
-  <div class="section" style="margin-bottom: 12px;">
-    <div class="section-title">AI 모델</div>
-    <select id="model-select" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px;">
-      <option value="haiku">Haiku ($1/$5) - 빠름, 저렴</option>
-      <option value="sonnet" selected>Sonnet ($3/$15) - 균형 (기본)</option>
-      <option value="opus">Opus ($15/$75) - 최고 품질</option>
-    </select>
-  </div>
-
   <div class="section">
     <div class="section-title">1. 전처리</div>
     <button id="btn-detach-components" class="btn-secondary" onclick="runCommandWithProgress('detach-components', this)">
@@ -354,33 +344,50 @@
     <button id="btn-delete-hidden-layers" class="btn-secondary" onclick="runCommand('delete-hidden-layers')">
       꺼진 레이어 삭제
     </button>
-    <button id="btn-cleanup-wrappers" class="btn-secondary" onclick="runCommandWithProgress('cleanup-wrappers', this)">
-      의미 없는 래퍼 제거
+    <button id="btn-convert-groups" class="btn-secondary" onclick="runCommandWithProgress('convert-groups-to-frames', this)">
+      프레이밍
+    </button>
+    <button id="btn-cleanup-wrappers" class="btn-secondary" onclick="runCommandWithProgress('cleanup-wrappers-ai', this)">
+      래퍼 제거
     </button>
     <button id="btn-flatten-same-name" class="btn-secondary" onclick="runCommandWithProgress('flatten-same-name', this)">
       중첩 레이어 병합
     </button>
+    <button id="btn-collect-merge" class="btn-secondary" onclick="runCommandWithProgress('collect-merge-candidates', this)">
+      병합 후보 수집
+    </button>
   </div>
 
-  <div class="section">
-    <div class="section-title">2. 네이밍</div>
-    <button id="btn-naming-agent" class="btn-agent" onclick="runCommandWithProgress('auto-naming-agent', this)" disabled>
-      AI 네이밍 (Agent)
+  <!-- 병합 후보 리스트 (숨김 상태) -->
+  <div id="merge-candidates-section" class="section" style="display: none;">
+    <div class="section-title">병합 후보</div>
+    <div id="merge-candidates-list" style="max-height: 200px; overflow-y: auto; font-size: 11px;"></div>
+    <div style="margin-top: 8px; display: flex; gap: 4px;">
+      <button class="btn-secondary" onclick="selectAllMergeCandidates(true)" style="flex: 1;">전체 선택</button>
+      <button class="btn-secondary" onclick="selectAllMergeCandidates(false)" style="flex: 1;">전체 해제</button>
+    </div>
+    <button id="btn-execute-merge" class="btn-primary" onclick="executeMerge()" style="margin-top: 8px; width: 100%;">
+      선택 항목 병합
     </button>
   </div>
 
   <div class="section">
-    <div class="section-title">3. Auto Layout</div>
+    <div class="section-title">2. AI 네이밍</div>
+    <button id="btn-naming-agent" class="btn-agent" onclick="runCommandWithProgress('auto-naming-agent', this)" disabled>
+      AI 네이밍 실행
+    </button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. 컴포넌트</div>
+    <div style="font-size: 10px; color: #999; margin-bottom: 6px;">전처리</div>
     <button id="btn-autolayout-agent" class="btn-agent" onclick="runCommandWithProgress('apply-autolayout-agent', this)" disabled>
-      AI Auto Layout (Agent)
+      AI Auto Layout
     </button>
     <button id="btn-standardize-spacing" class="btn-secondary" onclick="runCommandWithProgress('standardize-spacing', this)">
       간격 표준화
     </button>
-  </div>
-
-  <div class="section">
-    <div class="section-title">4. 컴포넌트</div>
+    <div style="font-size: 10px; color: #999; margin: 8px 0 6px 0;">변환</div>
     <button id="btn-componentize" class="btn-secondary" onclick="runCommand('componentize')">
       컴포넌트 후보 탐지
     </button>
@@ -668,6 +675,14 @@
           hidePipelineProgress();
           break;
 
+        case 'merge-candidates':
+          showMergeCandidates(msg.candidates);
+          break;
+
+        case 'merge-result':
+          hideMergeCandidates();
+          break;
+
         // 단일 작업 진행 상태
         case 'task-start':
           showSingleTaskProgress(msg.taskName);
@@ -678,6 +693,81 @@
           break;
       }
     };
+
+    // ===== 병합 후보 관련 함수 =====
+    let mergeCandidatesData = [];
+
+    function showMergeCandidates(candidates) {
+      mergeCandidatesData = candidates || [];
+      const section = document.getElementById('merge-candidates-section');
+      const list = document.getElementById('merge-candidates-list');
+
+      if (candidates.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      // 리스트 렌더링
+      let html = '';
+      candidates.forEach((c, i) => {
+        const similarityBadge = c.similarity === 'same'
+          ? '<span style="color: #0a0; font-size: 9px;">[자동]</span>'
+          : '<span style="color: #fa0; font-size: 9px;">[확인]</span>';
+        const checked = c.similarity === 'same' ? 'checked' : '';
+
+        html += `
+          <label style="display: flex; align-items: flex-start; gap: 6px; padding: 4px 0; border-bottom: 1px solid #eee; cursor: pointer;">
+            <input type="checkbox" data-index="${i}" ${checked} style="margin-top: 2px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; gap: 4px; align-items: center;">
+                ${similarityBadge}
+                <span style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.parentName}</span>
+              </div>
+              <div style="color: #666; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                └ ${c.childName}
+              </div>
+            </div>
+          </label>
+        `;
+      });
+
+      list.innerHTML = html;
+      section.style.display = 'block';
+    }
+
+    function hideMergeCandidates() {
+      document.getElementById('merge-candidates-section').style.display = 'none';
+      mergeCandidatesData = [];
+    }
+
+    function selectAllMergeCandidates(selectAll) {
+      const checkboxes = document.querySelectorAll('#merge-candidates-list input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = selectAll);
+    }
+
+    function executeMerge() {
+      const checkboxes = document.querySelectorAll('#merge-candidates-list input[type="checkbox"]:checked');
+      const selectedIds = [];
+
+      checkboxes.forEach(cb => {
+        const index = parseInt(cb.dataset.index);
+        if (mergeCandidatesData[index]) {
+          selectedIds.push(mergeCandidatesData[index].parentId);
+        }
+      });
+
+      if (selectedIds.length === 0) {
+        alert('선택된 항목이 없습니다.');
+        return;
+      }
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'execute-merge',
+          parentIds: selectedIds
+        }
+      }, '*');
+    }
 
     // 꺼진 레이어 모달 표시
     let hiddenLayersData = [];
@@ -859,12 +949,12 @@
         return;
       }
 
-      // 선택된 모델 가져오기
-      const selectedModel = document.getElementById('model-select').value;
+      // Two-Stage 기본 사용
+      const selectedModel = 'two-stage';
 
       // 진행 패널에 상세 정보 업데이트 (task-start로 패널이 이미 표시됨)
       if (currentPipeline && currentPipeline.steps.length === 1) {
-        currentPipeline.steps[0] = 'AI 컨텍스트 네이밍 분석 중... (' + data.nodes.length + '개 노드, ' + selectedModel + ')';
+        currentPipeline.steps[0] = 'AI 컨텍스트 네이밍 분석 중... (' + data.nodes.length + '개 노드)';
         renderProgress();
       }
 
@@ -907,12 +997,12 @@
         return;
       }
 
-      // 선택된 모델 가져오기
-      const selectedModel = document.getElementById('model-select').value;
+      // Two-Stage 기본 사용 (AutoLayout은 단일 모델 - haiku 사용)
+      const selectedModel = 'haiku';
 
       // 진행 패널에 상세 정보 업데이트 (task-start로 패널이 이미 표시됨)
       if (currentPipeline && currentPipeline.steps.length === 1) {
-        currentPipeline.steps[0] = 'AI Auto Layout 분석 중... (' + selectedModel + ')';
+        currentPipeline.steps[0] = 'AI Auto Layout 분석 중...';
         renderProgress();
       }
 

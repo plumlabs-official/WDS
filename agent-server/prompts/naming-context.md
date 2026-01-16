@@ -185,6 +185,13 @@ Type/Context[/State]
 
 ## 금지 사항
 
+### ⚠️ 절대 금지 (최우선)
+1. **언더스코어(_) 사용 금지** - 반드시 슬래시(/) 사용
+   - ❌ `Card_Header`, `Button_Primary`, `Icon_User`
+   - ✅ `Card/Header`, `Button/Primary`, `Icon/User`
+2. **부모-자식 동일 이름 금지** - 자식은 더 구체적인 Context 사용
+
+### 기타 금지
 | 금지 | 대안 |
 |------|------|
 | `Layout/...` | TopBar, Section, Container 등 |
@@ -192,8 +199,6 @@ Type/Context[/State]
 | `_1`, `_2` (넘버링) | 고유한 Context 사용 |
 | Inner, Item, Wrapper, Box | 구체적인 역할명 |
 | Authenticated, Empty, Active | UI 상태만 사용 (Disabled 등) |
-| **부모-자식 동일 이름** | 자식은 더 구체적인 Context 사용 |
-| **언더스코어(_)** | 슬래시(/)로 변환: `Card_Header` → `Card/Header` |
 
 ### 부모-자식 동일 이름 금지 예시
 ```

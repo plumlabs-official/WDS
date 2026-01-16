@@ -18,6 +18,10 @@ import {
 import {
   cleanupSelectionWrappers,
   flattenSelectionSameNameWrappers,
+  cleanupSelectionWrappersAggressive,
+  convertSelectionGroupsToFrames,
+  collectSelectionMergeCandidates,
+  executeMergeCandidates,
 } from './modules/cleanup';
 
 import {
@@ -112,12 +116,24 @@ function handleCommandWithUI(cmd: string) {
       handleStandardizeSpacing();
       break;
 
-    case 'cleanup-wrappers':
-      handleCleanupWrappers();
+    case 'cleanup-wrappers-ai':
+      handleCleanupWrappersAI();
+      break;
+
+    case 'convert-groups-to-frames':
+      handleConvertGroupsToFrames();
       break;
 
     case 'flatten-same-name':
       handleFlattenSameName();
+      break;
+
+    case 'collect-merge-candidates':
+      handleCollectMergeCandidates();
+      break;
+
+    case 'execute-merge':
+      handleExecuteMerge(msg.parentIds);
       break;
 
     case 'detach-components':
@@ -299,21 +315,29 @@ async function handleUIMessage(msg: UIMessage) {
 /**
  * 의미 없는 래퍼 제거 핸들러
  */
-function handleCleanupWrappers() {
-  figma.ui.postMessage({ type: 'task-start', taskName: '래퍼 제거 중...' });
+/**
+ * 래퍼 제거 핸들러
+ */
+function handleCleanupWrappersAI() {
+  figma.ui.postMessage({ type: 'task-start', taskName: '공격적 래퍼 제거 중...' });
 
   try {
-    const result = cleanupSelectionWrappers();
+    const result = cleanupSelectionWrappersAggressive();
 
-    if (result.details && result.details.removedCount > 0) {
-      console.log('=== 래퍼 제거 결과 ===');
-      for (const name of result.details.removedNames) {
-        console.log(`  - ${name}`);
+    if (result.details) {
+      if (result.details.removed > 0) {
+        console.log('=== 공격적 래퍼 제거 결과 ===');
+        for (const name of result.details.removedNames) {
+          console.log(`  - ${name}`);
+        }
+      }
+      if (result.details.outOfBoundsRemoved > 0) {
+        console.log(`=== 범위 밖 요소 ${result.details.outOfBoundsRemoved}개 제거 ===`);
       }
     }
 
     figma.notify(result.message, {
-      timeout: 3000,
+      timeout: 4000,
       error: !result.success,
     });
   } catch (e) {
@@ -340,6 +364,86 @@ async function handleFlattenSameName() {
       if (result.details.aiValidatedCount > 0) {
         console.log(`AI 검증: ${result.details.aiValidatedCount}개`);
       }
+    }
+
+    figma.notify(result.message, {
+      timeout: 3000,
+      error: !result.success,
+    });
+  } catch (e) {
+    figma.notify(`오류: ${e}`, { error: true });
+  }
+
+  figma.ui.postMessage({ type: 'task-complete' });
+}
+
+/**
+ * 병합 후보 수집 핸들러 (Human-in-the-loop)
+ */
+function handleCollectMergeCandidates() {
+  figma.ui.postMessage({ type: 'task-start', taskName: '병합 후보 수집 중...' });
+
+  try {
+    const result = collectSelectionMergeCandidates();
+
+    if (!result.success) {
+      figma.notify(result.message || '병합 후보 수집 실패', { error: true });
+      figma.ui.postMessage({ type: 'task-complete' });
+      return;
+    }
+
+    // UI로 후보 목록 전달
+    figma.ui.postMessage({
+      type: 'merge-candidates',
+      candidates: result.candidates,
+    });
+
+    const sameCount = result.candidates.filter(c => c.similarity === 'same').length;
+    const similarCount = result.candidates.filter(c => c.similarity === 'similar').length;
+
+    figma.notify(`병합 후보: ${result.candidates.length}개 (자동: ${sameCount}, 확인: ${similarCount})`);
+  } catch (e) {
+    figma.notify(`오류: ${e}`, { error: true });
+  }
+
+  figma.ui.postMessage({ type: 'task-complete' });
+}
+
+/**
+ * 선택된 병합 실행 핸들러
+ */
+function handleExecuteMerge(parentIds: string[]) {
+  figma.ui.postMessage({ type: 'task-start', taskName: '병합 실행 중...' });
+
+  try {
+    const result = executeMergeCandidates(parentIds);
+
+    figma.notify(`병합 완료: ${result.merged}개 성공, ${result.failed}개 실패`);
+
+    // 결과 전달
+    figma.ui.postMessage({
+      type: 'merge-result',
+      merged: result.merged,
+      failed: result.failed,
+    });
+  } catch (e) {
+    figma.notify(`오류: ${e}`, { error: true });
+  }
+
+  figma.ui.postMessage({ type: 'task-complete' });
+}
+
+/**
+ * GROUP → FRAME 변환 핸들러
+ */
+function handleConvertGroupsToFrames() {
+  figma.ui.postMessage({ type: 'task-start', taskName: 'GROUP → FRAME 변환 중...' });
+
+  try {
+    const result = convertSelectionGroupsToFrames();
+
+    if (result.converted > 0) {
+      console.log(`=== GROUP → FRAME 변환 결과: ${result.converted}개 ===`);
     }
 
     figma.notify(result.message, {
@@ -1402,6 +1506,13 @@ async function handleNamingAgent() {
     // AI 네이밍 대상 타입 확장 (TEXT, RECTANGLE 포함)
     const AI_TARGET_TYPES = ['FRAME', 'GROUP', 'COMPONENT', 'INSTANCE', 'TEXT', 'RECTANGLE'];
 
+    // 언더스코어 포함 노드는 무조건 AI 분석 대상 (네이밍 규칙 위반)
+    if (node.name.includes('_') && AI_TARGET_TYPES.includes(node.type)) {
+      console.log(`[Naming] 언더스코어 감지: "${node.name}" → AI로 위임`);
+      nodesForAI.push(node);
+      continue;
+    }
+
     // directName이 blacklist면 AI로 위임
     if (directName && isBlacklistedName(directName)) {
       console.log(`[Naming] Blacklist 감지: "${directName}" → AI로 위임`);
@@ -1423,6 +1534,13 @@ async function handleNamingAgent() {
         nodesForAI.push(node);
       }
     }
+  }
+
+  // 디버그: 노드 분류 요약
+  console.log(`[Naming Debug] 전체: ${allNodes.length}, 스킵: ${skippedCount}, 직접변환: ${directChanges.length}, AI위임: ${nodesForAI.length}`);
+  const underscoreNodes = nodesForAI.filter(n => n.name.includes('_'));
+  if (underscoreNodes.length > 0) {
+    console.log(`[Naming Debug] AI위임 중 언더스코어 포함: ${underscoreNodes.length}개`);
   }
 
   // 3. 형제 중복 이름 해결 + 기존 형제와 충돌 체크

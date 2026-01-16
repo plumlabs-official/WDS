@@ -14,6 +14,13 @@ export const MODEL_MAP = {
   opus: 'claude-opus-4-20250514',
 } as const;
 
+// 모델별 max_tokens 제한
+const MAX_TOKENS = {
+  haiku: 32768,
+  sonnet: 32768,
+  opus: 32000,  // Opus는 32000 제한
+} as const;
+
 export type ModelType = keyof typeof MODEL_MAP;
 
 // 모델별 가격 (per 1M tokens)
@@ -127,16 +134,17 @@ export async function askClaudeWithImage(
   // data:image/xxx;base64, prefix 제거
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-  // 모델 ID 변환
+  // 모델 ID 및 max_tokens 변환
   const modelId = MODEL_MAP[modelType];
-  console.log(`[Claude] Using model: ${modelType} (${modelId})`);
+  const maxTokens = MAX_TOKENS[modelType];
+  console.log(`[Claude] Using model: ${modelType} (${modelId}, max_tokens: ${maxTokens})`);
 
   // 스트리밍으로 응답 수집
   let fullText = '';
 
   const stream = client.messages.stream({
     model: modelId,
-    max_tokens: 32768,  // 150+ 노드 처리를 위해 증가
+    max_tokens: maxTokens,
     messages: [
       {
         role: 'user',

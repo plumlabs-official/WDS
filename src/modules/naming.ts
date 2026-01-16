@@ -1544,6 +1544,11 @@ export function shouldSkipForParentComponent(node: SceneNode): {
     return { shouldSkip: false, reason: '', parentComponent: null };
   }
 
+  // 언더스코어가 포함된 이름은 AI가 수정해야 하므로 스킵하지 않음
+  if (node.name.includes('_')) {
+    return { shouldSkip: false, reason: '', parentComponent: ancestorName };
+  }
+
   // 부모 컴포넌트 타입에 따라 스킵 여부 결정
   // Button 내부의 모든 자식은 네이밍 스킵
   if (ancestorComponent === 'Button') {

@@ -92,6 +92,22 @@ Icon: IconLeft, IconRight, IconOnly
 - AI 응답 검증: Purpose 필수, 금지 패턴, Size 규칙
 - **위치**: `agent-server/src/agents/naming.ts`
 
+### Haiku-Sonnet 2단계 파이프라인 (예정)
+- **결정**: Option C - 규칙 기반 필터 + Sonnet 검증
+- **방식**:
+  1. Haiku가 전체 네이밍 생성 (주니어)
+  2. 규칙 검증기가 의심 케이스 추출
+     - confidence 낮은 것
+     - 네이밍 규칙 위반 (Type/Context 누락)
+     - 부모-자식 동일 이름
+  3. Sonnet이 의심 케이스만 검토 (시니어)
+- **예상 비용**: Haiku $0.10 + Sonnet 일부 = ~$0.15-0.20 (vs Sonnet 단독 $0.31)
+- **이유**:
+  - 대부분 케이스는 Haiku 결과로 충분
+  - Validator 로직 이미 존재 (`cleanup-validator`)
+  - 비용 50% 절감 + 품질 유지
+- **상태**: 미구현 (추후 개선 시 참조)
+
 ---
 
 ## AutoLayout

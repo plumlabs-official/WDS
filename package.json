@@ -5,9 +5,11 @@
   "main": "dist/code.js",
   "scripts": {
     "build": "esbuild src/code.ts --bundle --outfile=dist/code.js --format=iife --target=es6 && cp src/ui.html dist/ui.html",
+    "build:all": "npm run build && cd agent-server && npm run build",
     "watch": "esbuild src/code.ts --bundle --outfile=dist/code.js --format=iife --target=es6 --watch",
     "build:ui": "cp src/ui.html dist/ui.html",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "server": "cd agent-server && npm start"
   },
   "keywords": [
     "figma",
