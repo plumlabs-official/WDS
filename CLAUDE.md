@@ -2,7 +2,7 @@
 
 > 이 파일은 Claude Code 세션 시작 시 자동으로 로드됩니다.
 >
-> Last updated: 2026-01-17 | v2.1.0
+> Last updated: 2026-01-17 | v2.5.0
 
 ## Quick Reference
 
@@ -15,6 +15,7 @@
 | 반복 작업 패턴 | `.ai/RECIPES.md` |
 | 현재 상태 | `.ai/SESSION.md` |
 | 네이밍 규칙 | `docs/specs/naming-schema.md` |
+| **완료 기록** | `.claude/commands/record.md` |
 
 ## Auto Reference Rules
 
@@ -77,6 +78,20 @@
 - [ ] **추측 → 유저에게 검증 요청 → 확인 후 수정**
 - [ ] 첫 시도부터 디버그 로그 추가
 - [ ] 예상대로 안 되면 조건문부터 확인
+
+### 작업 완료 시 (필수)
+> 상세: `.claude/commands/record.md`
+
+**다음 상황에서 `/record` 실행 제안:**
+- Phase/단계 완료
+- 기능 구현 완료 후 커밋
+- 버그 수정 완료 후 커밋
+- 구조 변경/리팩토링 완료
+
+**규칙:**
+- 커밋 후 `/record type message` 실행
+- ADR 필요 여부는 git diff 기반 자동 판정
+- ADR 생성은 사용자 승인 후에만
 
 ## Token Saving
 
