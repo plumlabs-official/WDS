@@ -8,7 +8,7 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { askClaudeWithImage, parseJsonResponse } from '../utils/claude';
+import { askClaudeWithImage, parseJsonResponse, ModelType } from '../utils/claude';
 import type {
   NamingRequest,
   NamingResult,
@@ -398,9 +398,10 @@ export async function analyzeNamingWithContext(
       .replace('{{screenHeight}}', String(request.screenHeight))
       .replace('{{nodeList}}', nodeList);
 
-    console.log(`[Context Naming] Analyzing ${request.nodes.length} nodes with screen context`);
+    const modelType = (request.model || 'sonnet') as ModelType;
+    console.log(`[Context Naming] Analyzing ${request.nodes.length} nodes with screen context (model: ${modelType})`);
 
-    const response = await askClaudeWithImage(prompt, request.screenScreenshot);
+    const response = await askClaudeWithImage(prompt, request.screenScreenshot, modelType);
 
     // 디버그: 응답 미리보기 (처음 500자)
     console.log(`[Context Naming] Response preview: ${response.substring(0, 500)}...`);

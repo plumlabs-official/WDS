@@ -1,6 +1,86 @@
 import Anthropic from '@anthropic-ai/sdk';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const client = new Anthropic();
+
+// 토큰 사용량 저장 경로
+const USAGE_FILE = path.join(process.cwd(), 'api-usage.json');
+
+// 모델 ID 매핑
+export const MODEL_MAP = {
+  haiku: 'claude-haiku-4-5-20251001',
+  sonnet: 'claude-sonnet-4-20250514',
+  opus: 'claude-opus-4-20250514',
+} as const;
+
+export type ModelType = keyof typeof MODEL_MAP;
+
+// 모델별 가격 (per 1M tokens)
+const PRICING: Record<string, { input: number; output: number; cacheRead: number }> = {
+  'claude-sonnet-4-20250514': { input: 3, output: 15, cacheRead: 0.3 },
+  'claude-haiku-4-5-20251001': { input: 1, output: 5, cacheRead: 0.1 },
+  'claude-opus-4-20250514': { input: 15, output: 75, cacheRead: 1.5 },
+};
+
+export interface UsageRecord {
+  timestamp: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  cost: number;
+}
+
+export interface SessionUsage {
+  sessionStart: string;
+  records: UsageRecord[];
+  totalCost: number;
+}
+
+/**
+ * 사용량 기록 저장
+ */
+function saveUsage(record: UsageRecord): void {
+  let session: SessionUsage;
+
+  try {
+    if (fs.existsSync(USAGE_FILE)) {
+      session = JSON.parse(fs.readFileSync(USAGE_FILE, 'utf-8'));
+    } else {
+      session = { sessionStart: new Date().toISOString(), records: [], totalCost: 0 };
+    }
+  } catch {
+    session = { sessionStart: new Date().toISOString(), records: [], totalCost: 0 };
+  }
+
+  session.records.push(record);
+  session.totalCost = session.records.reduce((sum, r) => sum + r.cost, 0);
+
+  fs.writeFileSync(USAGE_FILE, JSON.stringify(session, null, 2));
+  console.log(`[API Usage] $${record.cost.toFixed(4)} (Total: $${session.totalCost.toFixed(4)})`);
+}
+
+/**
+ * 비용 계산
+ */
+function calculateCost(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  cacheReadTokens: number = 0,
+  cacheCreationTokens: number = 0
+): number {
+  const pricing = PRICING[model as keyof typeof PRICING] || PRICING['claude-sonnet-4-20250514'];
+
+  // 캐시 읽기는 90% 할인, 캐시 생성은 25% 추가
+  const inputCost = ((inputTokens - cacheReadTokens) * pricing.input + cacheReadTokens * pricing.cacheRead) / 1_000_000;
+  const outputCost = (outputTokens * pricing.output) / 1_000_000;
+  const cacheCreationCost = (cacheCreationTokens * pricing.input * 1.25) / 1_000_000;
+
+  return inputCost + outputCost + cacheCreationCost;
+}
 
 export interface AgentRequest {
   screenshot?: string; // base64 encoded image
@@ -41,16 +121,21 @@ export async function askClaude(prompt: string): Promise<string> {
 export async function askClaudeWithImage(
   prompt: string,
   imageBase64: string,
+  modelType: ModelType = 'sonnet',
   mediaType: 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' = 'image/png'
 ): Promise<string> {
   // data:image/xxx;base64, prefix 제거
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
+  // 모델 ID 변환
+  const modelId = MODEL_MAP[modelType];
+  console.log(`[Claude] Using model: ${modelType} (${modelId})`);
+
   // 스트리밍으로 응답 수집
   let fullText = '';
 
   const stream = client.messages.stream({
-    model: 'claude-sonnet-4-20250514',
+    model: modelId,
     max_tokens: 32768,  // 150+ 노드 처리를 위해 증가
     messages: [
       {
@@ -79,6 +164,28 @@ export async function askClaudeWithImage(
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
       fullText += event.delta.text;
     }
+  }
+
+  // 최종 메시지에서 usage 정보 수집
+  const finalMessage = await stream.finalMessage();
+  const usage = finalMessage.usage;
+
+  if (usage) {
+    const usageAny = usage as unknown as Record<string, number>;
+    const cacheReadTokens = usageAny.cache_read_input_tokens || 0;
+    const cacheCreationTokens = usageAny.cache_creation_input_tokens || 0;
+
+    const cost = calculateCost(modelId, usage.input_tokens, usage.output_tokens, cacheReadTokens, cacheCreationTokens);
+
+    saveUsage({
+      timestamp: new Date().toISOString(),
+      model: modelId,
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+      cacheReadTokens,
+      cacheCreationTokens,
+      cost,
+    });
   }
 
   return fullText;

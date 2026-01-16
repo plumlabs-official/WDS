@@ -13,7 +13,7 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { askClaudeWithImage, parseJsonResponse } from '../utils/claude';
+import { askClaudeWithImage, parseJsonResponse, ModelType } from '../utils/claude';
 import type { AutoLayoutRequest, AutoLayoutResult, BaseResponse } from '../types';
 
 // 프롬프트 외부 파일 로드
@@ -61,7 +61,10 @@ export async function analyzeAutoLayout(
       .replace('{{calculatedDirection}}', request.calculatedDirection || 'AUTO')
       .replace('{{calculatedGap}}', String(request.calculatedGap || 0));
 
-    const response = await askClaudeWithImage(prompt, request.screenshot);
+    const modelType = (request.model || 'sonnet') as ModelType;
+    console.log(`[AutoLayout Agent] Using model: ${modelType}`);
+
+    const response = await askClaudeWithImage(prompt, request.screenshot, modelType);
     const result = parseJsonResponse<AutoLayoutResult>(response);
 
     if (!result) {

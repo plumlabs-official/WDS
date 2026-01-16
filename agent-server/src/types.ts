@@ -2,6 +2,9 @@
  * 공통 타입 정의
  */
 
+// AI 모델 타입
+export type ModelType = 'haiku' | 'sonnet' | 'opus';
+
 // 에이전트 타입
 export type AgentType = 'naming' | 'autolayout' | 'componentize';
 
@@ -40,6 +43,7 @@ export interface ContextAwareNamingRequest {
   screenScreenshot: string;  // 전체 스크린 (1장)
   screenWidth: number;
   screenHeight: number;
+  model?: ModelType;  // AI 모델 선택 (기본값: sonnet)
   nodes: Array<{
     nodeId: string;
     currentName: string;
@@ -73,6 +77,7 @@ export interface ContextAwareNamingResult {
 export interface AutoLayoutRequest extends BaseRequest {
   width?: number;
   height?: number;
+  model?: ModelType;  // AI 모델 선택 (기본값: sonnet)
   calculatedDirection?: string; // 룰 베이스 계산값
   calculatedGap?: number;
   children: Array<{
