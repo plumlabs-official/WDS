@@ -4,6 +4,15 @@
  * 역할:
  * - 의미 없는 래퍼 그룹/프레임 제거
  * - 자식 노드를 상위 레벨로 언래핑
+ *
+ * ⚠️ CLEANUP 작업 체크리스트 (수정 전 확인):
+ * - getNodeByIdAsync 사용 (getNodeById 금지, dynamic-page 모드)
+ * - 캐시 clear는 진입점 함수에서만 (반복 함수 내부 금지)
+ * - 노드 삭제 전 필요한 속성(.name 등) 미리 저장
+ * - children 배열 복사 후 순회: [...node.children]
+ * - 좌표 계산에서 절대/상대 구분
+ *
+ * 상세 패턴: .ai/lessons_learned.md 참조
  */
 
 /**
@@ -61,7 +70,12 @@ async function callCleanupValidator(
   operationType: 'flatten' | 'cleanup'
 ): Promise<CleanupValidationResult | null> {
   try {
-    const response = await fetch(`${AGENT_SERVER_URL}/agents/cleanup/validate`, {
+    // 30초 타임아웃 (Promise.race 사용 - Figma 플러그인 환경에서 AbortController 미지원)
+    const timeoutPromise = new Promise<Response>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), 30000);
+    });
+
+    const fetchPromise = fetch(`${AGENT_SERVER_URL}/agents/cleanup/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -72,6 +86,8 @@ async function callCleanupValidator(
         operationType,
       }),
     });
+
+    const response = await Promise.race([fetchPromise, timeoutPromise]);
 
     if (!response.ok) {
       console.log(`[Cleanup Validator] HTTP error: ${response.status}`);
@@ -84,8 +100,12 @@ async function callCleanupValidator(
     }
     console.log(`[Cleanup Validator] API error: ${result.error}`);
     return null;
-  } catch (e) {
-    console.log(`[Cleanup Validator] Network error:`, e);
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === 'Timeout') {
+      console.log(`[Cleanup Validator] 타임아웃 (30초)`);
+    } else {
+      console.log(`[Cleanup Validator] Network error:`, e);
+    }
     return null;
   }
 }
@@ -419,6 +439,18 @@ interface NestedChain {
 }
 
 /**
+ * 병합 후보 정보 (Human in the Loop용)
+ */
+export interface MergeCandidate {
+  id: string;                 // topNode.id
+  name: string;               // 체인 이름
+  depth: number;              // 중첩 깊이 (예: 3중)
+  hierarchy: string[];        // 계층 구조 (예: ['textfield+dsc', 'textfield+dsc', 'textfield'])
+  childrenPreview: string[];  // 최종 자식 미리보기 (예: ['text "매일..."', 'Frame 123'])
+  size: { width: number; height: number };
+}
+
+/**
  * 레이아웃 스냅샷 (병합 전후 비교용)
  */
 interface LayoutSnapshot {
@@ -536,6 +568,46 @@ function isSimilarSize(a: FrameNode, b: FrameNode, tolerance: number = 5): boole
   const widthDiff = Math.abs(a.width - b.width);
   const heightDiff = Math.abs(a.height - b.height);
   return widthDiff <= tolerance && heightDiff <= tolerance;
+}
+
+/**
+ * Auto Layout 프레임이 무의미한 래퍼인지 확인
+ * 조건:
+ * - 패딩이 없거나 무의미 (< 4px)
+ * - 시각적 스타일이 없음 (stroke, effect, cornerRadius 없음)
+ * - fill은 자식에게 이전 가능하므로 무시
+ */
+function isEmptyAutoLayoutWrapper(node: FrameNode): boolean {
+  // 패딩 체크 (4px 미만이면 무의미)
+  const PADDING_THRESHOLD = 4;
+  if (node.paddingTop >= PADDING_THRESHOLD ||
+      node.paddingRight >= PADDING_THRESHOLD ||
+      node.paddingBottom >= PADDING_THRESHOLD ||
+      node.paddingLeft >= PADDING_THRESHOLD) {
+    return false;
+  }
+
+  // cornerRadius 체크
+  if (typeof node.cornerRadius === 'number' && node.cornerRadius > 0) {
+    return false;
+  }
+
+  // strokes 체크
+  if (node.strokes && node.strokes.length > 0) {
+    for (const s of node.strokes) {
+      if (s.visible !== false) return false;
+    }
+  }
+
+  // effects 체크
+  if (node.effects && node.effects.length > 0) {
+    for (const e of node.effects) {
+      if (e.visible !== false) return false;
+    }
+  }
+
+  // fill은 자식에게 이전 가능하므로 체크 안 함
+  return true;
 }
 
 /**
@@ -698,18 +770,109 @@ async function flattenSameNameChain(
   const { topNode, middleNodes, bottomNode, offsetX, offsetY } = chain;
 
   try {
-    // 0. 병합 전 스크린샷 캡처 (AI 검증용)
+    // 노드 유효성 검사 (이전 병합으로 삭제되었을 수 있음)
+    const topNodeCheck = await figma.getNodeByIdAsync(topNode.id);
+    const bottomNodeCheck = await figma.getNodeByIdAsync(bottomNode.id);
+    if (!topNodeCheck || !bottomNodeCheck) {
+      console.log(`[Flatten] 노드가 이미 삭제됨, 스킵`);
+      return { success: false };
+    }
+
+    // ===== 새 방식: Auto Layout 부모가 무의미한 래퍼인 경우 =====
+    // topNode의 부모가 AL이고, topNode가 무의미한 래퍼이면
+    // bottomNode를 topNode 위치로 옮기고 topNode 제거
+    const parentNode = topNode.parent;
+    if (parentNode && 'layoutMode' in parentNode && parentNode.layoutMode !== 'NONE') {
+      // 부모가 Auto Layout인 경우
+
+      // topNode가 무의미한 래퍼인지 확인
+      const isTopNodeMeaningless = isEmptyAutoLayoutWrapper(topNode);
+
+      if (isTopNodeMeaningless) {
+        console.log(`[Flatten] AL 부모 감지: "${topNode.name}" → bottomNode "${bottomNode.name}"를 상위로 이동`);
+
+        // topNode의 fills를 bottomNode에 이전 (있다면)
+        if (topNode.fills && Array.isArray(topNode.fills) && topNode.fills.length > 0) {
+          const visibleFills = (topNode.fills as readonly Paint[]).filter(f => f.visible !== false);
+          if (visibleFills.length > 0 && 'fills' in bottomNode) {
+            const existingFills = (bottomNode.fills as readonly Paint[]) || [];
+            (bottomNode as FrameNode).fills = [...visibleFills, ...existingFills];
+            console.log(`[Flatten] topNode fills를 bottomNode에 이전`);
+          }
+        }
+
+        // bottomNode를 topNode의 부모로 이동 (topNode 위치에)
+        const topIndex = (parentNode as FrameNode).children.indexOf(topNode);
+        (parentNode as FrameNode).insertChild(topIndex, bottomNode);
+
+        // 중간 노드들 + topNode 제거
+        for (const mid of middleNodes) {
+          try { mid.remove(); } catch (e) { /* 이미 제거됨 */ }
+        }
+        try { topNode.remove(); } catch (e) { /* 이미 제거됨 */ }
+
+        console.log(`[Flatten] AL 부모 병합 완료`);
+        return { success: true, aiValidated: false };
+      }
+    }
+
+    // ===== 기존 방식: 일반 병합 =====
+    // 0. 병합 전 스크린샷 캡처 (AI 검증용) - 2단계 상위 부모까지 캡처하여 레이아웃 영향 감지
     let beforeScreenshot: string | null = null;
+    let screenshotTarget: SceneNode = topNode;
+
+    // 2단계 상위 부모까지 올라가서 캡처 (더 넓은 범위의 레이아웃 변화 감지)
+    let parent1 = topNode.parent;
+    if (parent1 && 'type' in parent1 && parent1.type === 'FRAME') {
+      screenshotTarget = parent1 as SceneNode;
+
+      // 2단계 상위가 있으면 더 올라감
+      let parent2 = parent1.parent;
+      if (parent2 && 'type' in parent2 && parent2.type === 'FRAME') {
+        screenshotTarget = parent2 as SceneNode;
+        console.log(`[Flatten] 스크린샷 대상: 2단계 상위 "${screenshotTarget.name}"`);
+      } else {
+        console.log(`[Flatten] 스크린샷 대상: 1단계 상위 "${screenshotTarget.name}"`);
+      }
+    }
+
     if (useAIValidation) {
       try {
-        beforeScreenshot = await captureNodeScreenshot(topNode);
+        beforeScreenshot = await captureNodeScreenshot(screenshotTarget);
         console.log(`[Flatten] 병합 전 스크린샷 캡처 완료`);
       } catch (e) {
         console.log(`[Flatten] 스크린샷 캡처 실패, AI 검증 스킵:`, e);
       }
     }
 
-    // 0.5. 스타일 병합 (fills, strokes, effects 등을 topNode에 병합)
+    // 0.5. 병합 전 모든 자손의 절대 위치 저장 (보정용)
+    interface AbsolutePositionInfo {
+      id: string;
+      name: string;
+      absoluteX: number;
+      absoluteY: number;
+    }
+    const beforePositions: AbsolutePositionInfo[] = [];
+
+    function collectAbsolutePositions(node: SceneNode) {
+      if (node.absoluteBoundingBox) {
+        beforePositions.push({
+          id: node.id,
+          name: node.name,
+          absoluteX: node.absoluteBoundingBox.x,
+          absoluteY: node.absoluteBoundingBox.y,
+        });
+      }
+      if ('children' in node) {
+        for (const child of node.children) {
+          collectAbsolutePositions(child);
+        }
+      }
+    }
+    collectAbsolutePositions(bottomNode);
+    console.log(`[Flatten] 병합 전 ${beforePositions.length}개 노드 위치 저장`);
+
+    // 0.6. 스타일 병합 (fills, strokes, effects 등을 topNode에 병합)
     mergeChainStyles(chain);
 
     // 1. 최하위 노드의 자식들과 위치 정보 저장
@@ -793,11 +956,44 @@ async function flattenSameNameChain(
       }
     }
 
-    // 9. AI 기반 시각적 검증 및 복원
+    // 9. 항상 절대 위치 기반 자동 보정 수행 (AI 검증과 무관)
+    let corrected = 0;
+    const layoutIssues: string[] = [];
+
+    for (const beforePos of beforePositions) {
+      try {
+        const node = figma.getNodeById(beforePos.id) as SceneNode | null;
+        if (node && node.absoluteBoundingBox) {
+          const afterX = node.absoluteBoundingBox.x;
+          const afterY = node.absoluteBoundingBox.y;
+          const deltaX = beforePos.absoluteX - afterX;
+          const deltaY = beforePos.absoluteY - afterY;
+
+          // 위치가 2px 이상 틀어졌으면 보정
+          if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+            if ('x' in node) {
+              node.x += deltaX;
+              node.y += deltaY;
+              console.log(`[Flatten] 보정: "${beforePos.name}" 이동 (${deltaX.toFixed(1)}, ${deltaY.toFixed(1)})`);
+              layoutIssues.push(`${beforePos.name}: (${deltaX.toFixed(1)}, ${deltaY.toFixed(1)}) 보정`);
+              corrected++;
+            }
+          }
+        }
+      } catch (e) {
+        // 노드가 제거되었을 수 있음 - 무시
+      }
+    }
+
+    if (corrected > 0) {
+      console.log(`[Flatten] ${corrected}개 노드 위치 보정 완료`);
+    }
+
+    // 10. AI 기반 시각적 검증 (참고용, 보정은 이미 완료)
     if (useAIValidation && beforeScreenshot) {
       try {
-        const afterScreenshot = await captureNodeScreenshot(topNode);
-        console.log(`[Flatten] 병합 후 스크린샷 캡처 완료, AI 검증 요청...`);
+        const afterScreenshot = await captureNodeScreenshot(screenshotTarget);
+        console.log(`[Flatten] 병합 후 스크린샷 캡처 완료 (대상: ${screenshotTarget.name}), AI 검증 요청...`);
 
         const validationResult = await callCleanupValidator(
           beforeScreenshot,
@@ -810,21 +1006,13 @@ async function flattenSameNameChain(
         if (validationResult) {
           if (validationResult.isIdentical) {
             console.log(`[Flatten] AI 검증: 시각적 차이 없음 ✓`);
-            return { success: true, aiValidated: true };
           } else if (validationResult.differences && validationResult.differences.length > 0) {
-            console.log(`[Flatten] AI 검증: ${validationResult.differences.length}개 차이 발견, 복원 시도...`);
+            console.log(`[Flatten] AI 검증: ${validationResult.differences.length}개 차이 발견`);
             console.log(`[Flatten] AI 요약: ${validationResult.summary}`);
-
-            // AI가 제안한 복원 지시 적용
-            const fixResult = applyCleanupFixes(topNode, validationResult.differences);
-            console.log(`[Flatten] 복원 결과: ${fixResult.applied}개 적용, ${fixResult.failed}개 실패`);
-
-            const issues = validationResult.differences.map(d => `${d.element}: ${d.description}`);
-            return { success: true, layoutIssues: issues, aiValidated: true };
           }
-        } else {
-          console.log(`[Flatten] AI 검증 실패, 규칙 기반 검증으로 폴백`);
         }
+
+        return { success: true, layoutIssues: layoutIssues.length > 0 ? layoutIssues : undefined, aiValidated: true };
       } catch (e) {
         console.log(`[Flatten] AI 검증 에러:`, e);
       }
@@ -935,6 +1123,246 @@ export async function flattenSameNameWrappersRecursive(
   }
 
   return { flattenedCount, flattenedNames, layoutIssues, aiValidatedCount };
+}
+
+// 체인 정보를 임시 저장 (ID로 조회용)
+// ⚠️ clear()는 collectSelectionMergeCandidates()에서만! (반복 함수 내부 금지)
+const chainCache = new Map<string, NestedChain>();
+
+/**
+ * 병합 후보 수집 (Human in the Loop용)
+ * - 실제 병합 없이 후보 목록만 반환
+ */
+export function collectMergeCandidates(node: SceneNode): MergeCandidate[] {
+  const candidates: MergeCandidate[] = [];
+  // chainCache.clear()는 collectSelectionMergeCandidates에서 한 번만 호출
+
+  function collectChains(n: SceneNode) {
+    try {
+      if (!n.parent) return;
+
+      // 자식 먼저 탐색 (깊이 우선)
+      if ('children' in n) {
+        const children = [...(n as ChildrenMixin).children];
+        for (const child of children) {
+          collectChains(child);
+        }
+      }
+
+      if (n.type !== 'FRAME') return;
+      if (!n.parent) return;
+
+      const chain = findSingleChildChain(n as FrameNode, false);
+      if (chain) {
+        const depth = chain.middleNodes.length + 2;
+
+        // 계층 구조 수집 (최하위 자식까지 포함)
+        const hierarchy: string[] = [chain.topNode.name];
+        for (const middle of chain.middleNodes) {
+          hierarchy.push(middle.name);
+        }
+        hierarchy.push(chain.bottomNode.name);
+
+        // bottomNode의 자식들도 계층에 추가
+        for (const child of chain.bottomNode.children.slice(0, 5)) {
+          const childLabel = child.type === 'TEXT'
+            ? `text "${(child as TextNode).characters.substring(0, 15)}${(child as TextNode).characters.length > 15 ? '...' : ''}"`
+            : `${child.name}`;
+          hierarchy.push(childLabel);
+        }
+        if (chain.bottomNode.children.length > 5) {
+          hierarchy.push(`... 외 ${chain.bottomNode.children.length - 5}개`);
+        }
+
+        // 최종 자식 미리보기 (별도로도 유지)
+        const childrenPreview: string[] = [];
+        for (const child of chain.bottomNode.children.slice(0, 5)) {
+          const preview = child.type === 'TEXT'
+            ? `text "${(child as TextNode).characters.substring(0, 20)}${(child as TextNode).characters.length > 20 ? '...' : ''}"`
+            : `${child.type} "${child.name}"`;
+          childrenPreview.push(preview);
+        }
+        if (chain.bottomNode.children.length > 5) {
+          childrenPreview.push(`... 외 ${chain.bottomNode.children.length - 5}개`);
+        }
+
+        const candidate: MergeCandidate = {
+          id: chain.topNode.id,
+          name: n.name,
+          depth,
+          hierarchy,
+          childrenPreview,
+          size: {
+            width: Math.round(chain.topNode.width),
+            height: Math.round(chain.topNode.height),
+          },
+        };
+
+        candidates.push(candidate);
+        chainCache.set(chain.topNode.id, chain);
+      }
+    } catch (e) {
+      console.log('[Flatten] collectChains error:', e);
+    }
+  }
+
+  console.log(`[Flatten] 후보 수집 시작: ${node.name}`);
+  collectChains(node);
+  console.log(`[Flatten] ${candidates.length}개 후보 발견`);
+
+  return candidates;
+}
+
+/**
+ * 선택된 노드에서 병합 후보 수집
+ */
+export function collectSelectionMergeCandidates(): {
+  success: boolean;
+  candidates: MergeCandidate[];
+  message?: string;
+} {
+  // ⚠️ 캐시 초기화는 여기서만! (collectMergeCandidates 내부에서 하면 다중 선택 시 손실)
+  chainCache.clear();
+
+  const selection = figma.currentPage.selection;
+
+  if (selection.length === 0) {
+    return {
+      success: false,
+      candidates: [],
+      message: '선택된 요소가 없습니다.',
+    };
+  }
+
+  const allCandidates: MergeCandidate[] = [];
+
+  for (const node of selection) {
+    const candidates = collectMergeCandidates(node);
+    allCandidates.push(...candidates);
+  }
+
+  return {
+    success: true,
+    candidates: allCandidates,
+    message: `${allCandidates.length}개 병합 후보 발견`,
+  };
+}
+
+/**
+ * 선택된 후보들만 병합 (Human in the Loop)
+ */
+export async function flattenSelectedCandidates(
+  selectedIds: string[],
+  useAIValidation: boolean = true
+): Promise<{
+  success: boolean;
+  message: string;
+  details?: {
+    flattenedCount: number;
+    flattenedNames: string[];
+    layoutIssues: string[];
+    aiValidatedCount: number;
+  };
+}> {
+  try {
+    let flattenedCount = 0;
+    let aiValidatedCount = 0;
+    const flattenedNames: string[] = [];
+    const layoutIssues: string[] = [];
+
+    console.log(`[Flatten] 캐시 크기: ${chainCache.size}, 캐시 키: ${Array.from(chainCache.keys()).join(', ')}`);
+
+    const total = selectedIds.length;
+    for (let i = 0; i < selectedIds.length; i++) {
+      const id = selectedIds[i];
+      const chain = chainCache.get(id);
+      if (!chain) {
+        console.log(`[Flatten] 캐시에서 체인 못 찾음: ${id}`);
+        continue;
+      }
+
+      console.log(`[Flatten] 캐시 히트: ${id}`);
+
+      // 캐시된 노드 참조가 유효한지 먼저 확인
+      let topNodeId: string;
+      try {
+        topNodeId = chain.topNode.id;
+        console.log(`[Flatten] topNode.id 접근 성공: ${topNodeId}`);
+      } catch (e) {
+        console.log(`[Flatten] ${id}: 캐시된 노드 참조 무효 (topNode.id 접근 실패)`);
+        continue;
+      }
+
+      // 노드가 아직 존재하는지 확인 (async 사용)
+      try {
+        const nodeCheck = await figma.getNodeByIdAsync(topNodeId);
+        if (!nodeCheck) {
+          console.log(`[Flatten] ${id}: 노드가 더 이상 존재하지 않음`);
+          continue;
+        }
+        if (!chain.topNode.parent) {
+          console.log(`[Flatten] ${id}: 이미 처리됨 (parent 없음)`);
+          continue;
+        }
+      } catch (e) {
+        console.log(`[Flatten] ${id}: getNodeByIdAsync 에러:`, e);
+        continue;
+      }
+
+      const depth = chain.middleNodes.length + 2;
+      // 병합 전에 이름 저장 (병합 후 노드가 삭제되므로)
+      const chainName = chain.topNode.name;
+      console.log(`[Flatten] 체인 병합: ${chainName} (${depth}중)`);
+
+      // 프로그레스 업데이트
+      figma.ui.postMessage({
+        type: 'merge-progress',
+        current: i + 1,
+        total: total,
+        name: chainName,
+      });
+
+      const result = await flattenSameNameChain(chain, useAIValidation);
+
+      if (result.success) {
+        flattenedCount++;
+        flattenedNames.push(`${chainName} (${depth}중 → 1)`);
+
+        if (result.aiValidated) {
+          aiValidatedCount++;
+        }
+
+        if (result.layoutIssues && result.layoutIssues.length > 0) {
+          layoutIssues.push(`${chainName}: ${result.layoutIssues.join(', ')}`);
+        }
+      }
+    }
+
+    // 캐시 정리
+    chainCache.clear();
+
+    let message = `${flattenedCount}개의 중첩 체인이 병합되었습니다.`;
+    if (aiValidatedCount > 0) {
+      message += ` (${aiValidatedCount}개 AI 검증)`;
+    }
+
+    return {
+      success: true,
+      message,
+      details: {
+        flattenedCount,
+        flattenedNames,
+        layoutIssues,
+        aiValidatedCount,
+      },
+    };
+  } catch (e) {
+    console.log('[Flatten] flattenSelectedCandidates error:', e);
+    return {
+      success: false,
+      message: '병합 중 오류가 발생했습니다: ' + String(e),
+    };
+  }
 }
 
 /**
@@ -2171,126 +2599,6 @@ function removeEmptyFromAutoLayout(node: FrameNode): number {
   }
 
   return removed;
-}
-
-/**
- * 병합 후보 수집 (Human-in-the-loop용)
- * - same: 자동 병합 대상
- * - similar: 사용자 확인 필요
- */
-export function collectMergeCandidates(node: SceneNode, depth: number = 0): MergeCandidate[] {
-  var candidates: MergeCandidate[] = [];
-
-  if (node.type !== 'FRAME') {
-    return candidates;
-  }
-
-  var frame = node as FrameNode;
-
-  // Auto Layout 단일자식 체크
-  if (frame.layoutMode !== 'NONE' && frame.children.length === 1) {
-    var child = frame.children[0];
-    if (child.type === 'FRAME' && (child as FrameNode).layoutMode !== 'NONE') {
-      var childFrame = child as FrameNode;
-
-      // 레이아웃 방향이 같아야 함
-      if (frame.layoutMode === childFrame.layoutMode) {
-        var similarity = getNameSimilarity(frame.name, childFrame.name);
-        if (similarity !== 'different') {
-          candidates.push({
-            parentId: frame.id,
-            parentName: frame.name,
-            childId: childFrame.id,
-            childName: childFrame.name,
-            similarity: similarity,
-            depth: depth
-          });
-        }
-      }
-    }
-  }
-
-  // 재귀적으로 자식들도 탐색
-  var children = [...frame.children];
-  for (var i = 0; i < children.length; i++) {
-    var childCandidates = collectMergeCandidates(children[i], depth + 1);
-    candidates = candidates.concat(childCandidates);
-  }
-
-  return candidates;
-}
-
-/**
- * 선택된 병합 후보 실행
- * - parentId 목록을 받아 해당 노드들을 병합
- * - 깊은 것부터 처리 (depth 역순)
- */
-export function executeMergeCandidates(parentIds: string[]): { merged: number; failed: number } {
-  var merged = 0;
-  var failed = 0;
-
-  // parentId로 노드 찾기
-  var nodesToMerge: FrameNode[] = [];
-  for (var i = 0; i < parentIds.length; i++) {
-    var node = figma.getNodeById(parentIds[i]);
-    if (node && node.type === 'FRAME') {
-      nodesToMerge.push(node as FrameNode);
-    }
-  }
-
-  // 깊은 것부터 처리 (자식부터 병합해야 부모 병합 시 문제 없음)
-  // depth 정보가 없으므로 y 좌표나 트리 깊이로 정렬 어려움
-  // 대신 역순으로 처리 (수집 시 이미 depth 순)
-  nodesToMerge.reverse();
-
-  for (var j = 0; j < nodesToMerge.length; j++) {
-    var parent = nodesToMerge[j];
-    try {
-      // 노드가 여전히 유효한지 확인
-      if (!parent.parent) continue;
-
-      if (mergeAutoLayoutSingleChild(parent)) {
-        merged++;
-      } else {
-        failed++;
-      }
-    } catch (e) {
-      console.error(`[Merge] 실패: ${parent.name}`, e);
-      failed++;
-    }
-  }
-
-  console.log(`[Merge] 완료: ${merged}개 병합, ${failed}개 실패`);
-  return { merged, failed };
-}
-
-/**
- * 선택 영역에서 병합 후보 수집
- */
-export function collectSelectionMergeCandidates(): {
-  success: boolean;
-  candidates: MergeCandidate[];
-  message?: string;
-} {
-  var selection = figma.currentPage.selection;
-
-  if (selection.length === 0) {
-    return { success: false, candidates: [], message: '선택된 요소가 없습니다.' };
-  }
-
-  var allCandidates: MergeCandidate[] = [];
-
-  for (var i = 0; i < selection.length; i++) {
-    var candidates = collectMergeCandidates(selection[i]);
-    allCandidates = allCandidates.concat(candidates);
-  }
-
-  // 깊이 역순 정렬 (깊은 것 먼저)
-  allCandidates.sort(function(a, b) {
-    return b.depth - a.depth;
-  });
-
-  return { success: true, candidates: allCandidates };
 }
 
 /**

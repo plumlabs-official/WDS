@@ -343,6 +343,95 @@ if (node.type === 'BOOLEAN_OPERATION') {
 - 점진적 수정 3회 반복 (자식 탐색 → 제외 → 제외+자식무시)
 - 초기 디버그 로그 부재
 
+### 13. 병합 후 삭제된 노드의 .name 접근 에러 (2026-01-16)
+**문제**: 체인 병합 완료 후 `chain.topNode.name` 접근 시 에러
+
+**원인**: `flattenSameNameChain()`이 `topNode`를 삭제한 후, 호출부에서 삭제된 노드의 `.name` 접근
+
+**증상**:
+```
+[Flatten] AL 부모 병합 완료
+Error: in get_name: The node with id "14481:3008" does not exist
+```
+
+```typescript
+// ❌ 문제 - 병합 후 삭제된 노드 접근
+const result = await flattenSameNameChain(chain, useAIValidation);
+if (result.success) {
+  flattenedNames.push(`${chain.topNode.name} (${depth}중 → 1)`);  // 에러!
+}
+
+// ✅ 해결 - 병합 전에 이름 저장
+const chainName = chain.topNode.name;  // 미리 저장
+const result = await flattenSameNameChain(chain, useAIValidation);
+if (result.success) {
+  flattenedNames.push(`${chainName} (${depth}중 → 1)`);  // 저장된 값 사용
+}
+```
+
+**핵심**: 노드 삭제 가능성 있는 함수 호출 전에 필요한 속성 미리 저장
+
+### 14. getNodeById vs getNodeByIdAsync (dynamic-page 모드) (2026-01-16)
+**문제**: `documentAccess: dynamic-page` 모드에서 `figma.getNodeById()` 사용 시 에러
+
+**원인**: dynamic-page 모드는 비동기 API만 지원
+
+**증상**:
+```
+Cannot call with documentAccess: dynamic-page. Use figma.getNodeByIdAsync instead.
+```
+
+```typescript
+// ❌ 문제 - 동기 API 사용
+const nodeCheck = figma.getNodeById(chain.topNode.id);
+
+// ✅ 해결 - 비동기 API 사용
+const nodeCheck = await figma.getNodeByIdAsync(chain.topNode.id);
+```
+
+**핵심**: `documentAccess: dynamic-page` 설정 시 모든 노드 접근은 async 버전 사용
+
+### 15. 캐시 clear 위치 - 반복 호출 함수 vs 진입점 (2026-01-16)
+**문제**: 다중 선택 시 모든 노드가 "캐시에서 체인 못 찾음" 에러
+
+**원인**: `chainCache.clear()`가 반복 호출되는 함수 내부에 있음
+
+**증상**:
+```
+[Flatten] 캐시에서 체인 못 찾음: 14480:1888
+[Flatten] 캐시에서 체인 못 찾음: 14480:1900
+... (모든 노드 실패)
+```
+
+```typescript
+// ❌ 문제 - 반복 호출 함수 내부에서 clear
+function collectMergeCandidates(node: SceneNode) {
+  chainCache.clear();  // 매 노드마다 초기화! → 이전 노드 캐시 손실
+  // ...
+}
+
+function collectSelectionMergeCandidates() {
+  for (const node of selection) {
+    collectMergeCandidates(node);  // 2번째 호출 시 1번째 캐시 날아감
+  }
+}
+
+// ✅ 해결 - 진입점 함수에서 한 번만 clear
+function collectMergeCandidates(node: SceneNode) {
+  // chainCache.clear() 제거
+  // ...
+}
+
+function collectSelectionMergeCandidates() {
+  chainCache.clear();  // 진입점에서 한 번만
+  for (const node of selection) {
+    collectMergeCandidates(node);  // 캐시 유지됨
+  }
+}
+```
+
+**핵심**: 캐시 초기화는 **진입점 함수**에서 한 번만, 반복 호출되는 함수 내부에서는 금지
+
 ---
 
 ## 공통 버그 패턴
@@ -490,6 +579,9 @@ for (const child of frame.children) {
 ### Cleanup 작업 전
 - [ ] 좌표 계산에서 절대/상대 구분했는가?
 - [ ] children 배열 복사 후 순회하는가?
+- [ ] 노드 삭제 후 접근할 속성은 미리 저장했는가?
+- [ ] `getNodeById` 대신 `getNodeByIdAsync` 사용했는가? (dynamic-page 모드)
+- [ ] 캐시 clear가 진입점 함수에만 있는가? (반복 호출 함수 내부 금지)
 
 ---
 
@@ -620,3 +712,6 @@ npm run build:all  # 플러그인 + 서버
 | 2026-01-16 | Cleanup | 의도적 프레임 이름 보존 로직 추가 (Hidden, Mask 등) |
 | 2026-01-16 | 프로세스 | 원인 추측 없이 검증 먼저 패턴 추가 |
 | 2026-01-16 | Cleanup | AL 언래핑 시도 후 비활성화 (Alignment 손실 문제) |
+| 2026-01-16 | Cleanup | 병합 후 삭제된 노드 접근 패턴 추가 |
+| 2026-01-16 | Cleanup | getNodeByIdAsync 필수 사용 패턴 추가 |
+| 2026-01-16 | Cleanup | 캐시 clear 위치 패턴 추가 |

@@ -350,24 +350,27 @@
     <button id="btn-cleanup-wrappers" class="btn-secondary" onclick="runCommandWithProgress('cleanup-wrappers-ai', this)">
       래퍼 제거
     </button>
-    <button id="btn-flatten-same-name" class="btn-secondary" onclick="runCommandWithProgress('flatten-same-name', this)">
+    <button id="btn-flatten-same-name" class="btn-secondary" onclick="runCommandWithProgress('collect-merge-candidates', this)">
       중첩 레이어 병합
-    </button>
-    <button id="btn-collect-merge" class="btn-secondary" onclick="runCommandWithProgress('collect-merge-candidates', this)">
-      병합 후보 수집
     </button>
   </div>
 
   <!-- 병합 후보 리스트 (숨김 상태) -->
   <div id="merge-candidates-section" class="section" style="display: none;">
-    <div class="section-title">병합 후보</div>
-    <div id="merge-candidates-list" style="max-height: 200px; overflow-y: auto; font-size: 11px;"></div>
+    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>병합 후보</span>
+      <span id="merge-candidates-count" style="font-size: 10px; color: #666;"></span>
+    </div>
+    <div id="merge-candidates-list" style="max-height: 250px; overflow-y: auto; font-size: 11px;"></div>
     <div style="margin-top: 8px; display: flex; gap: 4px;">
       <button class="btn-secondary" onclick="selectAllMergeCandidates(true)" style="flex: 1;">전체 선택</button>
       <button class="btn-secondary" onclick="selectAllMergeCandidates(false)" style="flex: 1;">전체 해제</button>
     </div>
     <button id="btn-execute-merge" class="btn-primary" onclick="executeMerge()" style="margin-top: 8px; width: 100%;">
-      선택 항목 병합
+      선택 항목 병합 실행
+    </button>
+    <button class="btn-secondary" onclick="hideMergeCandidates()" style="margin-top: 4px; width: 100%;">
+      취소
     </button>
   </div>
 
@@ -540,6 +543,15 @@
       }
     }
 
+    // 병합 프로그레스 업데이트
+    function updateMergeProgress(current, total, name) {
+      if (currentPipeline && currentPipeline.steps.length === 1) {
+        const percent = Math.round((current / total) * 100);
+        currentPipeline.steps[0] = `병합 중 (${current}/${total}): ${name}`;
+        renderProgress();
+      }
+    }
+
     // Check server connection on load
     checkServerConnection();
 
@@ -683,6 +695,10 @@
           hideMergeCandidates();
           break;
 
+        case 'merge-progress':
+          updateMergeProgress(msg.current, msg.total, msg.name);
+          break;
+
         // 단일 작업 진행 상태
         case 'task-start':
           showSingleTaskProgress(msg.taskName);
@@ -701,38 +717,68 @@
       mergeCandidatesData = candidates || [];
       const section = document.getElementById('merge-candidates-section');
       const list = document.getElementById('merge-candidates-list');
+      const countEl = document.getElementById('merge-candidates-count');
 
       if (candidates.length === 0) {
         section.style.display = 'none';
         return;
       }
 
-      // 리스트 렌더링
+      countEl.textContent = `${candidates.length}개`;
+
+      // 리스트 렌더링 (새 포맷: hierarchy, depth, childrenPreview)
       let html = '';
       candidates.forEach((c, i) => {
-        const similarityBadge = c.similarity === 'same'
-          ? '<span style="color: #0a0; font-size: 9px;">[자동]</span>'
-          : '<span style="color: #fa0; font-size: 9px;">[확인]</span>';
-        const checked = c.similarity === 'same' ? 'checked' : '';
+        const depthBadge = `<span style="background: #e0e0e0; color: #333; font-size: 9px; padding: 1px 4px; border-radius: 3px;">${c.depth}중</span>`;
+
+        // 계층 구조 (접기/펼치기)
+        // depth번째까지는 체인(제거됨), 그 이후는 최종 자식(유지됨)
+        const chainEndIdx = c.depth;
+        const hierarchyHtml = c.hierarchy.map((h, idx) => {
+          const indent = '&nbsp;'.repeat(idx * 2);
+          const isChain = idx < chainEndIdx;
+          const isLastChain = idx === chainEndIdx - 1;
+
+          if (idx === 0) {
+            return `<div style="font-weight: 500; color: #c00; text-decoration: line-through;">${h}</div>`;
+          } else if (isChain && !isLastChain) {
+            // 중간 노드 (제거됨)
+            return `<div style="color: #c00; font-size: 10px; text-decoration: line-through;">${indent}└ ${h}</div>`;
+          } else if (isLastChain) {
+            // 최하위 노드 (제거됨, 자식만 유지)
+            return `<div style="color: #c00; font-size: 10px; text-decoration: line-through;">${indent}└ ${h} <span style="color: #888; text-decoration: none;">(자식만 유지)</span></div>`;
+          } else {
+            // 최종 자식 (유지됨)
+            return `<div style="color: #080; font-size: 10px;">${indent}└ ${h}</div>`;
+          }
+        }).join('');
 
         html += `
-          <label style="display: flex; align-items: flex-start; gap: 6px; padding: 4px 0; border-bottom: 1px solid #eee; cursor: pointer;">
-            <input type="checkbox" data-index="${i}" ${checked} style="margin-top: 2px;">
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; gap: 4px; align-items: center;">
-                ${similarityBadge}
-                <span style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${c.parentName}</span>
+          <div style="border-bottom: 1px solid #eee; padding: 6px 0;">
+            <label style="display: flex; align-items: flex-start; gap: 6px; cursor: pointer;">
+              <input type="checkbox" data-index="${i}" data-nodeid="${c.id}" checked style="margin-top: 3px;" onchange="onCandidateCheckChange(this)">
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 2px;">
+                  ${depthBadge}
+                  <span style="font-weight: 500; overflow: hidden; text-overflow: ellipsis;">${c.name}</span>
+                  <span style="color: #999; font-size: 9px;">${c.size.width}x${c.size.height}</span>
+                </div>
+                <details style="font-size: 10px;" open>
+                  <summary style="cursor: pointer; color: #666;">계층 구조 <span style="color: #c00;">빨강=제거</span> <span style="color: #080;">초록=유지</span></summary>
+                  <div style="padding: 4px 0 0 8px; color: #555;">
+                    ${hierarchyHtml}
+                  </div>
+                </details>
               </div>
-              <div style="color: #666; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                └ ${c.childName}
-              </div>
-            </div>
-          </label>
+            </label>
+          </div>
         `;
       });
 
       list.innerHTML = html;
       section.style.display = 'block';
+
+      // 초기 선택은 code.ts의 handleCollectMergeCandidates에서 이미 설정됨
     }
 
     function hideMergeCandidates() {
@@ -742,31 +788,66 @@
 
     function selectAllMergeCandidates(selectAll) {
       const checkboxes = document.querySelectorAll('#merge-candidates-list input[type="checkbox"]');
-      checkboxes.forEach(cb => cb.checked = selectAll);
+      checkboxes.forEach(cb => {
+        cb.checked = selectAll;
+      });
+      // 전체 선택 상태를 한 번에 업데이트
+      updateMergeSelection();
+    }
+
+    function onCandidateCheckChange(checkbox) {
+      console.log('[UI] onCandidateCheckChange:', checkbox.dataset.nodeid, checkbox.checked);
+      // 전체 선택 상태를 한 번에 업데이트 (꺼진 레이어 삭제와 동일)
+      updateMergeSelection();
+    }
+
+    // 체크된 모든 후보의 ID를 수집해서 Figma에 전송 (꺼진 레이어 삭제와 동일 방식)
+    function updateMergeSelection() {
+      const checkboxes = document.querySelectorAll('#merge-candidates-list input[type="checkbox"]:checked');
+      const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.nodeid);
+
+      console.log('[UI] updateMergeSelection:', selectedIds);
+      parent.postMessage({
+        pluginMessage: {
+          type: 'update-merge-selection',
+          selectedIds: selectedIds
+        }
+      }, '*');
     }
 
     function executeMerge() {
+      console.log('[UI] executeMerge called');
+      console.log('[UI] mergeCandidatesData:', mergeCandidatesData);
+
       const checkboxes = document.querySelectorAll('#merge-candidates-list input[type="checkbox"]:checked');
       const selectedIds = [];
 
       checkboxes.forEach(cb => {
         const index = parseInt(cb.dataset.index);
+        console.log('[UI] checkbox index:', index, 'data:', mergeCandidatesData[index]);
         if (mergeCandidatesData[index]) {
-          selectedIds.push(mergeCandidatesData[index].parentId);
+          selectedIds.push(mergeCandidatesData[index].id);
         }
       });
+
+      console.log('[UI] selectedIds:', selectedIds);
 
       if (selectedIds.length === 0) {
         alert('선택된 항목이 없습니다.');
         return;
       }
 
-      parent.postMessage({
+      // 후보 목록 숨기기
+      hideMergeCandidates();
+
+      const message = {
         pluginMessage: {
           type: 'execute-merge',
           parentIds: selectedIds
         }
-      }, '*');
+      };
+      console.log('[UI] Sending message:', message);
+      parent.postMessage(message, '*');
     }
 
     // 꺼진 레이어 모달 표시

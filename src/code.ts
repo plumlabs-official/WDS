@@ -21,7 +21,7 @@ import {
   cleanupSelectionWrappersAggressive,
   convertSelectionGroupsToFrames,
   collectSelectionMergeCandidates,
-  executeMergeCandidates,
+  flattenSelectedCandidates,
 } from './modules/cleanup';
 
 import {
@@ -130,10 +130,6 @@ function handleCommandWithUI(cmd: string) {
 
     case 'collect-merge-candidates':
       handleCollectMergeCandidates();
-      break;
-
-    case 'execute-merge':
-      handleExecuteMerge(msg.parentIds);
       break;
 
     case 'detach-components':
@@ -272,6 +268,21 @@ async function handleUIMessage(msg: UIMessage) {
     return;
   }
 
+  // 병합 후보 선택 동기화 (꺼진 레이어 삭제와 동일 방식)
+  if (msg.type === 'update-merge-selection') {
+    const selectedIds = (msg as { type: string; selectedIds?: string[] }).selectedIds || [];
+    updateMergeNodeSelection(selectedIds);
+    return;
+  }
+
+  // 병합 실행
+  if (msg.type === 'execute-merge') {
+    const { parentIds } = msg as { type: string; parentIds: string[] };
+    console.log('[handleUIMessage] execute-merge received:', parentIds);
+    handleExecuteMerge(parentIds);
+    return;
+  }
+
   // 기존 명령어 (Rule-based)
   if (!msg.type.endsWith('-agent') && !msg.type.startsWith('agent-') && !msg.type.endsWith('-result')) {
     handleCommandWithUI(msg.type);
@@ -379,8 +390,10 @@ async function handleFlattenSameName() {
 
 /**
  * 병합 후보 수집 핸들러 (Human-in-the-loop)
+ * - 중첩 레이어 병합 버튼 클릭 시 호출
+ * - 후보 목록을 UI로 전달하여 사용자가 선택
  */
-function handleCollectMergeCandidates() {
+async function handleCollectMergeCandidates() {
   figma.ui.postMessage({ type: 'task-start', taskName: '병합 후보 수집 중...' });
 
   try {
@@ -392,16 +405,31 @@ function handleCollectMergeCandidates() {
       return;
     }
 
+    if (result.candidates.length === 0) {
+      figma.notify('병합할 중첩 체인이 없습니다.');
+      figma.ui.postMessage({ type: 'task-complete' });
+      return;
+    }
+
+    // 노드들을 저장 (체크박스 선택 동기화용) - getNodeByIdAsync 사용
+    pendingMergeNodes = [];
+    for (const candidate of result.candidates) {
+      const node = await figma.getNodeByIdAsync(candidate.id);
+      if (node && 'parent' in node) {
+        pendingMergeNodes.push(node as SceneNode);
+      }
+    }
+
     // UI로 후보 목록 전달
     figma.ui.postMessage({
       type: 'merge-candidates',
       candidates: result.candidates,
     });
 
-    const sameCount = result.candidates.filter(c => c.similarity === 'same').length;
-    const similarCount = result.candidates.filter(c => c.similarity === 'similar').length;
+    // 초기 선택 상태 설정 (모두 선택)
+    figma.currentPage.selection = pendingMergeNodes;
 
-    figma.notify(`병합 후보: ${result.candidates.length}개 (자동: ${sameCount}, 확인: ${similarCount})`);
+    figma.notify(`${result.candidates.length}개 병합 후보 발견. 선택 후 실행하세요.`);
   } catch (e) {
     figma.notify(`오류: ${e}`, { error: true });
   }
@@ -410,27 +438,66 @@ function handleCollectMergeCandidates() {
 }
 
 /**
- * 선택된 병합 실행 핸들러
+ * 선택된 병합 실행 핸들러 (Human-in-the-loop)
  */
-function handleExecuteMerge(parentIds: string[]) {
-  figma.ui.postMessage({ type: 'task-start', taskName: '병합 실행 중...' });
+async function handleExecuteMerge(selectedIds: string[]) {
+  figma.ui.postMessage({ type: 'task-start', taskName: '중첩 레이어 병합 중 (AI 검증)...' });
 
   try {
-    const result = executeMergeCandidates(parentIds);
+    console.log('[Execute Merge] selectedIds:', selectedIds);
 
-    figma.notify(`병합 완료: ${result.merged}개 성공, ${result.failed}개 실패`);
+    if (!selectedIds || selectedIds.length === 0) {
+      figma.notify('선택된 후보가 없습니다.', { error: true });
+      figma.ui.postMessage({ type: 'task-complete' });
+      return;
+    }
 
-    // 결과 전달
+    // AI 검증 포함 병합 실행
+    const result = await flattenSelectedCandidates(selectedIds, true);
+
+    console.log('[Execute Merge] result:', result);
+
+    if (result.details) {
+      console.log('=== 중첩 레이어 병합 결과 ===');
+      for (const name of result.details.flattenedNames) {
+        console.log(`  - ${name}`);
+      }
+    }
+
+    figma.notify(result.message, {
+      timeout: 3000,
+      error: !result.success,
+    });
+
+    // 결과 전달 - 후보 목록 닫기
     figma.ui.postMessage({
       type: 'merge-result',
-      merged: result.merged,
-      failed: result.failed,
+      success: result.success,
+      flattenedCount: result.details?.flattenedCount || 0,
     });
   } catch (e) {
+    console.log('[Execute Merge] error:', e);
     figma.notify(`오류: ${e}`, { error: true });
   }
 
   figma.ui.postMessage({ type: 'task-complete' });
+}
+
+/**
+ * 체크박스 선택에 따라 병합 후보 노드 선택 업데이트 (꺼진 레이어 삭제와 동일 방식)
+ */
+function updateMergeNodeSelection(selectedIds: string[]) {
+  const selectedSet = new Set(selectedIds);
+  const selectedNodes: SceneNode[] = [];
+
+  for (const node of pendingMergeNodes) {
+    if (selectedSet.has(node.id)) {
+      selectedNodes.push(node);
+    }
+  }
+
+  // Figma 선택 상태 업데이트
+  figma.currentPage.selection = selectedNodes;
 }
 
 /**
@@ -728,6 +795,9 @@ function handleDetachComponents() {
 
 // 꺼진 레이어 저장용
 let pendingHiddenLayers: SceneNode[] = [];
+
+// 병합 후보 노드 저장용
+let pendingMergeNodes: SceneNode[] = [];
 
 /**
  * 꺼진 레이어 삭제 (확인 후)

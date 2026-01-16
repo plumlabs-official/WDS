@@ -30,6 +30,36 @@
 - 추측하지 말고 **질문 먼저**
 - "이해가 맞나요?" 확인
 
+### Cleanup 작업 시 (cleanup.ts 수정 전)
+- [ ] `getNodeByIdAsync` 사용 (getNodeById 금지, dynamic-page 모드)
+- [ ] 캐시 clear는 진입점 함수에서만 (반복 함수 내부 금지)
+- [ ] 노드 삭제 전 필요한 속성(.name 등) 미리 저장
+- [ ] children 배열 복사 후 순회
+- [ ] 좌표 계산에서 절대/상대 구분
+
+### Naming 작업 시
+- [ ] "Layout" 타입 사용 금지 → TopBar, Section 등 구체적 이름
+- [ ] Purpose 필수: `Button/Primary` ❌ → `Button/CTA/Primary` ✅
+- [ ] Container에 Size 적용 금지: `Container/ButtonArea/LG` ❌
+- [ ] **비즈니스 상태 추론 금지**: Authenticated, Empty, Loading 등 사용 금지
+
+### AI Agent 작업 시 (agent-server 수정)
+- [ ] max_tokens: 32768 (100+ 노드 처리 시)
+- [ ] 대량 요청 시 스트리밍 필수 (`client.messages.stream`)
+- [ ] 후처리: **원래 이름** vs **AI 제안 이름** 구분 (제안 이름끼리 비교)
+
+### 빌드 후 테스트 전
+- [ ] UI/플러그인 변경 → `npm run build` (루트)
+- [ ] 서버 변경 → `cd agent-server && npm run build && npm start`
+- [ ] **플러그인 리로드 확인** (Figma에서 Reload)
+- [ ] 변경 미적용 시 → 빌드/리로드 먼저 의심
+
+### 디버깅 시
+- [ ] **추측 → 수정** 금지
+- [ ] **추측 → 유저에게 검증 요청 → 확인 후 수정**
+- [ ] 첫 시도부터 디버그 로그 추가
+- [ ] 예상대로 안 되면 조건문부터 확인
+
 ## Token Saving
 
 ### DO

@@ -189,7 +189,25 @@
       "cacheReadTokens": 0,
       "cacheCreationTokens": 24582,
       "cost": 0.1083395
+    },
+    {
+      "timestamp": "2026-01-16T12:13:29.880Z",
+      "model": "claude-haiku-4-5-20251001",
+      "inputTokens": 2,
+      "outputTokens": 15336,
+      "cacheReadTokens": 0,
+      "cacheCreationTokens": 24056,
+      "cost": 0.106752
+    },
+    {
+      "timestamp": "2026-01-16T12:13:38.370Z",
+      "model": "claude-sonnet-4-20250514",
+      "inputTokens": 2,
+      "outputTokens": 551,
+      "cacheReadTokens": 0,
+      "cacheCreationTokens": 4026,
+      "cost": 0.0233685
     }
   ],
-  "totalCost": 3.187918249999999
+  "totalCost": 3.3180387499999995
 }
