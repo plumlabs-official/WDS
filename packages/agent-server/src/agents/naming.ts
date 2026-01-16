@@ -9,6 +9,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { askClaudeWithImage, parseJsonResponse, ModelType } from '../utils/claude';
+import { validateNamingResponse, validateSuggestedName } from '@wellwe/common';
 import type {
   NamingRequest,
   NamingResult,
@@ -551,9 +552,9 @@ async function runSingleModelAnalysis(
   // 디버그: 응답 미리보기 (처음 500자)
   console.log(`[Context Naming] Response preview: ${response.substring(0, 500)}...`);
 
-  const results = parseJsonResponse<ContextAwareNamingResult['results']>(response);
+  const rawResults = parseJsonResponse<unknown>(response);
 
-  if (!results || !Array.isArray(results)) {
+  if (!rawResults || !Array.isArray(rawResults)) {
     console.error(`[Context Naming] Parse failed. Full response:\n${response}`);
     return {
       success: false,
@@ -561,7 +562,40 @@ async function runSingleModelAnalysis(
     };
   }
 
-  console.log(`[Context Naming] Got ${results.length} results`);
+  // zod 스키마 검증
+  const validation = validateNamingResponse(rawResults);
+
+  if (!validation.success) {
+    const errorCount = validation.error.errors.length;
+    console.warn(`[Context Naming] Schema validation: ${errorCount} errors`);
+
+    // 에러 상세 로그 (처음 5개만)
+    validation.error.errors.slice(0, 5).forEach((err, i) => {
+      console.warn(`  [${i + 1}] ${err.path.join('.')}: ${err.message}`);
+    });
+
+    // 부분 데이터 사용 가능한 경우
+    if (validation.partialData && validation.partialData.length > 0) {
+      console.log(`[Context Naming] Using ${validation.partialData.length}/${rawResults.length} valid results`);
+      // 타입 캐스팅 (zod 검증 통과한 데이터)
+      const results = validation.partialData as ContextAwareNamingResult['results'];
+      const processedResults = postProcessResults(results, request.nodes);
+      validateResults(processedResults);
+      return {
+        success: true,
+        data: { results: processedResults },
+      };
+    }
+
+    return {
+      success: false,
+      error: `Schema validation failed: ${errorCount} errors`,
+    };
+  }
+
+  // 타입 캐스팅 (zod 검증 통과)
+  const results = validation.data as ContextAwareNamingResult['results'];
+  console.log(`[Context Naming] Got ${results.length} results (schema valid)`);
 
   // 후처리 실행 (언더스코어 변환, 부모-자식 동일 이름 수정)
   const processedResults = postProcessResults(results, request.nodes);

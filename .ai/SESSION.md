@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 | v2.3.0
+> Last updated: 2026-01-17 | v2.4.0
 
 ---
 
@@ -70,7 +70,7 @@ packages/figma-plugin/src/
 
 | 버전 | 작업 | 커밋 |
 |------|------|------|
-| v2.3.0 | helpers 분리 (5개 파일) | `9bb1ab9` |
+| v2.3.0 | helpers 분리 (5개 파일) | `17f69de` |
 
 **결과:**
 - modules/naming.ts: 1,745줄 → 10줄 (shim)
@@ -95,11 +95,41 @@ naming/helpers/
 
 ---
 
-## 다음 작업
+## 완료됨 (2026-01-17) - Phase 3 ✅
 
-### Phase 3: zod 런타임 검증
-- schemaVersion 필드 추가 (GPT 피드백)
-- suggestedName 최소 규칙 체크
+### zod 런타임 검증
+
+| 버전 | 작업 | 커밋 |
+|------|------|------|
+| v2.4.0 | zod 스키마 검증 추가 | `ee3c2ff` |
+
+**적용 위치:**
+- common: `naming-schema.ts` - 스키마 정의 + 검증 함수
+- agent-server: `naming.ts` - LLM 응답 검증 적용
+
+**스키마 구조:**
+```typescript
+NamingResultItemSchema = {
+  nodeId: string,           // 필수
+  suggestedName: string,    // 필수
+  componentType: string,    // 필수
+  confidence: number,       // 0-1
+  reasoning: string,        // 필수
+  // 버튼 전용 (선택)
+  intent?, shape?, size?, state?, icon?,
+  // 일반 컴포넌트 (선택)
+  context?, purpose?, variant?
+}
+```
+
+**검증 함수:**
+- `validateNamingResponse()` - 배열 전체 검증 + 부분 데이터 추출
+- `validateSuggestedName()` - 개별 이름 규칙 검증
+- `validateButtonNaming()` - 버튼 형식 검증
+
+---
+
+## 다음 작업
 
 ### Phase 4: 네이밍 패턴 라이브러리 (MVP)
 - visual 유사도 제외하고 구조 기반 매칭만 먼저
