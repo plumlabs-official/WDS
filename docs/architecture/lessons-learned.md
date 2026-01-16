@@ -666,6 +666,54 @@ npm run build:all  # 플러그인 + 서버
 
 ---
 
+## Claude Code 커맨드 버그 패턴
+
+### 1. Unknown skill 에러 (frontmatter 누락)
+
+**날짜**: 2026-01-17
+
+**상황**: `/record` 커맨드 생성 후 실행 시 "Unknown skill: record" 에러
+
+**증상**: 커맨드 파일은 존재하는데 Claude Code가 인식 못 함
+
+**원인**: YAML frontmatter 없이 파일 생성
+
+```markdown
+// ❌ 잘못된 예
+# /record Command  ← 바로 시작
+
+// ✅ 올바른 예
+---
+description: 커맨드 설명
+allowed-tools: [Read, Edit, Bash]
+---
+# /record Command
+```
+
+**해결**: frontmatter 추가
+
+**재발방지**: [CLAUDE.md - 슬래시 커맨드 생성 시](../../CLAUDE.md#슬래시-커맨드-생성-시-필수)
+
+---
+
+### 2. Unknown skill 에러 (홈 디렉토리 미복사)
+
+**날짜**: 2026-01-17
+
+**상황**: frontmatter 추가 후에도 여전히 "Unknown skill" 에러
+
+**증상**: 프로젝트 폴더에 파일 있는데 인식 안 됨
+
+**원인**: 프로젝트 `.claude/commands/`에만 생성, 홈 디렉토리 `~/.claude/commands/`에 없음
+
+**해결**: 두 곳 모두에 파일 생성
+- `.claude/commands/커맨드명.md` (프로젝트용)
+- `~/.claude/commands/커맨드명.md` (전역용)
+
+**재발방지**: [CLAUDE.md - 슬래시 커맨드 생성 시](../../CLAUDE.md#슬래시-커맨드-생성-시-필수)
+
+---
+
 ## 변경 이력
 
 | 날짜 | 도메인 | 내용 |
@@ -695,6 +743,8 @@ npm run build:all  # 플러그인 + 서버
 | 2026-01-16 | Cleanup | 병합 후 삭제된 노드 접근 패턴 추가 |
 | 2026-01-16 | Cleanup | getNodeByIdAsync 필수 사용 패턴 추가 |
 | 2026-01-16 | Cleanup | 캐시 clear 위치 패턴 추가 |
+| 2026-01-17 | Claude Code | Unknown skill 에러 - frontmatter 누락 |
+| 2026-01-17 | Claude Code | Unknown skill 에러 - 홈 디렉토리 미복사 |
 
 ---
 

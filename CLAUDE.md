@@ -17,6 +17,22 @@
 | 네이밍 규칙 | `docs/specs/naming-schema.md` |
 | **완료 기록** | `.claude/commands/record.md` |
 
+## 문서 역할 경계 (SSOT)
+
+| 문서 | 역할 | 쓰는 시점 |
+|------|------|----------|
+| `CLAUDE.md` | **HOW** - 한 줄 체크리스트 | 작업 전 확인용 |
+| `lessons-learned.md` | **WHAT** - 사건 기록 + 맥락 | 버그/실수/삽질 발생 후 |
+| `ADR` | **WHY** - 팀 규칙 변경 결정 | 정책/구조/계약 변경 시 |
+
+**경계 규칙:**
+- **lessons-learned**: 사건 단위만 (형식: 날짜/상황/증상/원인/해결/재발방지)
+- **ADR**: 아래 중 하나 해당 시만 작성
+  - 폴더 구조/SSOT 정책처럼 계속 영향 주는 규칙
+  - API contract처럼 다른 모듈도 따라야 하는 약속
+  - 되돌리기 어려운 선택
+- **CLAUDE.md**: 이유/서사 금지, 근거 링크만 (`> 근거: lessons-learned.md#...`)
+
 ## Auto Reference Rules
 
 > 작업 유형에 따라 **먼저 읽어야 할 문서**. 실수 방지를 위한 자동 참조.
@@ -51,20 +67,11 @@
 ### 슬래시 커맨드 생성 시 (필수)
 > `/coach`, `/record` 같은 커맨드 만들 때
 
-- [ ] **YAML frontmatter 필수** (파일 맨 위에):
-  ```yaml
-  ---
-  description: 커맨드 설명
-  allowed-tools: [Read, Edit, Bash, ...]
-  ---
-  ```
-- [ ] **두 곳에 파일 생성**:
-  - `.claude/commands/커맨드명.md` (프로젝트용)
-  - `~/.claude/commands/커맨드명.md` (전역용)
+- [ ] **YAML frontmatter 필수** (파일 맨 위에)
+- [ ] **두 곳에 파일 생성**: 프로젝트 + 홈 디렉토리
 - [ ] 생성 후 `/커맨드명` 입력해서 인식 테스트
 
-**frontmatter 없으면** → "Unknown skill" 에러
-**홈 디렉토리에 없으면** → 인식 안 됨
+> 근거: [lessons-learned.md#claude-code-커맨드-버그-패턴](docs/architecture/lessons-learned.md#claude-code-커맨드-버그-패턴)
 
 ### Cleanup 작업 시 (cleanup.ts 수정 전)
 - [ ] `getNodeByIdAsync` 사용 (getNodeById 금지, dynamic-page 모드)
