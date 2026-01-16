@@ -32,10 +32,11 @@
 
 | 용도 | 파일 |
 |------|------|
-| 장기 결정 | `.ai/DECISIONS.md` |
+| SSOT 인덱스 | `docs/specs/index.md` |
 | 실패 패턴 | `docs/architecture/lessons-learned.md` |
 | 현재 상태 | `.ai/SESSION.md` |
 | 네이밍 규칙 | `docs/specs/naming-schema.md` |
+| 반복 작업 | `.ai/RECIPES.md` |
 
 ## Project Structure
 
@@ -43,25 +44,25 @@
 /
 ├── AGENTS.md               # 프로젝트 헌법 (이 파일)
 ├── CLAUDE.md               # Claude Code 지침
-├── docs/                   # 문서 (Diátaxis 구조)
-│   ├── tutorials/          # 시작 가이드
-│   ├── guides/             # 작업별 가이드
-│   ├── specs/              # 규칙/사양 (SSOT)
-│   └── architecture/       # 아키텍처/ADR
+├── CONTRIBUTING.md         # SSOT 정책, 문서 업데이트 규칙
+├── docs/                   # 문서 (목적 중심)
+│   ├── START-HERE.md       # 진입점 (5분 시작)
+│   ├── specs/              # SSOT (규칙/사양/계약)
+│   ├── how-to/             # 작업별 실행 레시피
+│   └── architecture/       # 설계/배경/ADR
 ├── packages/
 │   ├── figma-plugin/       # Figma 플러그인
 │   ├── agent-server/       # AI Agent Server
 │   └── common/             # 공유 타입/스키마
-├── .ai/                    # AI 전용 메모리
+├── .ai/                    # AI 전용 메모리 (링크 중심)
 │   ├── SESSION.md          # 세션 단기 기억
-│   ├── DECISIONS.md        # 의사결정 요약
-│   └── RECIPES/            # 반복 작업 레시피
-└── reference/              # 외부 참고 자료
+│   └── RECIPES.md          # 반복 작업 레시피
+└── research/               # 외부 참고자료 (SSOT 아님)
 ```
 
 ## Quick Commands
 
-> 상세: `.ai/RECIPES/workflows.md` → "빌드" 섹션
+> 상세: `.ai/RECIPES.md` → "빌드" 섹션
 
 | 명령 | 설명 |
 |------|------|
@@ -115,6 +116,7 @@
 | 문서 | 역할 |
 |------|------|
 | [CLAUDE.md](CLAUDE.md) | 작업 지침 및 체크리스트 |
-| [.ai/DECISIONS.md](.ai/DECISIONS.md) | 의사결정 기록 (WHY) |
-| [docs/architecture/lessons-learned.md](docs/architecture/lessons-learned.md) | 버그 패턴 및 해결책 (WHAT) |
+| [docs/specs/index.md](docs/specs/index.md) | SSOT 인덱스 |
+| [docs/architecture/lessons-learned.md](docs/architecture/lessons-learned.md) | 버그 패턴 및 해결책 |
 | [docs/specs/naming-schema.md](docs/specs/naming-schema.md) | 네이밍 규칙 상세 |
+| [.ai/RECIPES.md](.ai/RECIPES.md) | 반복 작업 레시피 |

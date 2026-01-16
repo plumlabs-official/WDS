@@ -10,9 +10,9 @@
 |------|------|
 | 프로젝트 헌법 | `AGENTS.md` |
 | 기술 사양/API | `docs/specs/technical-spec.md` |
-| 아키텍처 결정 (WHY) | `.ai/DECISIONS.md` |
+| SSOT 인덱스 | `docs/specs/index.md` |
 | 버그 패턴 (WHAT) | `docs/architecture/lessons-learned.md` |
-| 반복 작업 패턴 | `.ai/RECIPES/workflows.md` |
+| 반복 작업 패턴 | `.ai/RECIPES.md` |
 | 현재 상태 | `.ai/SESSION.md` |
 | 네이밍 규칙 | `docs/specs/naming-schema.md` |
 
@@ -25,9 +25,9 @@
 | Cleanup/병합 작업 | `docs/architecture/lessons-learned.md` | "Cleanup 버그 패턴" 섹션 |
 | Naming 작업 | `docs/specs/naming-schema.md` | 전체 |
 | AI Agent/서버 수정 | `docs/architecture/lessons-learned.md` | "AI Agent 버그 패턴" 섹션 |
-| 빌드/디버깅 | `.ai/RECIPES/workflows.md` | "빌드", "디버깅" 섹션 |
+| 빌드/디버깅 | `.ai/RECIPES.md` | "빌드", "디버깅" 섹션 |
 | 문서 구조 변경 | `AGENTS.md` | "문서 관리 원칙" 섹션 |
-| 새 기능 설계 | `.ai/DECISIONS.md` | 관련 도메인 섹션 |
+| 새 기능 설계 | `docs/architecture/ADRs/` | 관련 ADR |
 
 **규칙**: 해당 작업 시작 전, 위 문서의 지정 섹션을 먼저 읽고 진행
 
@@ -67,7 +67,7 @@
 - [ ] 스트리밍 필수
 
 ### 빌드 후 테스트 전
-> 상세: `.ai/RECIPES/workflows.md` → "빌드"
+> 상세: `.ai/RECIPES.md` → "빌드"
 
 - [ ] `npm run build:all` (통합 빌드)
 - [ ] **플러그인 리로드 확인** (Figma에서 Reload)
@@ -106,4 +106,4 @@
 
 ## Agent Server
 
-> 상세: `.ai/RECIPES/workflows.md` → "빌드", `docs/specs/api-contract.md`
+> 상세: `.ai/RECIPES.md` → "빌드", `docs/specs/api-contract.md`

@@ -2,6 +2,29 @@
 
 WellWe Design System Automator 프로젝트에 기여해주셔서 감사합니다.
 
+---
+
+## SSOT 정책
+
+> **Single Source of Truth** - 규칙/사양/계약의 정답은 한 곳에만
+
+### 원칙
+
+1. **SSOT는 `docs/specs/` 하나** - 규칙/사양/계약은 여기만 수정
+2. **`.ai/`와 `prompts/`에는 SSOT 본문 복사 금지** - 요약/링크만
+3. **중요 변경은 ADR로 기록** - 회귀 방지
+
+### 문서 업데이트 규칙
+
+| 변경 유형 | 수정 위치 | ADR 필요 |
+|----------|----------|----------|
+| 네이밍 규칙 변경 | `docs/specs/naming-schema.md` | O |
+| API 계약 변경 | `docs/specs/api-contract.md` | O |
+| 버그 패턴 추가 | `docs/architecture/lessons-learned.md` | X |
+| 가이드 업데이트 | `docs/how-to/*.md` | X |
+
+---
+
 ## 개발 환경 설정
 
 ### 필수 요구사항
@@ -66,9 +89,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 | 문서 유형 | 위치 |
 |----------|------|
-| 시작 가이드 | `docs/tutorials/` |
-| 작업 가이드 | `docs/guides/` |
-| 규칙/사양 | `docs/specs/` |
+| 진입점 | `docs/START-HERE.md` |
+| 작업 가이드 | `docs/how-to/` |
+| 규칙/사양 (SSOT) | `docs/specs/` |
 | 아키텍처/ADR | `docs/architecture/` |
 
 ### ADR (Architecture Decision Record)

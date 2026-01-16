@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 | v2.1.0
+> Last updated: 2026-01-17 | v2.1.1
 
 ---
 
@@ -18,19 +18,22 @@
 
 ## 현재 작업
 
-### 완료됨 (2026-01-17) - v2.1.0 구조 리팩토링
+### 완료됨 (2026-01-17) - v2.1.1 문서 구조 단순화
 
-#### Phase 1: 문서/디렉토리 구조 재설계 ✅
+#### Phase 1.1: 문서 구조 단순화 ✅
 
 | 작업 | 상태 |
 |------|------|
-| 1.1 루트 문서 생성 (README, CHANGELOG, CONTRIBUTING) | ✅ |
-| 1.2 docs/ 구조 생성 (Diátaxis: tutorials, guides, specs, architecture) | ✅ |
-| 1.3 SSOT 이동 (.ai/design-system → docs/specs) | ✅ |
-| 1.4 .ai/ 역할 재정의 (SESSION, DECISIONS, RECIPES) | ✅ |
-| 1.5 packages/ 구조 생성 (모노레포: figma-plugin, agent-server, common) | ✅ |
-| 1.6 워크스페이스 설정 | ✅ |
-| 검증: npm run build:all 성공 | ✅ |
+| docs/index.md → START-HERE.md (quickstart 흡수) | ✅ |
+| docs/tutorials/ 삭제 | ✅ |
+| docs/guides/ → how-to/ rename | ✅ |
+| docs/specs/index.md 생성 (SSOT 인덱스) | ✅ |
+| .ai/RECIPES/ → RECIPES.md (폴더→파일) | ✅ |
+| .ai/DECISIONS.md 삭제 | ✅ |
+| reference/ → research/ rename | ✅ |
+| research/README.md 생성 (NOT SSOT) | ✅ |
+| CONTRIBUTING.md 업데이트 (SSOT 정책) | ✅ |
+| prd.md 상단에 SSOT 아님 문구 | ✅ |
 | CLAUDE.md, AGENTS.md 경로 업데이트 | ✅ |
 
 ---

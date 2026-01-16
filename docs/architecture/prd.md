@@ -2,9 +2,16 @@
 
 > Wellwe Design System Automator
 >
-> Last updated: 2026-01-16 | v2.0.0
->
-> **기술 사양**: `SPEC.md` 참조
+> Last updated: 2026-01-17 | v2.1.1
+
+---
+
+> **Note**: 이 문서는 **SSOT가 아닙니다** (배경/맥락 설명용).
+> 현재 범위/제약/정의/규칙은 [`docs/specs/`](../specs/)를 참조하세요.
+
+---
+
+> **기술 사양**: [`docs/specs/technical-spec.md`](../specs/technical-spec.md) 참조
 
 ---
 
