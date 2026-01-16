@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 커밋 후 자동 기록 시스템 (3중 안전망)
 - coach 스킬 v4 - 초보 친화 규칙 추가
 - `/record` 커맨드 - 작업 완료 기록 자동화 (CHANGELOG + SESSION 연동)
 
