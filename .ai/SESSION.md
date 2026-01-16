@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 | v2.1.3
+> Last updated: 2026-01-17 | v2.2.0
 
 ---
 
@@ -29,43 +29,39 @@
 
 ---
 
-## 진행 중: Phase 2 Step 1 - Naming 코드 분리
+## 완료됨 (2026-01-17) - Phase 2 Step 1 ✅
 
-### 분석 완료
+### Naming 코드 분리
 
-**이동할 함수들 (code.ts → naming/):**
+| 버전 | 작업 | 커밋 |
+|------|------|------|
+| v2.2.0 | Naming 코드 분리 | `3a0735a` |
 
-| 대상 | 목적지 | 줄 수 |
-|------|--------|-------|
-| `handleNamingAgent` | handler.ts | 210줄 |
-| `handleNamingResult` | handler.ts | 24줄 |
-| `handleNamingBatchResult` | handler.ts | 27줄 |
-| `handleNamingContextResult` | handler.ts | 29줄 |
-| `tryDirectNaming` | direct.ts | 80줄 |
-| `collectAllNodes` | direct.ts | 10줄 |
+**결과:**
+- code.ts: 1,885줄 → 1,318줄 (**567줄 감소, 30%**)
+- naming/handler.ts: 483줄 (4 핸들러 + 타입 + 상태 + 유틸)
+- naming/direct.ts: 156줄 (tryDirectNaming, collectAllNodes)
+- naming/index.ts: 31줄 (re-export)
 
-**함께 이동할 타입/상태:**
-- `NamingResultMessage`, `NamingBatchResultMessage`, `NamingContextResultMessage`
-- `pendingNamingNode`, `pendingNamingNodes`
-
-**의존성:**
-- handler.ts → direct.ts, modules/naming.ts, 유틸 함수들
-- direct.ts → modules/naming.ts (20+ 함수)
-
-### 다음 세션에서 할 것
-
-1. `naming/handler.ts` 생성 (핸들러 4개 + 타입 + 상태)
-2. `naming/direct.ts` 생성 (tryDirectNaming, collectAllNodes)
-3. `code.ts`에서 import로 대체
-4. `npm run build:all` 테스트
-5. Figma에서 Naming 기능 테스트
+**구조:**
+```
+packages/figma-plugin/src/
+├── code.ts              # 메인 엔트리 (1,318줄)
+├── naming/
+│   ├── index.ts         # 통합 export
+│   ├── handler.ts       # AI 핸들러 + 타입 + 상태
+│   └── direct.ts        # 직접 네이밍 로직
+└── modules/
+    └── naming.ts        # 헬퍼 함수 (Step 2에서 분리 예정)
+```
 
 ---
 
-## 다음 작업 (Phase 2 이후)
+## 다음 작업
 
-### Phase 2 Step 2: helpers 분리
-- modules/naming.ts → helpers/classify.ts, infer.ts, normalize.ts, validate.ts
+### Phase 2 Step 2: helpers 분리 (다음)
+- modules/naming.ts → naming/helpers/ (classify.ts, infer.ts, normalize.ts, validate.ts)
+- 우선순위: 낮음 (현재 구조로도 작동)
 
 ### Phase 3: zod 런타임 검증
 - schemaVersion 필드 추가 (GPT 피드백)
