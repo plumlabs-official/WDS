@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+### Changed
+- 문서 역할 경계 규칙 + lessons-learned 사건 추가
+- 슬래시 커맨드 생성 체크리스트 추가
 ### Added
 - 커밋 후 자동 기록 시스템 (3중 안전망)
 - coach 스킬 v4 - 초보 친화 규칙 추가
