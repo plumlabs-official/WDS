@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash(git commit:*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/auto-changelog.sh 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "echo '\n⚠️  커밋 완료! CHANGELOG 확인 후 /record로 SESSION.md도 업데이트하세요.\n   예: /record feature 기능 설명'"
+          }
+        ]
+      }
+    ]
+  }
+}

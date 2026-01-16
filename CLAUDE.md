@@ -79,18 +79,27 @@
 - [ ] 첫 시도부터 디버그 로그 추가
 - [ ] 예상대로 안 되면 조건문부터 확인
 
-### 작업 완료 시 (필수)
+### 커밋 완료 후 (필수 - 3중 안전망)
 > 상세: `.claude/commands/record.md`
 
-**다음 상황에서 `/record` 실행 제안:**
-- Phase/단계 완료
-- 기능 구현 완료 후 커밋
-- 버그 수정 완료 후 커밋
-- 구조 변경/리팩토링 완료
+**자동화 (hook):**
+- [x] CHANGELOG 자동 업데이트 (`.claude/scripts/auto-changelog.sh`)
+- [x] 리마인드 메시지 자동 표시
+
+**수동 확인 (체크리스트):**
+- [ ] CHANGELOG.md `[Unreleased]` 섹션 확인
+- [ ] `/record <type> <message>` 실행 → SESSION.md 업데이트
+- [ ] ADR 필요 여부 확인 (구조 변경 시)
+
+**커밋 메시지 형식:**
+```
+<type>: <message>
+```
+- `feat:` → Added, `fix:` → Fixed, `refactor:` → Changed, `docs:` → Changed
 
 **규칙:**
-- 커밋 후 `/record type message` 실행
-- ADR 필요 여부는 git diff 기반 자동 판정
+- hook이 자동으로 CHANGELOG 업데이트
+- `/record`는 SESSION.md 업데이트용으로 실행
 - ADR 생성은 사용자 승인 후에만
 
 ## Token Saving
