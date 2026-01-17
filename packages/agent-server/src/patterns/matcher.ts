@@ -137,12 +137,12 @@ function scoreChildNames(a?: string[], b?: string[]): number {
 /**
  * 부모 이름 점수 (context 기반 매칭)
  * - 정확히 일치: 1.0
- * - 둘 다 없음: 0.5 (중립)
+ * - 둘 다 없음: 1.0 (정보 없음 = 같다고 취급)
  * - 하나만 있거나 불일치: 0.0
  */
 function scoreParentName(a?: string | null, b?: string | null): number {
-  // 둘 다 없으면 중립 (기존 패턴과 호환)
-  if (!a && !b) return 0.5;
+  // 둘 다 없으면 같다고 취급 (정보가 없으면 구분 불가 = 같음)
+  if (!a && !b) return 1.0;
 
   // 하나만 있으면 불일치
   if (!a || !b) return 0.0;
@@ -160,12 +160,12 @@ function scoreParentName(a?: string | null, b?: string | null): number {
 /**
  * 벡터 경로 해시 점수 (아이콘 구분)
  * - 정확히 일치: 1.0
- * - 둘 다 없음: 0.5 (중립 - 벡터가 아닌 노드)
+ * - 둘 다 없음: 1.0 (둘 다 벡터 아님 = 같다고 취급)
  * - 하나만 있거나 불일치: 0.0
  */
 function scoreVectorPathHash(a?: string | null, b?: string | null): number {
-  // 둘 다 없으면 중립 (벡터가 아닌 노드끼리 비교)
-  if (!a && !b) return 0.5;
+  // 둘 다 없으면 같다고 취급 (둘 다 벡터가 아니면 구분 불가 = 같음)
+  if (!a && !b) return 1.0;
 
   // 하나만 있으면 불일치 (벡터 vs 비벡터)
   if (!a || !b) return 0.0;
@@ -188,12 +188,12 @@ function scoreVectorPathHash(a?: string | null, b?: string | null): number {
 /**
  * 텍스트 지문 점수 (TEXT 노드 구분)
  * - 정확히 일치: 1.0
- * - 둘 다 없음: 0.5 (중립 - TEXT가 아닌 노드)
+ * - 둘 다 없음: 1.0 (둘 다 TEXT 아님 = 같다고 취급)
  * - 하나만 있거나 불일치: 0.0
  */
 function scoreTextFingerprint(a?: string | null, b?: string | null): number {
-  // 둘 다 없으면 중립 (TEXT가 아닌 노드끼리 비교)
-  if (!a && !b) return 0.5;
+  // 둘 다 없으면 같다고 취급 (둘 다 TEXT가 아니면 구분 불가 = 같음)
+  if (!a && !b) return 1.0;
 
   // 하나만 있으면 불일치 (TEXT vs non-TEXT)
   if (!a || !b) return 0.0;
