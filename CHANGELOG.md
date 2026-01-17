@@ -12,10 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 버튼 속성 자동 감지 (Intent/Shape/State/Icon)
 - 패턴 매칭 정확도 개선 (parentName, vectorPathHash, textFingerprint)
 
-### Changed
-- 회고 포인트 워크플로우 반영
-
 ### Fixed
+- Cleanup 노드 이동 시 layoutPositioning 버그 수정 (Ignore auto-layout 방지)
 - 패턴 매칭 점수 계산 수정 (null==null → 1.0)
 - 패턴 DB 저장 순서 변경 + 초기화 버튼 추가
 

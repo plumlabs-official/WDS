@@ -1,5 +1,2756 @@
 {
   "version": 1,
-  "patterns": [],
+  "patterns": [
+    {
+      "id": "4cfa53ae-09ac-4ba1-8b2d-d0e0c8ac1be3",
+      "name": "Section/Image",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "RECTANGLE",
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "Image",
+          "Image_2"
+        ],
+        "layoutMode": "NONE",
+        "width": 62,
+        "height": 62,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#646464",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:52.978Z",
+      "lastUsedAt": "2026-01-17T16:51:53.089Z",
+      "usageCount": 2,
+      "sourceNodeId": "14497:10184"
+    },
+    {
+      "id": "903d5e63-0f2a-44d7-bb6f-5066d1300267",
+      "name": "Section/Image_2",
+      "structure": {
+        "childCount": 4,
+        "childTypes": [
+          "RECTANGLE",
+          "RECTANGLE",
+          "TEXT",
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "Image",
+          "Image_2",
+          "김예은",
+          "Profile"
+        ],
+        "layoutMode": "NONE",
+        "width": 167.15394592285156,
+        "height": 171.95721435546875,
+        "aspectRatio": 0.972067072320165,
+        "positionZone": "middle",
+        "textHints": [
+          "김예은"
+        ],
+        "iconHints": [],
+        "parentName": "section_feed_left",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#DFF7DF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.047Z",
+      "lastUsedAt": "2026-01-17T16:51:53.047Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10173"
+    },
+    {
+      "id": "d6385511-268f-4d3e-85df-a558f702d838",
+      "name": "Image",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 237,
+        "aspectRatio": 0.7046413502109705,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#DFF7DF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.056Z",
+      "lastUsedAt": "2026-01-17T16:51:53.095Z",
+      "usageCount": 10,
+      "sourceNodeId": "14497:10061"
+    },
+    {
+      "id": "76b25cd5-bc2c-45f6-868e-cb144f65078a",
+      "name": "Icon/Star",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "Icon/Star"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 18,
+        "height": 18,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [
+          "Star"
+        ],
+        "parentName": "status_wating",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.058Z",
+      "lastUsedAt": "2026-01-17T16:51:53.128Z",
+      "usageCount": 3,
+      "sourceNodeId": "14497:10008"
+    },
+    {
+      "id": "edda7614-1075-437e-ac70-78686462ce6f",
+      "name": "Image_2",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 62,
+        "height": 62,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Section/Image",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.061Z",
+      "lastUsedAt": "2026-01-17T16:51:53.093Z",
+      "usageCount": 3,
+      "sourceNodeId": "14497:10057"
+    },
+    {
+      "id": "7352a974-6689-4863-836e-a4add7efa1b4",
+      "name": "Image_3",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 59.933956146240234,
+        "height": 60,
+        "aspectRatio": 0.998899269104004,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Section/Image",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FF6600",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.064Z",
+      "lastUsedAt": "2026-01-17T16:51:53.064Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10005"
+    },
+    {
+      "id": "b0e1fd3b-32c0-4e82-8973-e79ff45328b6",
+      "name": "Profile",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 60,
+        "height": 60,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Section/Image_2",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.073Z",
+      "lastUsedAt": "2026-01-17T16:51:53.073Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10017"
+    },
+    {
+      "id": "44fff81c-0157-4eb0-ac11-13af7588da1f",
+      "name": "Header/Main",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "StatusBar"
+        ],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 110,
+        "aspectRatio": 3.409090909090909,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Header/Main",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.098Z",
+      "lastUsedAt": "2026-01-17T16:51:53.112Z",
+      "usageCount": 3,
+      "sourceNodeId": "14497:10145"
+    },
+    {
+      "id": "d47034dc-356c-426d-bd5f-3ffd92263956",
+      "name": "TabBar/Main",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Fixed Button",
+          "bar_home"
+        ],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 108,
+        "aspectRatio": 3.4722222222222223,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "챌린지 진행 현황",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#000000",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.100Z",
+      "lastUsedAt": "2026-01-17T16:51:53.100Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10088"
+    },
+    {
+      "id": "3b7b4f3a-0f6e-429f-a00e-0d03ef3b5c1a",
+      "name": "SubTab",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Section/Icon",
+          "Frame 1430106566"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 375,
+        "height": 42,
+        "aspectRatio": 8.928571428571429,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_top",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.102Z",
+      "lastUsedAt": "2026-01-17T16:51:53.102Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10110"
+    },
+    {
+      "id": "5d543910-c5ad-44bd-b801-8b2cc5620f07",
+      "name": "Section/Icon",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Icons",
+          "Icons",
+          "Icons"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 375,
+        "height": 40,
+        "aspectRatio": 9.375,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "SubTab",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.106Z",
+      "lastUsedAt": "2026-01-17T16:51:53.106Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10111"
+    },
+    {
+      "id": "a0929166-f560-4f54-8150-cbba2f7895ec",
+      "name": "Icon/Chat",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "BOOLEAN_OPERATION",
+          "TEXT"
+        ],
+        "childNames": [
+          "Union",
+          "3"
+        ],
+        "layoutMode": "NONE",
+        "width": 24,
+        "height": 24,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [
+          "3"
+        ],
+        "iconHints": [],
+        "parentName": "Icons",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.108Z",
+      "lastUsedAt": "2026-01-17T16:51:53.108Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10117"
+    },
+    {
+      "id": "362711c0-8004-4824-8eaf-24e46931c296",
+      "name": "Section/Text",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "FRAME",
+          "TEXT",
+          "TEXT"
+        ],
+        "childNames": [
+          "ic_date_b",
+          "text",
+          "text"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 322,
+        "height": 18,
+        "aspectRatio": 17.88888888888889,
+        "positionZone": "top",
+        "textHints": [
+          "기간",
+          "2025.11.11일(화) - 2025.11.13(목)"
+        ],
+        "iconHints": [],
+        "parentName": "section_info",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.110Z",
+      "lastUsedAt": "2026-01-17T16:51:53.110Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10134"
+    },
+    {
+      "id": "f45e5031-967d-4c5b-9e97-446443d9104e",
+      "name": "Header/Main_2",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "btn_close",
+          "Frame 1430107176"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 375,
+        "height": 60,
+        "aspectRatio": 6.25,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Header/Main",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.113Z",
+      "lastUsedAt": "2026-01-17T16:51:53.113Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10158"
+    },
+    {
+      "id": "8771034d-b3a1-499b-9dc6-14974a5b162e",
+      "name": "Screen/ChallengeProgress",
+      "structure": {
+        "childCount": 7,
+        "childTypes": [
+          "RECTANGLE",
+          "FRAME",
+          "VECTOR",
+          "FRAME",
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "bg_img",
+          "oui:nav-info",
+          "Vector",
+          "Frame 1430106512",
+          "Header/Main",
+          "TabBar/Main",
+          "section_top"
+        ],
+        "layoutMode": "NONE",
+        "width": 376,
+        "height": 1330,
+        "aspectRatio": 0.28270676691729324,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "[All]",
+        "vectorPathHash": "410-M 1.1785036869456995 11.745609283447266 L 0 11.08645481459173 L 9.321495519333673 5.872804197783997 ",
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.115Z",
+      "lastUsedAt": "2026-01-17T16:51:53.115Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:9990"
+    },
+    {
+      "id": "ac8cebd5-3475-4a79-8ffa-8695264cab14",
+      "name": "Background/White",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 1330,
+        "aspectRatio": 0.2819548872180451,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "챌린지 진행 현황",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.117Z",
+      "lastUsedAt": "2026-01-17T16:51:53.117Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:9991"
+    },
+    {
+      "id": "ca5f85bd-3c7c-44c2-b681-b7e803ddcab5",
+      "name": "Icon/Info",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "Vector"
+        ],
+        "layoutMode": "NONE",
+        "width": 28,
+        "height": 28,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "챌린지 진행 현황",
+        "vectorPathHash": "6343-M 15.920003498621634 20.587995136534456 C 15.920531578786205 20.696183661619184 15.899644422497355 2",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.118Z",
+      "lastUsedAt": "2026-01-17T16:51:53.118Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:9992"
+    },
+    {
+      "id": "b0b73e4c-20f5-4635-b1d0-257efb790637",
+      "name": "Container/MainContent",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "section_feed"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 375,
+        "height": 1092,
+        "aspectRatio": 0.3434065934065934,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "챌린지 진행 현황",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.120Z",
+      "lastUsedAt": "2026-01-17T16:51:53.120Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:9995"
+    },
+    {
+      "id": "42767b58-2eeb-483a-b0a8-95326c5d6752",
+      "name": "Section/Feed",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "section_feed_left",
+          "section_feed_right"
+        ],
+        "layoutMode": "NONE",
+        "width": 343,
+        "height": 1101.9996337890625,
+        "aspectRatio": 0.3112523720363185,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.122Z",
+      "lastUsedAt": "2026-01-17T16:51:53.122Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10188"
+    },
+    {
+      "id": "1b4ce6d7-f7cd-41ca-b2cf-f7261f446aca",
+      "name": "Container/FeedLeft",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Section/Image",
+          "Section/Image_2",
+          "Group 54069077"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 167.15394592285156,
+        "height": 1101.8062744140625,
+        "aspectRatio": 0.15170901618956886,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_feed",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFF6EE",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.124Z",
+      "lastUsedAt": "2026-01-17T16:51:53.124Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:9998"
+    },
+    {
+      "id": "f7749753-fe8f-4415-bcb2-b083b69ab1eb",
+      "name": "Icon/StatusWaiting",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "Frame 1430106467"
+        ],
+        "layoutMode": "NONE",
+        "width": 18,
+        "height": 18,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Section/Image",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.126Z",
+      "lastUsedAt": "2026-01-17T16:51:53.126Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10171"
+    },
+    {
+      "id": "8c368ab9-0edc-4e34-b477-69d791cf9354",
+      "name": "Card/UserWaiting",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "RECTANGLE",
+          "FRAME"
+        ],
+        "childNames": [
+          "Image",
+          "Frame 1430106468"
+        ],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 300,
+        "aspectRatio": 0.5566666666666666,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_feed_left",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#DFF7DF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.130Z",
+      "lastUsedAt": "2026-01-17T16:51:53.130Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10175"
+    },
+    {
+      "id": "551705c4-9d49-41ca-b727-a43078c7757c",
+      "name": "Container/UserProfile",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Icons",
+          "Frame 1430106883"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 89,
+        "height": 74,
+        "aspectRatio": 1.2027027027027026,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.133Z",
+      "lastUsedAt": "2026-01-17T16:51:53.133Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10021"
+    },
+    {
+      "id": "a44c12a7-6334-4667-b83a-35f3b4396a53",
+      "name": "Image/Avatar",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "Union"
+        ],
+        "layoutMode": "NONE",
+        "width": 48,
+        "height": 48,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "1154-M 24 26.4 C 27.97646484375 26.4 31.2 23.176464843749997 31.2 19.2 C 31.2 15.22353515625 27.976464843",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.135Z",
+      "lastUsedAt": "2026-01-17T16:51:53.135Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10022"
+    },
+    {
+      "id": "3d0008e9-5c14-49eb-8292-4628f0c8ad03",
+      "name": "Text/Status",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "수락 대기중"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 63,
+        "height": 22,
+        "aspectRatio": 2.8636363636363638,
+        "positionZone": "middle",
+        "textHints": [
+          "수락 대기중"
+        ],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.137Z",
+      "lastUsedAt": "2026-01-17T16:51:53.137Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10024"
+    },
+    {
+      "id": "936cb88f-5c6a-4c00-b0d4-9648ffd6500d",
+      "name": "Container/FeedRight",
+      "structure": {
+        "childCount": 4,
+        "childTypes": [
+          "FRAME",
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Group 54069069",
+          "Group 54069067",
+          "Group 54069076",
+          "Group 54069120"
+        ],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 1068.596435546875,
+        "aspectRatio": 0.15627976516179795,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_feed",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#DFF7DF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.138Z",
+      "lastUsedAt": "2026-01-17T16:51:53.138Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10187"
+    },
+    {
+      "id": "e6b3d5f5-723c-4c01-8bd9-71c86fdda7a9",
+      "name": "Card/ActiveUser",
+      "structure": {
+        "childCount": 4,
+        "childTypes": [
+          "RECTANGLE",
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Image",
+          "Group 54069075",
+          "Frame 1430106883",
+          "Group 54069100"
+        ],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 172,
+        "aspectRatio": 0.9709302325581395,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_feed_right",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#DFF7DF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.141Z",
+      "lastUsedAt": "2026-01-17T16:51:53.141Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10179"
+    },
+    {
+      "id": "f4e76ebf-3f42-423c-abff-766221c67479",
+      "name": "Container/AvatarCircle",
+      "structure": {
+        "childCount": 4,
+        "childTypes": [
+          "RECTANGLE",
+          "ELLIPSE",
+          "ELLIPSE",
+          "TEXT"
+        ],
+        "childNames": [
+          "Image",
+          "Ellipse 875",
+          "Ellipse 876",
+          "지은"
+        ],
+        "layoutMode": "NONE",
+        "width": 88,
+        "height": 88,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [
+          "지은"
+        ],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#00CC61",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.143Z",
+      "lastUsedAt": "2026-01-17T16:51:53.143Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10177"
+    },
+    {
+      "id": "c734152c-96e6-4527-be15-2bab51b03ae7",
+      "name": "Text/UserLabel",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "나"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 89,
+        "height": 22,
+        "aspectRatio": 4.045454545454546,
+        "positionZone": "middle",
+        "textHints": [
+          "나"
+        ],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.145Z",
+      "lastUsedAt": "2026-01-17T16:51:53.145Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10035"
+    },
+    {
+      "id": "350a2451-b128-4567-b76e-8d41ba96ea50",
+      "name": "Container/MotivationMessage",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "BOOLEAN_OPERATION",
+          "TEXT",
+          "FRAME"
+        ],
+        "childNames": [
+          "Union",
+          "💪 참여 각오를 써보세요! 완주 가능성이 높아져요.",
+          "Icons"
+        ],
+        "layoutMode": "NONE",
+        "width": 156,
+        "height": 62.99913024902344,
+        "aspectRatio": 2.4762246618859978,
+        "positionZone": "middle",
+        "textHints": [
+          "💪 참여 각오를 써보세요! \n완주 가능성이 높아져요."
+        ],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.147Z",
+      "lastUsedAt": "2026-01-17T16:51:53.147Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10178"
+    },
+    {
+      "id": "10010d99-e764-4b7a-8c49-aa14eac64e74",
+      "name": "Icon/Menu",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "Union"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 16,
+        "height": 16,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "769-M 5.832390295634084 0.16983956963950278 C 5.608911779471809 -0.05661318987983424 5.246613993535761 -",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.149Z",
+      "lastUsedAt": "2026-01-17T16:51:53.149Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10042"
+    },
+    {
+      "id": "6601bdd3-2edb-49ce-b0b0-7a01ce68063e",
+      "name": "Card/UserProfile",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "Group 54069068",
+          "Image"
+        ],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 217,
+        "aspectRatio": 0.7695852534562212,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_feed_right",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.152Z",
+      "lastUsedAt": "2026-01-17T16:51:53.152Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10182"
+    },
+    {
+      "id": "fc43b556-ae18-4614-b28f-f88c68600c84",
+      "name": "Container/UserInfo",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "RECTANGLE",
+          "RECTANGLE",
+          "TEXT"
+        ],
+        "childNames": [
+          "square",
+          "Image",
+          "이연우"
+        ],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 217,
+        "aspectRatio": 0.7695852534562212,
+        "positionZone": "middle",
+        "textHints": [
+          "이연우"
+        ],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.153Z",
+      "lastUsedAt": "2026-01-17T16:51:53.153Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10180"
+    },
+    {
+      "id": "735b716d-34e2-4007-95ed-87b811376260",
+      "name": "Background/CardBase",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 217,
+        "aspectRatio": 0.7695852534562212,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.155Z",
+      "lastUsedAt": "2026-01-17T16:51:53.155Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10046"
+    },
+    {
+      "id": "23676251-8ab7-4846-97a8-891134621b3a",
+      "name": "Card/UserOh",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "RECTANGLE",
+          "FRAME"
+        ],
+        "childNames": [
+          "Image",
+          "Frame 1430106468"
+        ],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 300,
+        "aspectRatio": 0.5566666666666666,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_feed_right",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#DFF7DF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.157Z",
+      "lastUsedAt": "2026-01-17T16:51:53.157Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10185"
+    },
+    {
+      "id": "9dcf4179-e522-4c0f-9ece-18fd3a3aaf25",
+      "name": "Container/UserOhAvatar",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "TEXT"
+        ],
+        "childNames": [
+          "Section/Image",
+          "오은주"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 62,
+        "height": 88,
+        "aspectRatio": 0.7045454545454546,
+        "positionZone": "middle",
+        "textHints": [
+          "오은주"
+        ],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#646464",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.158Z",
+      "lastUsedAt": "2026-01-17T16:51:53.158Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10054"
+    },
+    {
+      "id": "99aaa64f-5122-4594-be77-9a72285fa06d",
+      "name": "Card/UserPending",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "RECTANGLE",
+          "FRAME"
+        ],
+        "childNames": [
+          "Image",
+          "Frame 1430106468"
+        ],
+        "layoutMode": "NONE",
+        "width": 167,
+        "height": 237,
+        "aspectRatio": 0.7046413502109705,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_feed_right",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#DFF7DF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.160Z",
+      "lastUsedAt": "2026-01-17T16:51:53.160Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10186"
+    },
+    {
+      "id": "d47ab1f8-e526-4299-ae11-033c9b50bf9a",
+      "name": "Container/PendingUserProfile",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Icons",
+          "Frame 1430106883"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 89,
+        "height": 74,
+        "aspectRatio": 1.2027027027027026,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.161Z",
+      "lastUsedAt": "2026-01-17T16:51:53.161Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10062"
+    },
+    {
+      "id": "d60be125-1420-485a-a53a-0299c4759b67",
+      "name": "Image/UserIcon",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "Union"
+        ],
+        "layoutMode": "NONE",
+        "width": 48,
+        "height": 48,
+        "aspectRatio": 1,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "1154-M 24 26.4 C 27.97646484375 26.4 31.2 23.176464843749997 31.2 19.2 C 31.2 15.22353515625 27.976464843",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.163Z",
+      "lastUsedAt": "2026-01-17T16:51:53.163Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10063"
+    },
+    {
+      "id": "022a9bd6-3d07-4c27-89bf-3a30d3df3fec",
+      "name": "Text/PendingStatus",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "수락 대기중"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 63,
+        "height": 22,
+        "aspectRatio": 2.8636363636363638,
+        "positionZone": "middle",
+        "textHints": [
+          "수락 대기중"
+        ],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.166Z",
+      "lastUsedAt": "2026-01-17T16:51:53.166Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10065"
+    },
+    {
+      "id": "16351196-20f8-4fa2-87e2-99ab5cc9f9a7",
+      "name": "Text/Time",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "Time"
+        ],
+        "layoutMode": "NONE",
+        "width": 33,
+        "height": 22,
+        "aspectRatio": 1.5,
+        "positionZone": "top",
+        "textHints": [
+          "9:41"
+        ],
+        "iconHints": [],
+        "parentName": "Header/Main",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.168Z",
+      "lastUsedAt": "2026-01-17T16:51:53.168Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10189"
+    },
+    {
+      "id": "d5d9a50b-7954-4c08-a2b9-7149385c5a85",
+      "name": "Container/StatusIndicators",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "FRAME",
+          "VECTOR",
+          "VECTOR"
+        ],
+        "childNames": [
+          "Battery",
+          "Wifi",
+          "Cellular Connection"
+        ],
+        "layoutMode": "NONE",
+        "width": 76.32803344726562,
+        "height": 13,
+        "aspectRatio": 5.871387188251202,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Header/Main",
+        "vectorPathHash": "2354-M 19.200000762939453 1.1462262868881226 C 19.200000762939453 0.5131829977035522 18.722436904907227 0",
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.170Z",
+      "lastUsedAt": "2026-01-17T16:51:53.170Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10192"
+    },
+    {
+      "id": "acf2435b-0e17-4317-90c0-62295cf0405f",
+      "name": "Icon/Battery",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "RECTANGLE",
+          "VECTOR",
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "Border",
+          "Cap",
+          "Capacity"
+        ],
+        "layoutMode": "NONE",
+        "width": 27.32803726196289,
+        "height": 13,
+        "aspectRatio": 2.102156712458684,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "222-M 0 0 L 0 4.075471878051758 C 0.8047311305999756 3.7303033239986974 1.328037977218628 2.927343493278",
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.172Z",
+      "lastUsedAt": "2026-01-17T16:51:53.172Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10191"
+    },
+    {
+      "id": "6511dd54-fe74-4a93-80a1-c61159668c16",
+      "name": "Container/HeaderActions",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "Frame 1430107176"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 375,
+        "height": 40,
+        "aspectRatio": 9.375,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Header/Main",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.174Z",
+      "lastUsedAt": "2026-01-17T16:51:53.174Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10079"
+    },
+    {
+      "id": "2aa5b17b-abad-4f38-a7f5-883f412527b6",
+      "name": "Container/ActionButtons",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Frame 1430106829",
+          "ri:more-fill"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 77,
+        "height": 40,
+        "aspectRatio": 1.925,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.176Z",
+      "lastUsedAt": "2026-01-17T16:51:53.176Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10080"
+    },
+    {
+      "id": "66763c68-a08a-4d47-a389-cf800d7e9f6a",
+      "name": "Icon/Repeat",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "material-symbols-light:event-repeat-outline"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 37,
+        "height": 37,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.178Z",
+      "lastUsedAt": "2026-01-17T16:51:53.178Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10081"
+    },
+    {
+      "id": "eef0cb0d-9307-4a6e-8835-be039abf1734",
+      "name": "Icon/EventRepeat",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "VECTOR",
+          "VECTOR"
+        ],
+        "childNames": [
+          "Vector",
+          "Vector"
+        ],
+        "layoutMode": "NONE",
+        "width": 31,
+        "height": 31,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "313-M 3.932407103114656 3.946759283542633 L 5.740740776062012 0 L 7.53472226858139 3.946759283542633 L 1",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.180Z",
+      "lastUsedAt": "2026-01-17T16:51:53.180Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10082"
+    },
+    {
+      "id": "28330fc4-2353-4387-adb9-f409312f87c6",
+      "name": "Icon/More",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "Vector"
+        ],
+        "layoutMode": "NONE",
+        "width": 40,
+        "height": 40,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "1000-M 2.439024395412869 0 C 1.0975609488603546 0 0 1.1249999701976776 0 2.5 C 0 3.8750000298023224 1.097",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.183Z",
+      "lastUsedAt": "2026-01-17T16:51:53.183Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10086"
+    },
+    {
+      "id": "0286ef77-284b-40fc-84f9-0d4f47eb9d77",
+      "name": "Container/BottomActionBar",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Background",
+          "btn_start",
+          "tooltip / default"
+        ],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 64,
+        "aspectRatio": 5.859375,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "TabBar/Main",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.185Z",
+      "lastUsedAt": "2026-01-17T16:51:53.185Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10089"
+    },
+    {
+      "id": "f8d95496-4437-481e-9f6c-ba3cc20ca0c2",
+      "name": "Background/ActionBar",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "Bg"
+        ],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 64,
+        "aspectRatio": 5.859375,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Fixed Button",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.186Z",
+      "lastUsedAt": "2026-01-17T16:51:53.186Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10090"
+    },
+    {
+      "id": "b3b31eff-abcc-452e-aec4-58b01def46c4",
+      "name": "Background/BarBase",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 64,
+        "aspectRatio": 5.859375,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Background",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.188Z",
+      "lastUsedAt": "2026-01-17T16:51:53.188Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10091"
+    },
+    {
+      "id": "cca6bd53-52ac-46a2-9c93-278aa879e870",
+      "name": "Button/Normal/Filled/56/Disabled",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "bg_btn"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 351,
+        "height": 56,
+        "aspectRatio": 6.267857142857143,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Fixed Button",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#D9D9D9",
+        "opacity": 0.8999999761581421
+      },
+      "createdAt": "2026-01-17T16:51:53.191Z",
+      "lastUsedAt": "2026-01-17T16:51:53.191Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10092"
+    },
+    {
+      "id": "710905eb-1dd1-4127-96d6-67647d8c9918",
+      "name": "Container/ButtonText",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "RECTANGLE",
+          "TEXT"
+        ],
+        "childNames": [
+          "image 1418",
+          "인증하기"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 97,
+        "height": 32,
+        "aspectRatio": 3.03125,
+        "positionZone": "bottom",
+        "textHints": [
+          "인증하기"
+        ],
+        "iconHints": [],
+        "parentName": "btn_start",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.193Z",
+      "lastUsedAt": "2026-01-17T16:51:53.193Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10093"
+    },
+    {
+      "id": "9ceff6d1-63a0-411e-a813-3618662c324e",
+      "name": "Image/Icon",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 17,
+        "height": 20,
+        "aspectRatio": 0.85,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "bg_btn",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.195Z",
+      "lastUsedAt": "2026-01-17T16:51:53.195Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10094"
+    },
+    {
+      "id": "c49b0d0b-4eb1-4a48-9427-87422946055f",
+      "name": "Container/Tooltip",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "txt_box",
+          "arr_bottom_center"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 351,
+        "height": 32,
+        "aspectRatio": 10.96875,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Fixed Button",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.197Z",
+      "lastUsedAt": "2026-01-17T16:51:53.197Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10096"
+    },
+    {
+      "id": "b827541a-e12a-4c58-9bca-c67521e2d7dc",
+      "name": "Background/TooltipMessage",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "⏱️ 3시간 후 시작"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 140,
+        "height": 28,
+        "aspectRatio": 5,
+        "positionZone": "bottom",
+        "textHints": [
+          "⏱️ 3시간 후 시작"
+        ],
+        "iconHints": [],
+        "parentName": "tooltip / default",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#00CC61",
+        "opacity": 0.8999999761581421
+      },
+      "createdAt": "2026-01-17T16:51:53.200Z",
+      "lastUsedAt": "2026-01-17T16:51:53.200Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10097"
+    },
+    {
+      "id": "d703b77d-aa2d-4ccd-bc65-8952badf3453",
+      "name": "Icon/TooltipArrow",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "POLYGON"
+        ],
+        "childNames": [
+          "arr"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 351,
+        "height": 6.000001430511475,
+        "aspectRatio": 58.49998605251645,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "tooltip / default",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.202Z",
+      "lastUsedAt": "2026-01-17T16:51:53.202Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10099"
+    },
+    {
+      "id": "377bdbff-11a3-49cf-bee3-7a01a2f601ff",
+      "name": "TabBar/Home",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "indicator_home"
+        ],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 34,
+        "aspectRatio": 11.029411764705882,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "TabBar/Main",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#000000",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.203Z",
+      "lastUsedAt": "2026-01-17T16:51:53.203Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10101"
+    },
+    {
+      "id": "6e2c477f-4189-4677-8b48-31b032a5e967",
+      "name": "Icon/TabIndicator",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 135,
+        "height": 5,
+        "aspectRatio": 27,
+        "positionZone": "bottom",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "bar_home",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#000000",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.207Z",
+      "lastUsedAt": "2026-01-17T16:51:53.207Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10102"
+    },
+    {
+      "id": "70a96646-949c-4379-93ec-42785faa3753",
+      "name": "Section/Header",
+      "structure": {
+        "childCount": 4,
+        "childTypes": [
+          "FRAME",
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "bg",
+          "SubTab",
+          "section_title",
+          "Header/Main"
+        ],
+        "layoutMode": "NONE",
+        "width": 376,
+        "height": 238,
+        "aspectRatio": 1.5798319327731092,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "챌린지 진행 현황",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#000000",
+        "opacity": 0.699999988079071
+      },
+      "createdAt": "2026-01-17T16:51:53.209Z",
+      "lastUsedAt": "2026-01-17T16:51:53.209Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10200"
+    },
+    {
+      "id": "b8ede400-721e-4c25-adfb-03b0583eea11",
+      "name": "Background/HeaderOverlay",
+      "structure": {
+        "childCount": 4,
+        "childTypes": [
+          "RECTANGLE",
+          "FRAME",
+          "RECTANGLE",
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "image 1486",
+          "Frame 1430107050",
+          "Blur Overlay",
+          "Blur Background"
+        ],
+        "layoutMode": "NONE",
+        "width": 376,
+        "height": 196,
+        "aspectRatio": 1.9183673469387754,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_top",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#000000",
+        "opacity": 0.699999988079071
+      },
+      "createdAt": "2026-01-17T16:51:53.211Z",
+      "lastUsedAt": "2026-01-17T16:51:53.211Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10193"
+    },
+    {
+      "id": "7f59dc2c-4f5c-46b8-85da-1f12bfa32979",
+      "name": "Image/HeaderBackground",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 376,
+        "height": 196,
+        "aspectRatio": 1.9183673469387754,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "bg",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#000000",
+        "opacity": 0.699999988079071
+      },
+      "createdAt": "2026-01-17T16:51:53.213Z",
+      "lastUsedAt": "2026-01-17T16:51:53.213Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10105"
+    },
+    {
+      "id": "09a51f12-c1b0-45dc-b402-8f735f0db466",
+      "name": "Container/HeaderImage",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "요즘 외국에서 유행 중인 컬러워크🎨 #당현천 #퍼플정원 #불암산 #수국 #장미 2"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 375,
+        "height": 196,
+        "aspectRatio": 1.913265306122449,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "bg",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.215Z",
+      "lastUsedAt": "2026-01-17T16:51:53.215Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10106"
+    },
+    {
+      "id": "7af2b24f-267a-4fde-9025-b7e3a0167c1e",
+      "name": "Image/ChallengeHero",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 142,
+        "height": 196,
+        "aspectRatio": 0.7244897959183674,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.217Z",
+      "lastUsedAt": "2026-01-17T16:51:53.217Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10107"
+    },
+    {
+      "id": "a87dd0ee-4310-4928-bf42-7eaac815d50f",
+      "name": "Overlay/BlurEffect",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 196,
+        "aspectRatio": 1.913265306122449,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "bg",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.219Z",
+      "lastUsedAt": "2026-01-17T16:51:53.219Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10108"
+    },
+    {
+      "id": "68bf7a14-4d64-4a1e-9f1e-32f60da65976",
+      "name": "Background/BlurBackground",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 196,
+        "aspectRatio": 1.913265306122449,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "bg",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#000000",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.221Z",
+      "lastUsedAt": "2026-01-17T16:51:53.221Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10109"
+    },
+    {
+      "id": "abf04844-8316-4bc9-88f1-bf5abf584ef8",
+      "name": "TabItem/Participation",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "인증"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 125,
+        "height": 29,
+        "aspectRatio": 4.310344827586207,
+        "positionZone": "middle",
+        "textHints": [
+          "인증"
+        ],
+        "iconHints": [],
+        "parentName": "Section/Icon",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.225Z",
+      "lastUsedAt": "2026-01-17T16:51:53.225Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10112"
+    },
+    {
+      "id": "e83fd29c-6f58-46e7-82c8-3aaedd34a0ab",
+      "name": "TabItem/Chat",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "TEXT",
+          "FRAME"
+        ],
+        "childNames": [
+          "채팅",
+          "Icon/Chat"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 125,
+        "height": 29,
+        "aspectRatio": 4.310344827586207,
+        "positionZone": "middle",
+        "textHints": [
+          "채팅"
+        ],
+        "iconHints": [
+          "Chat"
+        ],
+        "parentName": "Section/Icon",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.227Z",
+      "lastUsedAt": "2026-01-17T16:51:53.227Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10114"
+    },
+    {
+      "id": "6d0a1efe-7cc1-4277-a0a0-af205390bf2f",
+      "name": "TabItem/Members",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "멤버"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 124,
+        "height": 29,
+        "aspectRatio": 4.275862068965517,
+        "positionZone": "middle",
+        "textHints": [
+          "멤버"
+        ],
+        "iconHints": [],
+        "parentName": "Section/Icon",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.229Z",
+      "lastUsedAt": "2026-01-17T16:51:53.229Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10122"
+    },
+    {
+      "id": "8e80894f-f654-4a3c-af95-d70591d569fb",
+      "name": "Container/TabIndicatorBar",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "FRAME",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Frame 1430106563",
+          "Frame 1430106564",
+          "Frame 1430106565"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 375,
+        "height": 2,
+        "aspectRatio": 187.5,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "SubTab",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.232Z",
+      "lastUsedAt": "2026-01-17T16:51:53.232Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10124"
+    },
+    {
+      "id": "7cd0ae73-b0a4-40e5-8ce4-1ff6d68b8867",
+      "name": "Icon/TabActive",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 124,
+        "height": 2,
+        "aspectRatio": 62,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#00CC61",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.234Z",
+      "lastUsedAt": "2026-01-17T16:51:53.234Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10125"
+    },
+    {
+      "id": "170e62c4-d235-4c9c-b93d-cc949f9fd7db",
+      "name": "Icon/TabInactive",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 126,
+        "height": 2,
+        "aspectRatio": 63,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#D9D9D9",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.236Z",
+      "lastUsedAt": "2026-01-17T16:51:53.236Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10126"
+    },
+    {
+      "id": "54f0feba-2132-4bf8-9509-34404c1d4b68",
+      "name": "Icon/TabInactiveSecond",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 125,
+        "height": 2,
+        "aspectRatio": 62.5,
+        "positionZone": "middle",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#D9D9D9",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.238Z",
+      "lastUsedAt": "2026-01-17T16:51:53.238Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10127"
+    },
+    {
+      "id": "1aaf2ed3-60b9-4fc1-a758-ab1878ebbd65",
+      "name": "Container/HeaderTitle",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "title",
+          "section_info"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 374,
+        "height": 86,
+        "aspectRatio": 4.348837209302325,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_top",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.241Z",
+      "lastUsedAt": "2026-01-17T16:51:53.241Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10128"
+    },
+    {
+      "id": "d552e095-a246-4133-a254-2fc1c0ee91fe",
+      "name": "Text/ChallengeTitle",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "TEXT",
+          "FRAME"
+        ],
+        "childNames": [
+          "매일 10분 컬러워크 챌린지",
+          "ep:info-filled"
+        ],
+        "layoutMode": "NONE",
+        "width": 342,
+        "height": 32,
+        "aspectRatio": 10.6875,
+        "positionZone": "top",
+        "textHints": [
+          "매일 10분 컬러워크 챌린지"
+        ],
+        "iconHints": [],
+        "parentName": "section_title",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.245Z",
+      "lastUsedAt": "2026-01-17T16:51:53.245Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10129"
+    },
+    {
+      "id": "f83325fc-c397-4126-b497-25adc7cda47e",
+      "name": "Button/Secondary/Ghost/24",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "자세히"
+        ],
+        "layoutMode": "VERTICAL",
+        "width": 60,
+        "height": 24,
+        "aspectRatio": 2.5,
+        "positionZone": "top",
+        "textHints": [
+          "자세히"
+        ],
+        "iconHints": [],
+        "parentName": "title",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 0.30000001192092896
+      },
+      "createdAt": "2026-01-17T16:51:53.247Z",
+      "lastUsedAt": "2026-01-17T16:51:53.247Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10131"
+    },
+    {
+      "id": "dcb01109-a9c3-4a42-9ca1-c55e4cb8cc10",
+      "name": "Container/ChallengeInfo",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "Section/Text"
+        ],
+        "layoutMode": "NONE",
+        "width": 342,
+        "height": 17,
+        "aspectRatio": 20.11764705882353,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "section_title",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.249Z",
+      "lastUsedAt": "2026-01-17T16:51:53.249Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10133"
+    },
+    {
+      "id": "c1efd300-230e-445a-b1a3-1924d18b735e",
+      "name": "Icon/Calendar",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "cal"
+        ],
+        "layoutMode": "NONE",
+        "width": 18,
+        "height": 18,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Section/Text",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.252Z",
+      "lastUsedAt": "2026-01-17T16:51:53.252Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10135"
+    },
+    {
+      "id": "74dd729f-9ffb-4828-b68d-97fd0b98e0f7",
+      "name": "Icon/CalendarSmall",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "패스 110163"
+        ],
+        "layoutMode": "NONE",
+        "width": 11.00405502319336,
+        "height": 12.72719955444336,
+        "aspectRatio": 0.8646092941437058,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "ic_date_b",
+        "vectorPathHash": "1067-M 1.2229222819583776 0 L 9.78113274123498 0 C 10.105471840069185 -1.3286520217170712e-15 10.41652741",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.254Z",
+      "lastUsedAt": "2026-01-17T16:51:53.254Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10195"
+    },
+    {
+      "id": "579a06b4-e295-473c-b18a-443d5b8fd423",
+      "name": "Text/DateRange",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 26,
+        "height": 18,
+        "aspectRatio": 1.4444444444444444,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Section/Text",
+        "vectorPathHash": null,
+        "textFingerprint": "SK",
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.256Z",
+      "lastUsedAt": "2026-01-17T16:51:53.256Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10141"
+    },
+    {
+      "id": "07c97834-60ea-4138-995d-3adf667e3384",
+      "name": "Text/ChallengeDetail",
+      "structure": {
+        "childCount": 0,
+        "childTypes": [],
+        "childNames": [],
+        "layoutMode": "NONE",
+        "width": 208,
+        "height": 18,
+        "aspectRatio": 11.555555555555555,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Section/Text",
+        "vectorPathHash": null,
+        "textFingerprint": "MNKP",
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.259Z",
+      "lastUsedAt": "2026-01-17T16:51:53.259Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10143"
+    },
+    {
+      "id": "91df5d8f-9ad3-4049-bd8b-0d0a45630084",
+      "name": "Container/StatusBar",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "VECTOR",
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Rectangle",
+          "Time-Style",
+          "Group 2608560"
+        ],
+        "layoutMode": "NONE",
+        "width": 375,
+        "height": 50,
+        "aspectRatio": 7.5,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Header/Main",
+        "vectorPathHash": "67-M 0 0 L 375 0 L 375 50.00000000000001 L 0 50.00000000000001 L 0 0 Z",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.261Z",
+      "lastUsedAt": "2026-01-17T16:51:53.261Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10146"
+    },
+    {
+      "id": "636faf36-fa65-4fc9-94fa-d3e397721a3f",
+      "name": "Text/SystemTime",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "TEXT"
+        ],
+        "childNames": [
+          "Time"
+        ],
+        "layoutMode": "NONE",
+        "width": 33,
+        "height": 22,
+        "aspectRatio": 1.5,
+        "positionZone": "top",
+        "textHints": [
+          "9:41"
+        ],
+        "iconHints": [],
+        "parentName": "StatusBar",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.263Z",
+      "lastUsedAt": "2026-01-17T16:51:53.263Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10196"
+    },
+    {
+      "id": "c791355f-228e-45cb-b074-64987d73122b",
+      "name": "Container/SystemIcons",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "FRAME",
+          "VECTOR",
+          "VECTOR"
+        ],
+        "childNames": [
+          "Battery",
+          "Wifi",
+          "Cellular Connection"
+        ],
+        "layoutMode": "NONE",
+        "width": 76.32803344726562,
+        "height": 13,
+        "aspectRatio": 5.871387188251202,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "StatusBar",
+        "vectorPathHash": "2354-M 19.200000762939453 1.1462262868881226 C 19.200000762939453 0.5131829977035522 18.722436904907227 0",
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.266Z",
+      "lastUsedAt": "2026-01-17T16:51:53.266Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10199"
+    },
+    {
+      "id": "76237ed7-675d-4313-804f-f820dce044d3",
+      "name": "Icon/BatteryIndicator",
+      "structure": {
+        "childCount": 3,
+        "childTypes": [
+          "RECTANGLE",
+          "VECTOR",
+          "RECTANGLE"
+        ],
+        "childNames": [
+          "Border",
+          "Cap",
+          "Capacity"
+        ],
+        "layoutMode": "NONE",
+        "width": 27.32803726196289,
+        "height": 13,
+        "aspectRatio": 2.102156712458684,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "222-M 0 0 L 0 4.075471878051758 C 0.8047311305999756 3.7303033239986974 1.328037977218628 2.927343493278",
+        "textFingerprint": null,
+        "fillColor": "#FFFFFF",
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.269Z",
+      "lastUsedAt": "2026-01-17T16:51:53.269Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10198"
+    },
+    {
+      "id": "c5e2a6ae-ce9d-4331-932b-604e78dcf373",
+      "name": "Icon/Close",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "Button Area"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 37,
+        "height": 37,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Header/Main_2",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.271Z",
+      "lastUsedAt": "2026-01-17T16:51:53.271Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10159"
+    },
+    {
+      "id": "86e06d52-6eac-4ca8-bf40-e2b4536e6a20",
+      "name": "Container/CloseButton",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "Vector"
+        ],
+        "layoutMode": "NONE",
+        "width": 21,
+        "height": 21,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "btn_close",
+        "vectorPathHash": "363-M 1.1785036869456995 21 L 0 19.8214963130543 L 9.321495519333673 10.499999206279373 L 0 1.1785036869",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.274Z",
+      "lastUsedAt": "2026-01-17T16:51:53.274Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10160"
+    },
+    {
+      "id": "8d9a624c-7cc8-44d6-979b-3037233d816a",
+      "name": "Container/HeaderRightActions",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "FRAME",
+          "FRAME"
+        ],
+        "childNames": [
+          "Frame 1430106829",
+          "ri:more-fill"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 77,
+        "height": 40,
+        "aspectRatio": 1.925,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": "Header/Main_2",
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.277Z",
+      "lastUsedAt": "2026-01-17T16:51:53.277Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10163"
+    },
+    {
+      "id": "37421913-a495-481f-9589-e9ef07f504b5",
+      "name": "Icon/Refresh",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "FRAME"
+        ],
+        "childNames": [
+          "material-symbols-light:event-repeat-outline"
+        ],
+        "layoutMode": "HORIZONTAL",
+        "width": 37,
+        "height": 37,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": null,
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.279Z",
+      "lastUsedAt": "2026-01-17T16:51:53.279Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10164"
+    },
+    {
+      "id": "87500172-9ed9-43b7-9363-25f476c193fb",
+      "name": "Icon/RefreshOutline",
+      "structure": {
+        "childCount": 2,
+        "childTypes": [
+          "VECTOR",
+          "VECTOR"
+        ],
+        "childNames": [
+          "Vector",
+          "Vector"
+        ],
+        "layoutMode": "NONE",
+        "width": 31,
+        "height": 31,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "313-M 3.932407103114656 3.946759283542633 L 5.740740776062012 0 L 7.53472226858139 3.946759283542633 L 1",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.282Z",
+      "lastUsedAt": "2026-01-17T16:51:53.282Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10165"
+    },
+    {
+      "id": "ea5d4844-5be5-4bde-bda3-abc662ba81d9",
+      "name": "Icon/MoreOptions",
+      "structure": {
+        "childCount": 1,
+        "childTypes": [
+          "VECTOR"
+        ],
+        "childNames": [
+          "Vector"
+        ],
+        "layoutMode": "NONE",
+        "width": 40,
+        "height": 40,
+        "aspectRatio": 1,
+        "positionZone": "top",
+        "textHints": [],
+        "iconHints": [],
+        "parentName": null,
+        "vectorPathHash": "1000-M 2.439024395412869 0 C 1.0975609488603546 0 0 1.1249999701976776 0 2.5 C 0 3.8750000298023224 1.097",
+        "textFingerprint": null,
+        "fillColor": null,
+        "opacity": 1
+      },
+      "createdAt": "2026-01-17T16:51:53.284Z",
+      "lastUsedAt": "2026-01-17T16:51:53.284Z",
+      "usageCount": 1,
+      "sourceNodeId": "14497:10169"
+    }
+  ],
   "history": []
 }
