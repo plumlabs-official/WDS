@@ -60,31 +60,56 @@ Button/Intent/Shape/Size[/State][/Icon]
 
 ### Intent 판단 기준 (우선순위대로)
 
-**1단계: 색상으로 판단 (최우선)**
+⚠️ **Intent 힌트가 제공되면 반드시 참고!**
+- `Intent 힌트: Danger (확실)` → Intent = Danger
+- `Intent 힌트: Success (추정)` → Intent = Success (추정이어도 채택)
+- `Intent 힌트: Primary (약함)` → 스크린샷으로 재확인 후 판단
+
+**1단계: Intent 힌트 확인 (최우선)**
+| 힌트 | 판단 |
+|------|------|
+| `Intent 힌트: Danger` | Intent = Danger |
+| `Intent 힌트: Warning` | Intent = Warning |
+| `Intent 힌트: Success` | Intent = Success |
+| `Intent 힌트: Info` | Intent = Info |
+| `Intent 힌트: Primary` | Intent = Primary |
+| `Intent 힌트: Secondary` | Intent = Secondary |
+| `Intent 힌트: Normal` | Intent = Normal |
+
+**2단계: 힌트 없으면 색상으로 직접 판단**
 | 색상 | Intent |
 |------|--------|
 | 빨간색 계열 | Danger |
 | 노란색/주황색 | Warning |
 | 초록색 계열 | Success |
 | 파란색 계열 (정보 목적) | Info |
-
-**2단계: 강조도로 판단 (색상이 중립적일 때)**
-| 특징 | Intent |
-|------|--------|
-| 브랜드/강조색 + Filled | Primary |
-| 덜 강조된 색상, Outlined | Secondary |
+| 채도 높은 색상 | Primary |
+| 채도 낮은 색상 | Secondary |
 | 회색/무채색 | Normal |
 
-**판단 충돌 시**: 색상 의미 > 강조도
-- 예: 빨간색 Filled 버튼 → `Danger` (Primary 아님)
-- 예: 초록색 강조 버튼 → `Success` (Primary 아님)
+**판단 충돌 시**: 색상 의미(Danger/Warning/Success/Info) > 강조도(Primary/Secondary/Normal)
 
 ### Shape (시각적 스타일)
-| Shape | 특징 |
-|-------|------|
-| Filled | 배경색이 채워져 있음 |
-| Outlined | 테두리만 있고 배경 투명 |
-| Ghost | 배경/테두리 없음, 텍스트만 |
+
+⚠️ **Shape 힌트 필드가 제공되면 반드시 참고**
+
+| Shape | 특징 | 감지 조건 |
+|-------|------|----------|
+| Filled | 색상 있는 배경 | 채우기 색상이 **흰색이 아닌** 색상 |
+| Outlined | 테두리만 보임 | `테두리` 있음 + (채우기 없음 OR **흰색/투명**) |
+| Ghost | 텍스트만 | `테두리` 없음 + 채우기 없음/흰색 |
+
+**핵심 규칙:**
+- `테두리: 있음` + 배경 흰색(#FFFFFF) = **Outlined**
+- `테두리: 있음` + 배경 없음 = **Outlined**
+- 색상 배경(#0066FF 등) + 테두리 없음 = **Filled**
+- 색상 배경 + 테두리 있음 + **색상 동일** = **Filled** (fill=stroke 동일색)
+- 색상 배경 + 테두리 있음 + 색상 다름 = **Filled** (with border)
+
+**Shape 힌트 활용:**
+- `Shape 힌트: Outlined` → Shape = Outlined
+- `Shape 힌트: Filled` → Shape = Filled
+- `Shape 힌트: Ghost` → Shape = Ghost
 
 ### Size (높이)
 - **실제 높이(px)를 그대로 사용**
@@ -94,8 +119,28 @@ Button/Intent/Shape/Size[/State][/Icon]
 ### State (선택, Default면 생략)
 - Disabled, Loading, Focus
 
+**Disabled 판단 기준** (노드 정보 필수 확인):
+
+| 조건 | 판단 |
+|------|------|
+| 채우기 색상 **#808080 ~ #CCCCCC** (회색 계열) | `Disabled` |
+| 채우기 색상 **#D0D0D0 이상** (밝은 회색) | `Disabled` |
+| 투명도 **50% 미만** | `Disabled` |
+| 채도 낮은 색상 (회색빛 도는 색) | `Disabled` |
+
+⚠️ **중요**: `채우기 색상` 필드가 있으면 **반드시** 확인!
+- 회색 계열이면 무조건 Disabled (브랜드색처럼 보여도)
+- 투명도 낮으면 무조건 Disabled
+
 ### Icon (선택, 있을 때만)
-- IconLeft, IconRight, IconOnly
+
+⚠️ **아이콘 위치 필드가 제공되면 반드시 사용**
+
+| 필드 값 | 적용 |
+|--------|------|
+| `아이콘 위치: 왼쪽` | IconLeft |
+| `아이콘 위치: 오른쪽` | IconRight |
+| `아이콘 위치: 아이콘만` | IconOnly |
 
 ### 버튼 예시
 ```

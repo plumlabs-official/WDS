@@ -206,6 +206,12 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
   parentName: string | null;
   vectorPathHash: string | null;
   textFingerprint: string | null;
+  // 버튼 속성 감지용
+  fillColor: string | null;
+  opacity: number | null;
+  hasStroke: boolean;
+  strokeColor: string | null;
+  iconPosition: 'left' | 'right' | 'only' | null;
 } {
   const childTypes: string[] = [];
   const childNames: string[] = [];
@@ -290,6 +296,163 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
     }
   }
 
+  // 채우기 색상 추출 (첫 번째 solid fill, 노드 또는 자식에서)
+  let fillColor: string | null = null;
+  let opacity: number | null = null;
+
+  // 헬퍼: 노드에서 solid fill 색상 추출
+  const extractFillFromNode = (n: SceneNode): { color: string | null; opacity: number | null } => {
+    if ('fills' in n && Array.isArray(n.fills)) {
+      const fills = n.fills as Paint[];
+      const solidFill = fills.find(f => f.type === 'SOLID' && f.visible !== false);
+      if (solidFill && solidFill.type === 'SOLID') {
+        const c = solidFill.color;
+        const r = Math.round(c.r * 255).toString(16).padStart(2, '0');
+        const g = Math.round(c.g * 255).toString(16).padStart(2, '0');
+        const b = Math.round(c.b * 255).toString(16).padStart(2, '0');
+        return {
+          color: `#${r}${g}${b}`.toUpperCase(),
+          opacity: solidFill.opacity ?? 1
+        };
+      }
+    }
+    return { color: null, opacity: null };
+  };
+
+  // 1. 노드 자체에서 fill 추출 시도
+  const nodeFill = extractFillFromNode(node);
+  fillColor = nodeFill.color;
+  opacity = nodeFill.opacity;
+
+  // 2. 노드에 fill이 없으면 자식에서 재귀적으로 탐색 (최대 2레벨)
+  // 버튼 구조: Button > Background (GROUP/FRAME) > Rectangle
+  if (!fillColor && 'children' in node) {
+    const findFillRecursive = (parent: SceneNode, depth: number): { color: string | null; opacity: number | null } => {
+      if (depth > 2) return { color: null, opacity: null };
+      if (!('children' in parent)) return { color: null, opacity: null };
+
+      const frame = parent as FrameNode;
+      for (const child of frame.children) {
+        // RECTANGLE, ELLIPSE에서 직접 fill 추출
+        if (child.type === 'RECTANGLE' || child.type === 'ELLIPSE') {
+          const childFill = extractFillFromNode(child);
+          if (childFill.color) {
+            return childFill;
+          }
+        }
+        // FRAME, GROUP인 경우 한 레벨 더 탐색
+        if ((child.type === 'FRAME' || child.type === 'GROUP') && 'children' in child) {
+          const nestedFill = findFillRecursive(child, depth + 1);
+          if (nestedFill.color) {
+            return nestedFill;
+          }
+        }
+      }
+      return { color: null, opacity: null };
+    };
+
+    const foundFill = findFillRecursive(node, 1);
+    fillColor = foundFill.color;
+    opacity = foundFill.opacity;
+  }
+
+  // 노드 전체 투명도도 고려
+  if ('opacity' in node && typeof node.opacity === 'number') {
+    opacity = opacity !== null ? opacity * node.opacity : node.opacity;
+  }
+
+  // Stroke 정보 추출 (Outlined 버튼 감지용)
+  let hasStroke = false;
+  let strokeColor: string | null = null;
+
+  // 헬퍼: 노드에서 stroke 정보 추출
+  const extractStrokeFromNode = (n: SceneNode): { hasStroke: boolean; color: string | null } => {
+    if ('strokes' in n && Array.isArray(n.strokes)) {
+      const strokes = n.strokes as Paint[];
+      const visibleStroke = strokes.find(s => s.type === 'SOLID' && s.visible !== false);
+      if (visibleStroke && visibleStroke.type === 'SOLID') {
+        const c = visibleStroke.color;
+        const r = Math.round(c.r * 255).toString(16).padStart(2, '0');
+        const g = Math.round(c.g * 255).toString(16).padStart(2, '0');
+        const b = Math.round(c.b * 255).toString(16).padStart(2, '0');
+        return {
+          hasStroke: true,
+          color: `#${r}${g}${b}`.toUpperCase()
+        };
+      }
+    }
+    return { hasStroke: false, color: null };
+  };
+
+  // 1. 노드 자체에서 stroke 추출
+  const nodeStroke = extractStrokeFromNode(node);
+  hasStroke = nodeStroke.hasStroke;
+  strokeColor = nodeStroke.color;
+
+  // 2. 노드에 stroke가 없으면 자식에서 재귀적으로 탐색 (최대 2레벨)
+  if (!hasStroke && 'children' in node) {
+    const findStrokeRecursive = (parent: SceneNode, depth: number): { hasStroke: boolean; color: string | null } => {
+      if (depth > 2) return { hasStroke: false, color: null };
+      if (!('children' in parent)) return { hasStroke: false, color: null };
+
+      const frame = parent as FrameNode;
+      for (const child of frame.children) {
+        if (child.type === 'RECTANGLE' || child.type === 'ELLIPSE') {
+          const childStroke = extractStrokeFromNode(child);
+          if (childStroke.hasStroke) {
+            return childStroke;
+          }
+        }
+        if ((child.type === 'FRAME' || child.type === 'GROUP') && 'children' in child) {
+          const nestedStroke = findStrokeRecursive(child, depth + 1);
+          if (nestedStroke.hasStroke) {
+            return nestedStroke;
+          }
+        }
+      }
+      return { hasStroke: false, color: null };
+    };
+
+    const foundStroke = findStrokeRecursive(node, 1);
+    hasStroke = foundStroke.hasStroke;
+    strokeColor = foundStroke.color;
+  }
+
+  // 아이콘 위치 감지 (버튼 내 아이콘 위치)
+  let iconPosition: 'left' | 'right' | 'only' | null = null;
+
+  if ('children' in node) {
+    const frame = node as FrameNode;
+    let iconChild: SceneNode | null = null;
+    let textChild: SceneNode | null = null;
+
+    for (const child of frame.children) {
+      // 아이콘 감지: VECTOR, Icon/* 이름, 또는 작은 FRAME/GROUP (아이콘 컨테이너)
+      if (child.type === 'VECTOR' ||
+          child.name.startsWith('Icon/') ||
+          child.name.toLowerCase().includes('icon') ||
+          (child.type === 'FRAME' && child.width < 32 && child.height < 32)) {
+        iconChild = child;
+      }
+      // 텍스트 감지
+      if (child.type === 'TEXT') {
+        textChild = child;
+      }
+    }
+
+    if (iconChild) {
+      if (!textChild) {
+        // 아이콘만 있음
+        iconPosition = 'only';
+      } else {
+        // 아이콘과 텍스트 둘 다 있음 - 위치 비교
+        const iconCenterX = iconChild.x + iconChild.width / 2;
+        const textCenterX = textChild.x + textChild.width / 2;
+        iconPosition = iconCenterX < textCenterX ? 'left' : 'right';
+      }
+    }
+  }
+
   return {
     childCount: childTypes.length,
     childTypes,
@@ -304,6 +467,11 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
     parentName,
     vectorPathHash,
     textFingerprint,
+    fillColor,
+    opacity,
+    hasStroke,
+    strokeColor,
+    iconPosition,
   };
 }
 

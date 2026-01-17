@@ -136,6 +136,18 @@ app.post('/agents/naming/context', async (req, res) => {
     const request: ContextAwareNamingRequest = req.body;
     console.log(`[Context Naming] Analyzing ${request.nodes.length} nodes with screen context (${request.screenWidth}x${request.screenHeight})`);
 
+    // DEBUG: 버튼 속성 디버깅 (모든 노드)
+    console.log('[Context Naming] ALL nodes structure:', request.nodes.map(n => ({
+      nodeId: n.nodeId,
+      name: n.currentName,
+      size: `${n.width}x${n.height}`,
+      fillColor: n.structure?.fillColor || 'NULL',
+      opacity: n.structure?.opacity,
+      hasStroke: n.structure?.hasStroke || false,
+      strokeColor: n.structure?.strokeColor || 'NULL',
+      iconPosition: n.structure?.iconPosition || 'NULL'
+    })));
+
     const result = await analyzeNamingWithContext(request);
 
     if (result.success) {

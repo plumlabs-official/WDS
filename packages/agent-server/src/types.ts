@@ -60,6 +60,14 @@ export interface ContextAwareNamingRequest {
     depth?: number;   // 스크린 기준 깊이 (1=최상위, 2=Layout레벨, 3+=컴포넌트)
     texts?: string[];      // 자식 TEXT 노드의 텍스트 (Purpose 추론용)
     iconHints?: string[];  // 자식 Icon/* 이름 (Purpose 추론용)
+    structure?: {          // 패턴 매칭용 구조 정보
+      fillColor?: string | null;  // 채우기 색상 (#RRGGBB)
+      opacity?: number | null;    // 투명도 (0-1)
+      hasStroke?: boolean;        // Stroke 유무 (Outlined 버튼 감지)
+      strokeColor?: string | null; // Stroke 색상
+      iconPosition?: 'left' | 'right' | 'only' | null; // 아이콘 위치
+      [key: string]: unknown;     // 기타 구조 정보
+    };
   }>;
 }
 

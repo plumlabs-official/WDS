@@ -36,6 +36,88 @@ function loadPrompt(filename: string): string {
 const NAMING_PROMPT = loadPrompt('naming-single.md');
 const CONTEXT_AWARE_NAMING_PROMPT = loadPrompt('naming-context.md');
 
+/**
+ * 색상 → Intent 감지
+ * @param hexColor #RRGGBB 형식
+ * @returns Intent 이름 또는 null
+ */
+function detectIntentFromColor(hexColor: string | null | undefined): { intent: string; confidence: 'high' | 'medium' | 'low' } | null {
+  if (!hexColor) return null;
+
+  const color = hexColor.toUpperCase().replace('#', '');
+  if (color.length !== 6) return null;
+
+  const r = parseInt(color.substring(0, 2), 16);
+  const g = parseInt(color.substring(2, 4), 16);
+  const b = parseInt(color.substring(4, 6), 16);
+
+  // 회색 판단 (R ≈ G ≈ B, 차이 < 30)
+  const isGray = Math.abs(r - g) < 30 && Math.abs(g - b) < 30 && Math.abs(r - b) < 30;
+
+  // 밝기 계산 (0-255)
+  const brightness = (r + g + b) / 3;
+
+  // 채도 계산 (0-1)
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const saturation = max === 0 ? 0 : (max - min) / max;
+
+  // 1. Danger (빨간색 계열): R이 높고, G와 B가 낮음
+  if (r >= 180 && g <= 100 && b <= 100) {
+    return { intent: 'Danger', confidence: 'high' };
+  }
+  if (r >= 200 && g <= 150 && b <= 150 && r - g >= 50 && r - b >= 50) {
+    return { intent: 'Danger', confidence: 'medium' };
+  }
+
+  // 2. Success (초록색 계열): G가 높고, R과 B가 낮음
+  if (g >= 180 && r <= 100 && b <= 100) {
+    return { intent: 'Success', confidence: 'high' };
+  }
+  if (g >= 150 && g > r && g > b && g - r >= 30) {
+    return { intent: 'Success', confidence: 'medium' };
+  }
+
+  // 3. Warning (노란/주황 계열): R과 G가 높고, B가 낮음
+  if (r >= 200 && g >= 150 && b <= 100) {
+    return { intent: 'Warning', confidence: 'high' };
+  }
+  if (r >= 180 && g >= 120 && b <= 80 && r + g > b * 3) {
+    return { intent: 'Warning', confidence: 'medium' };
+  }
+
+  // 4. Info (파란색 계열 - 정보 목적): B가 높고, R이 낮음
+  if (b >= 180 && r <= 100 && g <= 180) {
+    return { intent: 'Info', confidence: 'high' };
+  }
+  if (b >= 150 && b > r && b >= g) {
+    return { intent: 'Info', confidence: 'medium' };
+  }
+
+  // 5. Normal (회색/무채색)
+  if (isGray) {
+    if (brightness >= 200) {
+      // 밝은 회색은 Disabled 가능성
+      return { intent: 'Normal', confidence: 'medium' };
+    }
+    return { intent: 'Normal', confidence: 'high' };
+  }
+
+  // 6. Primary vs Secondary 판단 (채도와 밝기 기반)
+  if (saturation >= 0.5 && brightness >= 80 && brightness <= 200) {
+    // 채도 높고 적당한 밝기 → Primary
+    return { intent: 'Primary', confidence: 'medium' };
+  }
+
+  if (saturation >= 0.2 && saturation < 0.5) {
+    // 채도 중간 → Secondary
+    return { intent: 'Secondary', confidence: 'low' };
+  }
+
+  // 기본값
+  return { intent: 'Secondary', confidence: 'low' };
+}
+
 export async function analyzeNaming(
   request: NamingRequest
 ): Promise<BaseResponse<NamingResult>> {
@@ -512,13 +594,95 @@ function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
     const parentInfo = node.parentName
       ? `\n   - 부모 이름: "${node.parentName}" ⚠️ 이 이름과 동일하면 안됨`
       : '';
+    // 버튼 속성 감지용 정보 (structure에서 추출)
+    const opacity = node.structure?.opacity;
+    const fillColorInfo = node.structure?.fillColor
+      ? `\n   - 채우기 색상: ${node.structure.fillColor}${opacity !== null && opacity !== undefined && opacity < 1 ? ` (투명도: ${(opacity * 100).toFixed(0)}%)` : ''}`
+      : '';
+    // Stroke 정보 (Outlined 버튼 감지)
+    const strokeInfo = node.structure?.hasStroke
+      ? `\n   - 테두리: 있음${node.structure.strokeColor ? ` (${node.structure.strokeColor})` : ''}`
+      : '';
+    // 아이콘 위치 정보
+    const iconPositionInfo = node.structure?.iconPosition
+      ? `\n   - 아이콘 위치: ${node.structure.iconPosition === 'left' ? '왼쪽' : node.structure.iconPosition === 'right' ? '오른쪽' : '아이콘만'}`
+      : '';
+    // Shape 힌트 (AI 판단 보조)
+    let shapeHint = '';
+    const fillColor = node.structure?.fillColor?.toUpperCase() || null;
+    const strokeColor = node.structure?.strokeColor?.toUpperCase() || null;
+    const hasStroke = !!node.structure?.hasStroke;
+
+    // 흰색/투명 판단 (Outlined 버튼은 배경이 흰색이거나 비어있음)
+    const isWhiteOrTransparent = !fillColor ||
+      fillColor === '#FFFFFF' ||
+      fillColor === '#FAFAFA' ||
+      fillColor === '#F5F5F5' ||
+      fillColor === '#FEFEFE' ||
+      /^#F[0-9A-F]{5}$/.test(fillColor); // #Fxxxxx 패턴 (밝은 흰색 계열)
+
+    // fill과 stroke 색상 동일 여부 (Filled 버튼에서 fill+stroke 동시 존재 시)
+    const isFillStrokeSameColor = fillColor && strokeColor && fillColor === strokeColor;
+
+    if (hasStroke && isWhiteOrTransparent && !isFillStrokeSameColor) {
+      // Outlined: stroke 있고, fill이 흰색이거나 비어있음
+      shapeHint = '\n   - Shape 힌트: Outlined (테두리 있음, 배경 흰색/투명)';
+    } else if (fillColor && !isWhiteOrTransparent) {
+      // Filled: 색상 있는 배경 (stroke 유무 무관, 색상 동일하면 Filled)
+      if (hasStroke && isFillStrokeSameColor) {
+        shapeHint = '\n   - Shape 힌트: Filled (배경+테두리 동일 색상)';
+      } else if (hasStroke) {
+        shapeHint = '\n   - Shape 힌트: Filled (색상 배경+테두리)';
+      } else {
+        shapeHint = '\n   - Shape 힌트: Filled (색상 배경)';
+      }
+    } else if (!hasStroke && isWhiteOrTransparent) {
+      // Ghost: 배경도 테두리도 없음 (텍스트만)
+      shapeHint = '\n   - Shape 힌트: Ghost (배경/테두리 없음, 텍스트만)';
+    }
+
+    // State 힌트 (Disabled 감지)
+    let stateHint = '';
+    if (node.structure?.fillColor) {
+      const fill = node.structure.fillColor.toUpperCase();
+      // 회색 계열 감지 (#808080 ~ #E0E0E0)
+      const isGrayish = /^#([89A-Ea-e][0-9A-Fa-f]){3}$/.test(fill) ||
+                        /^#([C-Ec-e][0-9A-Fa-f]){3}$/.test(fill) ||
+                        fill === '#CCCCCC' || fill === '#D0D0D0' || fill === '#DDDDDD' ||
+                        fill === '#B0B0B0' || fill === '#A0A0A0' || fill === '#909090';
+      if (isGrayish) {
+        stateHint = `\n   - ⚠️ State 힌트: Disabled 가능성 높음 (회색 계열 ${fill})`;
+      }
+    }
+    if (opacity !== null && opacity !== undefined && opacity < 0.5) {
+      stateHint = `\n   - ⚠️ State 힌트: Disabled 가능성 높음 (투명도 ${(opacity * 100).toFixed(0)}%)`;
+    }
+
+    // Intent 힌트 (버튼 색상 기반)
+    let intentHint = '';
+    if (fillColor && !isWhiteOrTransparent) {
+      const intentResult = detectIntentFromColor(fillColor);
+      if (intentResult) {
+        const confidenceLabel = intentResult.confidence === 'high' ? '확실' :
+                               intentResult.confidence === 'medium' ? '추정' : '약함';
+        intentHint = `\n   - Intent 힌트: ${intentResult.intent} (${confidenceLabel}, ${fillColor})`;
+      }
+    } else if (hasStroke && strokeColor) {
+      // Outlined 버튼의 경우 stroke 색상으로 Intent 판단
+      const intentResult = detectIntentFromColor(strokeColor);
+      if (intentResult) {
+        const confidenceLabel = intentResult.confidence === 'high' ? '확실' :
+                               intentResult.confidence === 'medium' ? '추정' : '약함';
+        intentHint = `\n   - Intent 힌트: ${intentResult.intent} (${confidenceLabel}, 테두리 ${strokeColor})`;
+      }
+    }
 
     return `${index + 1}. nodeId="${node.nodeId}"
    - 현재 이름: "${node.currentName}"
    - 타입: ${node.nodeType}
    - 깊이: ${depthLabel}
    - 위치: (${node.x}, ${node.y})
-   - 크기: ${node.width} x ${node.height}${parentInfo}${textsInfo}${iconsInfo}`;
+   - 크기: ${node.width} x ${node.height}${parentInfo}${textsInfo}${iconsInfo}${fillColorInfo}${strokeInfo}${iconPositionInfo}${shapeHint}${stateHint}${intentHint}`;
   }).join('\n\n');
 }
 

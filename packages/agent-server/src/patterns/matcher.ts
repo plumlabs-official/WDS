@@ -18,15 +18,16 @@ import { getAllPatterns } from './store';
 // ============================================
 
 const WEIGHTS = {
-  childCount: 0.08,      // 자식 수
-  childTypes: 0.12,      // 자식 타입 구성
-  layoutMode: 0.06,      // 레이아웃 방향
-  positionZone: 0.06,    // 위치 (상단/하단/중앙)
-  aspectRatio: 0.08,     // 가로/세로 비율
-  childNames: 0.08,      // 자식 이름 유사도 (보너스)
-  parentName: 0.17,      // 부모 이름 일치 (context 기반)
-  vectorPathHash: 0.17,  // 벡터 경로 해시 (아이콘 구분)
-  textFingerprint: 0.18, // 텍스트 지문 (TEXT 노드 구분)
+  childCount: 0.07,      // 자식 수
+  childTypes: 0.10,      // 자식 타입 구성
+  layoutMode: 0.05,      // 레이아웃 방향
+  positionZone: 0.05,    // 위치 (상단/하단/중앙)
+  aspectRatio: 0.07,     // 가로/세로 비율
+  childNames: 0.06,      // 자식 이름 유사도 (보너스)
+  parentName: 0.15,      // 부모 이름 일치 (context 기반)
+  vectorPathHash: 0.15,  // 벡터 경로 해시 (아이콘 구분)
+  textFingerprint: 0.15, // 텍스트 지문 (TEXT 노드 구분)
+  fillColor: 0.15,       // 채우기 색상 (버튼 상태 구분)
 };
 
 // ============================================
@@ -210,6 +211,56 @@ function scoreTextFingerprint(a?: string | null, b?: string | null): number {
   return 0.0;
 }
 
+/**
+ * 채우기 색상 점수 (버튼 상태 구분)
+ * - 정확히 일치: 1.0
+ * - 둘 다 없음: 1.0 (채우기 없음 = 같다고 취급)
+ * - 유사한 색상 (밝기 차이만): 0.7
+ * - 하나만 있거나 완전 불일치: 0.0
+ */
+function scoreFillColor(a?: string | null, b?: string | null): number {
+  // 둘 다 없으면 같다고 취급
+  if (!a && !b) return 1.0;
+
+  // 하나만 있으면 불일치
+  if (!a || !b) return 0.0;
+
+  // 정확히 일치
+  if (a.toUpperCase() === b.toUpperCase()) return 1.0;
+
+  // 색상 유사도 계산 (RGB 거리)
+  const parseHex = (hex: string): [number, number, number] => {
+    const clean = hex.replace('#', '');
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    return [r, g, b];
+  };
+
+  try {
+    const [r1, g1, b1] = parseHex(a);
+    const [r2, g2, b2] = parseHex(b);
+
+    // 유클리드 거리 (0-441 범위)
+    const distance = Math.sqrt(
+      Math.pow(r1 - r2, 2) +
+      Math.pow(g1 - g2, 2) +
+      Math.pow(b1 - b2, 2)
+    );
+
+    // 거리가 50 이하면 유사 (같은 계열 색상)
+    if (distance <= 50) return 0.7;
+
+    // 거리가 100 이하면 약간 유사
+    if (distance <= 100) return 0.3;
+  } catch {
+    // 파싱 실패 시 불일치
+  }
+
+  // 완전 불일치
+  return 0.0;
+}
+
 // ============================================
 // 매칭 함수
 // ============================================
@@ -303,6 +354,16 @@ export function calculateSimilarity(
     });
   }
 
+  // 10. 채우기 색상 (버튼 상태 구분)
+  const fillColorScore = scoreFillColor(input.fillColor, pattern.fillColor);
+  if (input.fillColor || pattern.fillColor) {
+    reasons.push({
+      factor: 'fillColor',
+      score: fillColorScore,
+      detail: `입력: ${input.fillColor || '(없음)'}, 패턴: ${pattern.fillColor || '(없음)'}`,
+    });
+  }
+
   // 가중 평균 계산
   const totalScore =
     childCountScore * WEIGHTS.childCount +
@@ -313,7 +374,8 @@ export function calculateSimilarity(
     childNamesScore * WEIGHTS.childNames +
     parentNameScore * WEIGHTS.parentName +
     vectorPathHashScore * WEIGHTS.vectorPathHash +
-    textFingerprintScore * WEIGHTS.textFingerprint;
+    textFingerprintScore * WEIGHTS.textFingerprint +
+    fillColorScore * WEIGHTS.fillColor;
 
   return { score: totalScore, reasons };
 }
@@ -329,9 +391,17 @@ export function findSimilarPatterns(
 
   const patterns = getAllPatterns();
   const candidates: MatchCandidate[] = [];
+  let bestScore = 0;
+  let bestPatternName = '';
 
   for (const pattern of patterns) {
     const { score, reasons } = calculateSimilarity(input, pattern.structure);
+
+    // 최고 점수 추적 (디버깅용)
+    if (score > bestScore) {
+      bestScore = score;
+      bestPatternName = pattern.name;
+    }
 
     if (score >= minScore) {
       candidates.push({
@@ -340,6 +410,11 @@ export function findSimilarPatterns(
         reasons,
       });
     }
+  }
+
+  // 미매칭 시 최고 점수 로깅
+  if (candidates.length === 0 && patterns.length > 0) {
+    console.log(`[PatternMatcher] NO MATCH - best was "${bestPatternName}" (score: ${bestScore.toFixed(2)}, threshold: ${minScore})`);
   }
 
   // 점수 내림차순 정렬

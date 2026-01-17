@@ -77,6 +77,12 @@ export const StructureFeaturesSchema = z.object({
 
   /** 텍스트 지문 (TEXT 노드 구분용) */
   textFingerprint: z.string().nullable().optional(),
+
+  /** 채우기 색상 (버튼 상태 구분용, #RRGGBB 형식) */
+  fillColor: z.string().nullable().optional(),
+
+  /** 투명도 (0-1, 버튼 상태 구분용) */
+  opacity: z.number().min(0).max(1).nullable().optional(),
 });
 
 export type StructureFeatures = z.infer<typeof StructureFeaturesSchema>;
