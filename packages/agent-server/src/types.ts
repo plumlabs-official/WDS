@@ -66,6 +66,10 @@ export interface ContextAwareNamingRequest {
       hasStroke?: boolean;        // Stroke 유무 (Outlined 버튼 감지)
       strokeColor?: string | null; // Stroke 색상
       iconPosition?: 'left' | 'right' | 'only' | null; // 아이콘 위치
+      // 컴포넌트 속성 확장
+      cornerRadius?: number | null;  // 모서리 반경 (Avatar Circle 감지)
+      strokeWidth?: number | null;   // 테두리 두께 (Input)
+      hasShadow?: boolean;           // 그림자 유무 (Card Elevation)
       [key: string]: unknown;     // 기타 구조 정보
     };
   }>;

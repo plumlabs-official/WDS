@@ -161,6 +161,159 @@ Button/Primary/Filled/Medium  ← Size는 숫자(px)여야 함
 
 ---
 
+## Avatar 네이밍
+
+```
+Avatar/Size[/Shape]
+```
+
+### Size (필수)
+- **실제 width(px)를 그대로 사용**
+- 예: 48px 아바타 → `size: "48"`
+
+### Shape (힌트 활용)
+
+⚠️ **Avatar 힌트가 제공되면 반드시 참고!**
+
+| 힌트 | Shape |
+|------|-------|
+| `Avatar 힌트: Circle` | Circle |
+| `Avatar 힌트: Square` | Square |
+| `Avatar 힌트: Rounded` | Rounded |
+
+감지 조건:
+- cornerRadius >= width/2 → Circle
+- cornerRadius < 4 → Square
+- 그 외 → Rounded
+
+### Avatar 예시
+```
+Avatar/48/Circle     ← 48px 원형 아바타
+Avatar/32/Square     ← 32px 사각형 아바타
+Avatar/64/Rounded    ← 64px 둥근 모서리 아바타
+```
+
+---
+
+## Card 네이밍
+
+```
+Card/Context[/Elevation]
+```
+
+### Context (필수)
+| Context | 용도 |
+|---------|------|
+| Profile | 사용자 프로필 |
+| Product | 상품 정보 |
+| Feed | 피드 아이템 |
+| Challenge | 챌린지 정보 |
+| Stats | 통계 정보 |
+
+### Elevation (선택)
+
+⚠️ **Card 힌트가 제공되면 반드시 참고!**
+
+| 힌트 | Elevation |
+|------|-----------|
+| `Card 힌트: Raised` | Raised |
+| (힌트 없음) | Flat (생략) |
+
+### Card 예시
+```
+Card/Profile          ← 그림자 없는 프로필 카드
+Card/Product/Raised   ← 그림자 있는 상품 카드
+Card/Feed             ← 피드 아이템 카드
+```
+
+---
+
+## Input 네이밍
+
+```
+Input/Context[/State][/Size]
+```
+
+### Context (필수)
+| Context | 용도 |
+|---------|------|
+| Text | 일반 텍스트 입력 |
+| Search | 검색 입력 |
+| Password | 비밀번호 입력 |
+| Email | 이메일 입력 |
+
+### State (힌트 활용)
+
+⚠️ **Input 힌트가 제공되면 반드시 참고!**
+
+| 힌트 | State |
+|------|-------|
+| `Input 힌트: Focus` | Focus |
+| `Input 힌트: Error` | Error |
+| `State 힌트: Disabled` | Disabled |
+| (힌트 없음) | Default (생략) |
+
+### Input 예시
+```
+Input/Search            ← 기본 검색 입력
+Input/Text/Focus        ← 포커스된 텍스트 입력
+Input/Email/Error       ← 에러 상태 이메일 입력
+Input/Password/48       ← 높이 48px 비밀번호 입력
+```
+
+---
+
+## Toggle/Checkbox 네이밍
+
+```
+Toggle/State
+Checkbox/State
+```
+
+### State (힌트 활용)
+
+⚠️ **Toggle/Checkbox 힌트가 제공되면 반드시 참고!**
+
+| 힌트 | State |
+|------|-------|
+| `Toggle/Checkbox 힌트: On` | On |
+| (회색/투명) | Off |
+| `State 힌트: Disabled` | Disabled |
+
+### Toggle/Checkbox 예시
+```
+Toggle/On       ← 활성화된 토글
+Toggle/Off      ← 비활성화된 토글
+Checkbox/On     ← 체크된 체크박스
+Checkbox/Off    ← 체크 안 된 체크박스
+```
+
+---
+
+## Badge/Tag 네이밍
+
+```
+Badge/Intent/Size
+Tag/Intent/Size
+```
+
+### Intent (버튼과 동일 규칙)
+- Intent 힌트가 제공되면 그대로 사용
+- Primary, Secondary, Danger, Warning, Success, Info, Normal
+
+### Size (필수)
+- **실제 height(px)를 그대로 사용**
+
+### Badge/Tag 예시
+```
+Badge/Success/24    ← 초록색 24px 뱃지
+Badge/Danger/20     ← 빨간색 20px 뱃지
+Tag/Primary/28      ← 브랜드색 28px 태그
+Tag/Normal/24       ← 회색 24px 태그
+```
+
+---
+
 ## 일반 컴포넌트 네이밍
 
 ```

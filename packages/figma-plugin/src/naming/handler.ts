@@ -212,6 +212,10 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
   hasStroke: boolean;
   strokeColor: string | null;
   iconPosition: 'left' | 'right' | 'only' | null;
+  // 컴포넌트 속성 확장 (Avatar, Card 등)
+  cornerRadius: number | null;
+  strokeWidth: number | null;
+  hasShadow: boolean;
 } {
   const childTypes: string[] = [];
   const childNames: string[] = [];
@@ -418,6 +422,57 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
     strokeColor = foundStroke.color;
   }
 
+  // cornerRadius 추출 (Avatar Circle 감지용)
+  let cornerRadius: number | null = null;
+  if ('cornerRadius' in node && typeof node.cornerRadius === 'number') {
+    cornerRadius = node.cornerRadius;
+  } else if ('children' in node) {
+    // 자식에서 cornerRadius 찾기 (첫 번째 RECTANGLE/ELLIPSE)
+    const frame = node as FrameNode;
+    for (const child of frame.children) {
+      if ((child.type === 'RECTANGLE' || child.type === 'ELLIPSE') &&
+          'cornerRadius' in child && typeof child.cornerRadius === 'number') {
+        cornerRadius = child.cornerRadius;
+        break;
+      }
+    }
+  }
+
+  // strokeWidth 추출 (Input 테두리 두께)
+  let strokeWidth: number | null = null;
+  if ('strokeWeight' in node && typeof node.strokeWeight === 'number') {
+    strokeWidth = node.strokeWeight;
+  } else if ('children' in node) {
+    // 자식에서 strokeWeight 찾기
+    const frame = node as FrameNode;
+    for (const child of frame.children) {
+      if ('strokeWeight' in child && typeof child.strokeWeight === 'number' && child.strokeWeight > 0) {
+        strokeWidth = child.strokeWeight;
+        break;
+      }
+    }
+  }
+
+  // effects 추출 (Card Elevation 감지용)
+  let hasShadow = false;
+  if ('effects' in node && Array.isArray(node.effects)) {
+    hasShadow = (node.effects as Effect[]).some(
+      e => e.type === 'DROP_SHADOW' && e.visible !== false
+    );
+  }
+  // 노드에 없으면 자식에서 찾기
+  if (!hasShadow && 'children' in node) {
+    const frame = node as FrameNode;
+    for (const child of frame.children) {
+      if ('effects' in child && Array.isArray(child.effects)) {
+        hasShadow = (child.effects as Effect[]).some(
+          e => e.type === 'DROP_SHADOW' && e.visible !== false
+        );
+        if (hasShadow) break;
+      }
+    }
+  }
+
   // 아이콘 위치 감지 (버튼 내 아이콘 위치)
   let iconPosition: 'left' | 'right' | 'only' | null = null;
 
@@ -472,6 +527,9 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
     hasStroke,
     strokeColor,
     iconPosition,
+    cornerRadius,
+    strokeWidth,
+    hasShadow,
   };
 }
 

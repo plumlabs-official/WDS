@@ -677,12 +677,68 @@ function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
       }
     }
 
+    // === 컴포넌트별 확장 힌트 ===
+
+    // Avatar Shape 힌트 (cornerRadius 기반)
+    let avatarShapeHint = '';
+    const cornerRadius = node.structure?.cornerRadius;
+    const nodeWidth = node.width;
+    if (cornerRadius !== null && cornerRadius !== undefined && nodeWidth) {
+      // 정사각형에 가까운지 확인 (aspectRatio 0.8 ~ 1.2)
+      const aspectRatio = node.width / node.height;
+      if (aspectRatio >= 0.8 && aspectRatio <= 1.2) {
+        // Circle: cornerRadius >= width/2 * 0.9 (약간의 여유)
+        if (cornerRadius >= nodeWidth / 2 * 0.9) {
+          avatarShapeHint = `\n   - Avatar 힌트: Circle (cornerRadius=${cornerRadius}, width=${nodeWidth})`;
+        } else if (cornerRadius < 4) {
+          avatarShapeHint = `\n   - Avatar 힌트: Square (cornerRadius=${cornerRadius})`;
+        } else {
+          avatarShapeHint = `\n   - Avatar 힌트: Rounded (cornerRadius=${cornerRadius})`;
+        }
+      }
+    }
+
+    // Card Elevation 힌트 (effects 기반)
+    let cardElevationHint = '';
+    const hasShadow = node.structure?.hasShadow;
+    if (hasShadow) {
+      cardElevationHint = '\n   - Card 힌트: Raised (그림자 있음)';
+    }
+
+    // Input State 힌트 (strokeColor 기반 - Focus/Error)
+    let inputStateHint = '';
+    if (strokeColor && !fillColor) {
+      // stroke만 있고 fill이 없으면 Input 가능성
+      const strokeIntent = detectIntentFromColor(strokeColor);
+      if (strokeIntent?.intent === 'Danger') {
+        inputStateHint = `\n   - Input 힌트: Error (빨간 테두리 ${strokeColor})`;
+      } else if (strokeIntent?.intent === 'Primary' || strokeIntent?.intent === 'Info') {
+        inputStateHint = `\n   - Input 힌트: Focus (강조 테두리 ${strokeColor})`;
+      }
+    }
+
+    // Toggle/Checkbox State 힌트 (fillColor 기반 - On/Off)
+    let toggleStateHint = '';
+    if (fillColor && !isWhiteOrTransparent) {
+      const toggleIntent = detectIntentFromColor(fillColor);
+      if (toggleIntent?.intent === 'Success' || toggleIntent?.intent === 'Primary') {
+        toggleStateHint = `\n   - Toggle/Checkbox 힌트: On (활성 색상 ${fillColor})`;
+      }
+    }
+
+    // strokeWidth 정보
+    let strokeWidthInfo = '';
+    const strokeWidth = node.structure?.strokeWidth;
+    if (strokeWidth && strokeWidth > 0) {
+      strokeWidthInfo = `\n   - 테두리 두께: ${strokeWidth}px`;
+    }
+
     return `${index + 1}. nodeId="${node.nodeId}"
    - 현재 이름: "${node.currentName}"
    - 타입: ${node.nodeType}
    - 깊이: ${depthLabel}
    - 위치: (${node.x}, ${node.y})
-   - 크기: ${node.width} x ${node.height}${parentInfo}${textsInfo}${iconsInfo}${fillColorInfo}${strokeInfo}${iconPositionInfo}${shapeHint}${stateHint}${intentHint}`;
+   - 크기: ${node.width} x ${node.height}${parentInfo}${textsInfo}${iconsInfo}${fillColorInfo}${strokeInfo}${strokeWidthInfo}${iconPositionInfo}${shapeHint}${stateHint}${intentHint}${avatarShapeHint}${cardElevationHint}${inputStateHint}${toggleStateHint}`;
   }).join('\n\n');
 }
 
