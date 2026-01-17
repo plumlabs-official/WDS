@@ -22,6 +22,7 @@ import {
   recordPatternUsage,
   renamePattern,
   getHistory,
+  resetPatterns,
 } from './patterns';
 import { findSimilarPatterns } from './patterns';
 import { CreatePatternRequestSchema, MatchPatternRequestSchema } from '@wellwe/common';
@@ -287,6 +288,24 @@ app.delete('/patterns/:id', (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('[Patterns] Delete error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 패턴 DB 초기화
+ * POST /patterns/reset
+ */
+app.post('/patterns/reset', (req, res) => {
+  try {
+    resetPatterns();
+    console.log('[Patterns] DB Reset');
+    res.json({ success: true, message: 'Pattern DB has been reset' });
+  } catch (error) {
+    console.error('[Patterns] Reset error:', error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

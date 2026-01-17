@@ -357,6 +357,20 @@ export async function handleNamingAgent(): Promise<void> {
     console.log('[Direct Naming]', change.oldName, '→', change.newName);
   }
 
+  // 4.5. 룰베이스 패턴 정보 수집 (나중에 AI 네이밍 완료 후 저장)
+  let ruleBasedPatterns: Array<{ name: string; structure: ReturnType<typeof extractNodeStructure>; sourceNodeId: string }> = [];
+  if (resolvedChanges.length > 0) {
+    const screenFrameForPatterns = findScreenFrame(resolvedChanges[0].node);
+    if (screenFrameForPatterns) {
+      ruleBasedPatterns = resolvedChanges.map(change => ({
+        name: change.newName,
+        structure: extractNodeStructure(change.node, screenFrameForPatterns),
+        sourceNodeId: change.node.id
+      }));
+      console.log(`[Pattern] 룰베이스 ${ruleBasedPatterns.length}개 패턴 수집 (저장은 네이밍 완료 후)`);
+    }
+  }
+
   // 3.5. 2차 패스: TabItem 자식 아이콘 기반 이름 유추
   // (직접 변환 후에 실행해야 자식 Icon/* 이름이 적용된 상태)
   let tabItemInferredCount = 0;
@@ -454,7 +468,7 @@ export async function handleNamingAgent(): Promise<void> {
 
     console.log(`[Context Naming] Screen: ${screenFrame.width}x${screenFrame.height}, Nodes: ${nodePositions.length}`);
 
-    // UI로 컨텍스트 기반 요청 전송
+    // UI로 컨텍스트 기반 요청 전송 (룰베이스 패턴도 함께 전달 - 네이밍 완료 후 저장용)
     figma.ui.postMessage({
       type: 'agent-naming-context',
       data: {
@@ -462,6 +476,7 @@ export async function handleNamingAgent(): Promise<void> {
         screenWidth: screenFrame.width,
         screenHeight: screenFrame.height,
         nodes: nodePositions,
+        ruleBasedPatterns, // 네이밍 완료 후 저장할 룰베이스 패턴
       },
     });
 
@@ -543,6 +558,8 @@ export function handleNamingBatchResult(msg: NamingBatchResultMessage): void {
  * Naming Agent 컨텍스트 기반 결과 처리 (전체 스크린 분석)
  */
 export function handleNamingContextResult(msg: NamingContextResultMessage): void {
+  console.log(`[DEBUG] handleNamingContextResult 시작 - results: ${msg.data?.results?.length ?? 0}, pendingNodes: ${pendingNamingNodes.length}`);
+
   if (!msg.success || !msg.data || !msg.data.results) {
     figma.notify('컨텍스트 네이밍 분석 실패: ' + (msg.error || 'Unknown error'), { error: true });
     figma.ui.postMessage({ type: 'task-complete' });
@@ -551,6 +568,7 @@ export function handleNamingContextResult(msg: NamingContextResultMessage): void
   }
 
   let renamedCount = 0;
+  let notFoundCount = 0;
 
   // nodeId로 매칭하여 이름 적용
   for (const result of msg.data.results) {
@@ -562,10 +580,12 @@ export function handleNamingContextResult(msg: NamingContextResultMessage): void
       console.log(`  reasoning: ${result.reasoning}`);
       renamedCount++;
     } else {
-      console.warn(`[Context AI Naming] Node not found: ${result.nodeId}`);
+      console.warn(`[Context AI Naming] Node not found: ${result.nodeId} (source: ${result.source})`);
+      notFoundCount++;
     }
   }
 
+  console.log(`[DEBUG] 결과 적용 완료 - 성공: ${renamedCount}, 미발견: ${notFoundCount}`);
   figma.notify(`AI 컨텍스트 네이밍 완료: ${renamedCount}개 이름 변경`, { timeout: 3000 });
 
   figma.ui.postMessage({ type: 'task-complete' });

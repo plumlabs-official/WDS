@@ -379,6 +379,9 @@
     <button id="btn-naming-agent" class="btn-agent" onclick="runCommandWithProgress('auto-naming-agent', this)" disabled>
       AI 네이밍 실행
     </button>
+    <button id="btn-reset-patterns" class="btn-secondary" onclick="resetPatternDB()" style="margin-top: 6px; font-size: 10px;">
+      패턴 DB 초기화
+    </button>
   </div>
 
   <div class="section">
@@ -724,8 +727,55 @@
         case 'task-complete':
           completeSingleTaskProgress();
           break;
+
+        case 'save-patterns-batch':
+          savePatternsBatch(msg.patterns);
+          break;
       }
     };
+
+    // ===== 패턴 배치 저장 =====
+    async function savePatternsBatch(patterns) {
+      if (!patterns || patterns.length === 0) return;
+
+      let savedCount = 0;
+      for (const p of patterns) {
+        try {
+          await fetch(AGENT_SERVER_URL + '/patterns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(p),
+          });
+          savedCount++;
+        } catch (err) {
+          console.warn('[Pattern Save Error]', p.name, err);
+        }
+      }
+      console.log(`[Pattern Save] 룰베이스 ${savedCount}/${patterns.length}개 저장 완료`);
+    }
+
+    // ===== 패턴 DB 초기화 =====
+    async function resetPatternDB() {
+      if (!confirm('패턴 DB를 초기화하시겠습니까?\n저장된 모든 패턴이 삭제됩니다.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(AGENT_SERVER_URL + '/patterns/reset', {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          alert('패턴 DB가 초기화되었습니다.');
+          console.log('[Pattern DB] 초기화 완료');
+        } else {
+          alert('패턴 DB 초기화 실패');
+        }
+      } catch (err) {
+        console.error('[Pattern DB Reset Error]', err);
+        alert('서버 연결 실패');
+      }
+    }
 
     // ===== 병합 후보 관련 함수 =====
     let mergeCandidatesData = [];
@@ -1041,6 +1091,8 @@
 
     // Context-aware Naming Agent API call (패턴 매칭 통합)
     async function handleNamingContext(data) {
+      console.log('[DEBUG] handleNamingContext 시작, 총 노드:', data.nodes.length);
+
       if (!serverConnected) {
         parent.postMessage({
           pluginMessage: {
@@ -1058,6 +1110,15 @@
       const results = [];
       const nodesForAI = [];
       let patternAppliedCount = 0;
+
+      // 패턴 저장은 네이밍 완료 후 일괄 처리 (같은 실행 내 HITL 방지)
+      const patternsToSave = [];
+
+      // 룰베이스 패턴 수집 (저장은 나중에)
+      if (data.ruleBasedPatterns && data.ruleBasedPatterns.length > 0) {
+        patternsToSave.push(...data.ruleBasedPatterns);
+        console.log('[Pattern] 룰베이스 패턴 수집:', data.ruleBasedPatterns.length, '개');
+      }
 
       // 진행 패널 업데이트
       if (currentPipeline && currentPipeline.steps.length === 1) {
@@ -1187,7 +1248,7 @@
           const aiResult = await aiResponse.json();
 
           if (aiResult.success && aiResult.data?.results) {
-            // AI 결과 추가 + 패턴 DB에 저장
+            // AI 결과 추가 + 패턴 수집 (저장은 나중에)
             for (const r of aiResult.data.results) {
               results.push({
                 nodeId: r.nodeId,
@@ -1198,25 +1259,17 @@
                 source: 'ai'
               });
 
-              // 패턴 DB에 저장 (해당 노드의 structure 정보 찾기)
+              // 패턴 수집 (저장은 네이밍 완료 후)
               const nodeData = nodesForAI.find(n => n.nodeId === r.nodeId);
               if (nodeData?.structure) {
-                try {
-                  await fetch(AGENT_SERVER_URL + '/patterns', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      name: r.suggestedName,
-                      structure: nodeData.structure,
-                      sourceNodeId: r.nodeId
-                    }),
-                  });
-                  console.log('[Pattern Save]', r.suggestedName);
-                } catch (saveErr) {
-                  console.warn('[Pattern Save Error]', saveErr);
-                }
+                patternsToSave.push({
+                  name: r.suggestedName,
+                  structure: nodeData.structure,
+                  sourceNodeId: r.nodeId
+                });
               }
             }
+            console.log('[Pattern] AI 패턴 수집:', aiResult.data.results.length, '개');
           }
         } catch (aiErr) {
           console.error('[AI Naming Error]', aiErr);
@@ -1224,7 +1277,8 @@
       }
 
       // 3. 최종 결과 전달
-      console.log('[Naming Summary] 패턴 적용:', patternAppliedCount, ', AI 분석:', nodesForAI.length);
+      console.log('[DEBUG] 최종 결과 - 패턴 적용:', patternAppliedCount, ', AI 분석:', nodesForAI.length, ', 총 results:', results.length);
+      console.log('[DEBUG] results 상세:', results.map(r => ({ nodeId: r.nodeId, name: r.suggestedName, source: r.source })));
 
       parent.postMessage({
         pluginMessage: {
@@ -1233,6 +1287,12 @@
           data: { results }
         }
       }, '*');
+
+      // 4. 네이밍 완료 후 패턴 일괄 저장 (같은 실행 내 HITL 방지)
+      if (patternsToSave.length > 0) {
+        console.log('[Pattern] 패턴 일괄 저장 시작:', patternsToSave.length, '개');
+        await savePatternsBatch(patternsToSave);
+      }
     }
 
     // HITL 모달 표시 (Promise 기반)

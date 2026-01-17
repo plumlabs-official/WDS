@@ -253,3 +253,16 @@ export function getHistory(limit: number = 50): PatternHistory[] {
     .sort((a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime())
     .slice(0, limit);
 }
+
+/**
+ * 패턴 DB 초기화
+ */
+export function resetPatterns(): void {
+  const emptyStore: PatternStore = {
+    version: 1,
+    patterns: [],
+    history: [],
+  };
+  saveStore(emptyStore);
+  console.log('[PatternStore] Reset complete');
+}
