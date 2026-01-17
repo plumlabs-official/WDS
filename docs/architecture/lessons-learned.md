@@ -565,6 +565,53 @@ for (const child of frame.children) {
 
 ---
 
+## Figma 속성 추출 버그 패턴
+
+### 1. fillColor가 AI에 전달 안 됨 (2026-01-17)
+
+**상황**: 버튼 Disabled 상태 감지를 위해 fillColor 추출 로직 추가
+
+**증상**: 회색 버튼이 `Button/Primary/Filled/56`으로 네이밍됨 (Disabled 아님)
+
+**원인**: 버튼 구조가 예상과 다름
+```
+예상: Button (FRAME, fills 있음)
+실제: Button (FRAME, fills 없음)
+      └─ Background (GROUP)
+          └─ Rectangle (fills 있음) ← 여기에 색상!
+```
+
+**해결**: 재귀 탐색으로 변경 (2레벨 깊이)
+```typescript
+// ❌ 직접 자식만 탐색
+for (const child of frame.children) {
+  if (child.type === 'RECTANGLE') { ... }
+}
+
+// ✅ 재귀 탐색 (2레벨)
+const findFillRecursive = (parent, depth) => {
+  if (depth > 2) return null;
+  for (const child of parent.children) {
+    if (child.type === 'RECTANGLE') {
+      const fill = extractFill(child);
+      if (fill) return fill;
+    }
+    if (child.type === 'FRAME' || child.type === 'GROUP') {
+      const nested = findFillRecursive(child, depth + 1);
+      if (nested) return nested;
+    }
+  }
+  return null;
+};
+```
+
+**재발 방지**:
+1. 디버그 로그 먼저 추가
+2. 실제 Figma 구조 확인 후 코딩
+3. 작은 단위로 빌드 → 테스트 → 수정 반복
+
+---
+
 ## AI Agent 버그 패턴
 
 ### 1. max_tokens 부족으로 JSON 파싱 실패

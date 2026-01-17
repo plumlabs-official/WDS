@@ -42,6 +42,7 @@
 | Cleanup/병합 작업 | `docs/architecture/lessons-learned.md` | "Cleanup 버그 패턴" 섹션 |
 | Naming 작업 | `docs/specs/naming-schema.md` | 전체 |
 | AI Agent/서버 수정 | `docs/architecture/lessons-learned.md` | "AI Agent 버그 패턴" 섹션 |
+| **Figma 속성 추출** | `docs/architecture/lessons-learned.md` | "Figma 속성 추출 버그 패턴" 섹션 |
 | 빌드/디버깅 | `.ai/RECIPES.md` | "빌드", "디버깅" 섹션 |
 | 문서 구조 변경 | `AGENTS.md` | "문서 관리 원칙" 섹션 |
 | 새 기능 설계 | `docs/architecture/ADRs/` | 관련 ADR |
@@ -85,6 +86,14 @@
 
 - [ ] Layout, Content 타입 금지
 - [ ] 비즈니스 상태 추론 금지 (Authenticated, Empty 등)
+
+### Figma 노드 속성 추출 시 (handler.ts 수정)
+> 근거: [lessons-learned.md#figma-속성-추출-버그-패턴](docs/architecture/lessons-learned.md#figma-속성-추출-버그-패턴)
+
+- [ ] **디버그 로그 먼저** - 추출 결과 확인용 로그 추가 후 시작
+- [ ] **실제 구조 확인** - 버튼 = FRAME > RECT 가정 금지, 재귀 탐색 필요
+- [ ] **2레벨 이상 탐색** - fills/strokes가 손자 노드에 있을 수 있음
+- [ ] **작은 단위 테스트** - 빌드 → Figma 테스트 → 수정 반복
 
 ### AI Agent 작업 시 (agent-server 수정)
 > 상세: `docs/architecture/lessons-learned.md` → "AI Agent 버그 패턴"
