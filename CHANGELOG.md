@@ -8,21 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 버튼 속성 자동 감지 (Intent/Shape/State/Icon) - fillColor/strokeColor 재귀 추출, Intent 감지 함수
+- 컴포넌트 속성 확장 (cornerRadius, effects, strokeWidth) - Avatar/Card/Input/Toggle 힌트
+- 버튼 속성 자동 감지 (Intent/Shape/State/Icon)
 - 패턴 매칭 정확도 개선 (parentName, vectorPathHash, textFingerprint)
+
+### Changed
+- 회고 포인트 워크플로우 반영
 
 ### Fixed
 - 패턴 매칭 점수 계산 수정 (null==null → 1.0)
 - 패턴 DB 저장 순서 변경 + 초기화 버튼 추가
-- AI 네이밍 + 패턴 DB 자동 통합 (HITL 포함)
-- 커밋 후 자동 기록 시스템 (3중 안전망)
-- coach 스킬 v4 - 초보 친화 규칙 추가
-- `/record` 커맨드 - 작업 완료 기록 자동화 (CHANGELOG + SESSION 연동)
-
-### Changed
-- hook 디버그 로깅 추가 및 경로 수정
-- 문서 역할 경계 규칙 + lessons-learned 사건 추가
-- 슬래시 커맨드 생성 체크리스트 추가
 
 ## [2.5.0] - 2026-01-17
 
