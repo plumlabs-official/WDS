@@ -172,6 +172,82 @@ function getRelativePosition(node: SceneNode, screenFrame: FrameNode): {
   };
 }
 
+/**
+ * 노드 구조 정보 추출 (패턴 매칭용)
+ */
+function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
+  childCount: number;
+  childTypes: string[];
+  childNames: string[];
+  layoutMode: 'HORIZONTAL' | 'VERTICAL' | 'NONE';
+  width: number;
+  height: number;
+  aspectRatio: number;
+  positionZone: 'top' | 'middle' | 'bottom';
+  textHints: string[];
+  iconHints: string[];
+} {
+  const childTypes: string[] = [];
+  const childNames: string[] = [];
+  const textHints: string[] = [];
+  const iconHints: string[] = [];
+
+  // 자식 정보 수집
+  if ('children' in node) {
+    const frame = node as FrameNode;
+    for (const child of frame.children) {
+      childTypes.push(child.type);
+      childNames.push(child.name);
+
+      // 텍스트 힌트
+      if (child.type === 'TEXT') {
+        const text = (child as TextNode).characters.trim();
+        if (text && text.length < 50) {
+          textHints.push(text);
+        }
+      }
+
+      // 아이콘 힌트
+      if (child.name.startsWith('Icon/')) {
+        iconHints.push(child.name.replace('Icon/', ''));
+      }
+    }
+  }
+
+  // 레이아웃 모드
+  let layoutMode: 'HORIZONTAL' | 'VERTICAL' | 'NONE' = 'NONE';
+  if (node.type === 'FRAME') {
+    const frame = node as FrameNode;
+    if (frame.layoutMode === 'HORIZONTAL' || frame.layoutMode === 'VERTICAL') {
+      layoutMode = frame.layoutMode;
+    }
+  }
+
+  // 위치 영역 계산 (스크린 기준 상대 좌표)
+  const nodeAbsolute = node.absoluteTransform;
+  const screenAbsolute = screenFrame.absoluteTransform;
+  const relativeY = nodeAbsolute[1][2] - screenAbsolute[1][2];
+  const centerY = relativeY + node.height / 2;
+  const relativeYRatio = centerY / screenFrame.height;
+
+  let positionZone: 'top' | 'middle' | 'bottom' = 'middle';
+  if (relativeYRatio < 0.15) positionZone = 'top';
+  else if (relativeYRatio >= 0.85) positionZone = 'bottom';
+
+  return {
+    childCount: childTypes.length,
+    childTypes,
+    childNames: childNames.length > 0 ? childNames : [],
+    layoutMode,
+    width: node.width,
+    height: node.height,
+    aspectRatio: node.width / node.height,
+    positionZone,
+    textHints: textHints.length > 0 ? textHints : [],
+    iconHints: iconHints.length > 0 ? iconHints : [],
+  };
+}
+
 // ============================================
 // Handlers
 // ============================================
@@ -313,7 +389,7 @@ export async function handleNamingAgent(): Promise<void> {
       return;
     }
 
-    // 노드 위치 정보 + 텍스트/아이콘 힌트 수집
+    // 노드 위치 정보 + 텍스트/아이콘 힌트 + 구조 정보 수집
     pendingNamingNodes = [];
     const nodePositions: Array<{
       nodeId: string;
@@ -327,6 +403,7 @@ export async function handleNamingAgent(): Promise<void> {
       height: number;
       texts: string[];
       iconHints: string[];
+      structure: ReturnType<typeof extractNodeStructure>;
     }> = [];
 
     for (const node of nodesForAI) {
@@ -359,6 +436,9 @@ export async function handleNamingAgent(): Promise<void> {
         ? (node.parent as SceneNode).name
         : null;
 
+      // 구조 정보 추출 (패턴 매칭용)
+      const structure = extractNodeStructure(node, screenFrame);
+
       nodePositions.push({
         nodeId: node.id,
         currentName: node.name,
@@ -367,6 +447,7 @@ export async function handleNamingAgent(): Promise<void> {
         nodeType: node.type,
         texts,
         iconHints,
+        structure,
         ...position,
       });
     }

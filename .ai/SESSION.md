@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 14:40 | v2.5.0
+> Last updated: 2026-01-17 15:00 | v2.5.0
 
 ---
 
@@ -31,39 +31,29 @@
 
 ---
 
-## 이번 세션 (2026-01-17 #2)
+## 이번 세션 (2026-01-17 #3)
 
-**완료:**
-- **Hook matcher 근본 수정**: `Bash(*git commit*)` → `Bash`
-  - matcher는 regex로 **툴 이름만** 매칭 (커맨드 인자 X)
-  - `post-bash-hook.sh` 생성 (커맨드 필터링 로직 분리)
-- 디버그 로깅 추가 (`/tmp/claude-hook-debug.log`)
+**Phase 4 UI 통합 진행 중:**
 
-**커밋:** `45f63c4` → `48d7e26` (3개)
+### 논의 히스토리
+1. **초기 구현**: "유사 패턴 찾기" 버튼 별도 추가 → 완료
+2. **사용자 피드백**: 원하는 워크플로우는 AI 네이밍에 패턴 매칭 자동 통합
+3. **HITL 결정**: 유사 패턴 발견 시 모달로 유저 확인 (초기 DB 품질 보정)
+4. **최종 결정**:
+   - 임계값: **0.8**
+   - 모달 옵션: **적용 / AI로 분석 / 모두 자동 적용**
+   - "유사 패턴 찾기" 버튼: **제거**
 
-**최근 커밋:**
-- `745ed31` test: hook 동작 테스트
-- `e1f8778` chore: hook 동작 테스트 2
-- `48d7e26` fix: PostToolUse hook matcher 수정 (Bash만 매칭)
+### 완료
+- [x] code.ts - extractNodeStructure 함수 추가
+- [x] ui.html - "유사 패턴 찾기" 버튼 + 결과 패널 (1차)
+- [x] HITL 모달 추가 (적용/AI분석/모두자동적용)
+- [x] AI 네이밍에 패턴 매칭 자동 통합
+- [x] "유사 패턴 찾기" 버튼 제거
+- [x] AI 네이밍 결과 → 패턴 DB 자동 저장
+- [x] 빌드 성공
 
----
-
-## 다음 작업
-
-### 즉시 (세션 재시작 후)
-- [ ] **hook 테스트**: 간단한 bash 명령어 실행 → `/tmp/claude-hook-debug.log` 확인
-- [ ] git commit 테스트 → CHANGELOG 자동 업데이트 확인
-- [ ] 안 되면 git post-commit hook으로 대체
-
-### 이후
-| 옵션 | 설명 | 추천 이유 |
-|------|------|----------|
-| **A) Phase 4 UI 통합** | Figma 플러그인 패턴 매칭 UI | 백엔드 완성됨, 사용자 가치 즉시 전달 |
-| B) Agent Server 리팩토링 | naming.ts 분리 | 내부 개선, 우선순위 낮음 |
-
-**A 선택 시 첫 작업:**
-- [ ] `packages/figma-plugin/src/ui/` - 패턴 매칭 결과 컴포넌트
-- [ ] `packages/figma-plugin/src/code.ts` - `/patterns/match` API 호출
+**플랜 파일:** `.claude/plans/modular-skipping-adleman.md`
 
 ---
 

@@ -422,7 +422,7 @@
     <div id="progress-percent" class="progress-percent">0%</div>
   </div>
 
-  <!-- 확인 모달 -->
+  <!-- 확인 모달 (꺼진 레이어) -->
   <div id="modal-overlay" class="modal-overlay" style="display: none;">
     <div class="modal">
       <div class="modal-title">꺼진 레이어 삭제</div>
@@ -439,6 +439,23 @@
       <div class="modal-buttons">
         <button class="btn-secondary" onclick="cancelDeleteHidden()">취소</button>
         <button class="btn-danger" onclick="confirmDeleteHidden()">선택 삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HITL 패턴 확인 모달 -->
+  <div id="pattern-confirm-modal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+      <div class="modal-title">유사 패턴 발견</div>
+      <div class="modal-content">
+        <p style="margin-bottom: 8px;">현재 노드: <strong id="pattern-node-name"></strong></p>
+        <p style="margin-bottom: 8px;">제안 이름: <strong id="pattern-suggested-name" style="color: #6366f1;"></strong></p>
+        <p>유사도: <strong id="pattern-score"></strong>%</p>
+      </div>
+      <div class="modal-buttons" style="flex-direction: column; gap: 6px;">
+        <button class="btn-primary" onclick="confirmPatternApply()">적용</button>
+        <button class="btn-secondary" onclick="skipToAINaming()">AI로 분석</button>
+        <button class="btn-agent" onclick="enableAutoApplyAll()">모두 자동 적용</button>
       </div>
     </div>
   </div>
@@ -1017,7 +1034,12 @@
       }
     }
 
-    // Context-aware Naming Agent API call (전체 스크린 기반)
+    // ===== 패턴 매칭 + AI 네이밍 통합 =====
+    let autoApplyPatterns = false; // 세션 내 "모두 자동 적용" 플래그
+    let pendingPatternDecision = null; // HITL 모달 대기 중인 노드 정보
+    let patternDecisionResolver = null; // Promise resolver
+
+    // Context-aware Naming Agent API call (패턴 매칭 통합)
     async function handleNamingContext(data) {
       if (!serverConnected) {
         parent.postMessage({
@@ -1030,38 +1052,225 @@
         return;
       }
 
-      // Two-Stage 기본 사용
-      const selectedModel = 'two-stage';
+      // 세션 시작 시 플래그 리셋
+      autoApplyPatterns = false;
 
-      // 진행 패널에 상세 정보 업데이트 (task-start로 패널이 이미 표시됨)
+      const results = [];
+      const nodesForAI = [];
+      let patternAppliedCount = 0;
+
+      // 진행 패널 업데이트
       if (currentPipeline && currentPipeline.steps.length === 1) {
-        currentPipeline.steps[0] = 'AI 컨텍스트 네이밍 분석 중... (' + data.nodes.length + '개 노드)';
+        currentPipeline.steps[0] = '패턴 매칭 + AI 네이밍 분석 중... (' + data.nodes.length + '개 노드)';
         renderProgress();
       }
 
-      try {
-        const response = await fetch(AGENT_SERVER_URL + '/agents/naming/context', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...data, model: selectedModel }),
-        });
+      // 1. 각 노드마다 패턴 매칭 시도
+      for (let i = 0; i < data.nodes.length; i++) {
+        const node = data.nodes[i];
 
-        const result = await response.json();
+        // 진행 상태 업데이트
+        if (currentPipeline && currentPipeline.steps.length === 1) {
+          currentPipeline.steps[0] = `패턴 매칭 중... (${i + 1}/${data.nodes.length})`;
+          renderProgress();
+        }
 
-        parent.postMessage({
-          pluginMessage: {
-            type: 'naming-context-result',
-            ...result
+        // 구조 정보가 있으면 패턴 매칭 시도
+        if (node.structure) {
+          try {
+            const matchResponse = await fetch(AGENT_SERVER_URL + '/patterns/match', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                structure: node.structure,
+                limit: 1,
+                minScore: 0.8
+              }),
+            });
+
+            const matchResult = await matchResponse.json();
+
+            if (matchResult.success && matchResult.data?.candidates?.length > 0) {
+              const topMatch = matchResult.data.candidates[0];
+
+              if (topMatch.score >= 0.8) {
+                // 유사도 높음 - HITL 또는 자동 적용
+                if (autoApplyPatterns) {
+                  // 자동 적용 모드
+                  results.push({
+                    nodeId: node.nodeId,
+                    suggestedName: topMatch.pattern.name,
+                    source: 'pattern-auto',
+                    confidence: topMatch.score
+                  });
+                  patternAppliedCount++;
+
+                  // 사용 횟수 증가
+                  await fetch(AGENT_SERVER_URL + '/patterns/' + topMatch.pattern.id + '/use', {
+                    method: 'POST'
+                  });
+
+                  console.log('[Pattern Auto]', node.currentName, '→', topMatch.pattern.name, '(' + (topMatch.score * 100).toFixed(0) + '%)');
+                } else {
+                  // HITL 모달 표시
+                  const userChoice = await showPatternConfirmModalAsync(node, topMatch);
+
+                  if (userChoice === 'apply') {
+                    results.push({
+                      nodeId: node.nodeId,
+                      suggestedName: topMatch.pattern.name,
+                      source: 'pattern-hitl',
+                      confidence: topMatch.score
+                    });
+                    patternAppliedCount++;
+
+                    // 사용 횟수 증가
+                    await fetch(AGENT_SERVER_URL + '/patterns/' + topMatch.pattern.id + '/use', {
+                      method: 'POST'
+                    });
+
+                    console.log('[Pattern HITL]', node.currentName, '→', topMatch.pattern.name);
+                  } else if (userChoice === 'auto-all') {
+                    autoApplyPatterns = true;
+                    results.push({
+                      nodeId: node.nodeId,
+                      suggestedName: topMatch.pattern.name,
+                      source: 'pattern-auto',
+                      confidence: topMatch.score
+                    });
+                    patternAppliedCount++;
+
+                    await fetch(AGENT_SERVER_URL + '/patterns/' + topMatch.pattern.id + '/use', {
+                      method: 'POST'
+                    });
+
+                    console.log('[Pattern Auto-All]', node.currentName, '→', topMatch.pattern.name);
+                  } else {
+                    // AI로 분석
+                    nodesForAI.push(node);
+                  }
+                }
+                continue;
+              }
+            }
+          } catch (err) {
+            console.warn('[Pattern Match Error]', err);
           }
-        }, '*');
-      } catch (error) {
-        parent.postMessage({
-          pluginMessage: {
-            type: 'naming-context-result',
-            success: false,
-            error: error.message
+        }
+
+        // 패턴 매칭 실패 또는 유사도 낮음 - AI 분석 대상
+        nodesForAI.push(node);
+      }
+
+      // 2. AI 네이밍 대상이 있으면 AI API 호출
+      if (nodesForAI.length > 0) {
+        if (currentPipeline && currentPipeline.steps.length === 1) {
+          currentPipeline.steps[0] = `AI 네이밍 분석 중... (${nodesForAI.length}개 노드)`;
+          renderProgress();
+        }
+
+        try {
+          const aiData = {
+            screenScreenshot: data.screenScreenshot,
+            screenWidth: data.screenWidth,
+            screenHeight: data.screenHeight,
+            nodes: nodesForAI,
+            model: 'two-stage'
+          };
+
+          const aiResponse = await fetch(AGENT_SERVER_URL + '/agents/naming/context', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(aiData),
+          });
+
+          const aiResult = await aiResponse.json();
+
+          if (aiResult.success && aiResult.data?.results) {
+            // AI 결과 추가 + 패턴 DB에 저장
+            for (const r of aiResult.data.results) {
+              results.push({
+                nodeId: r.nodeId,
+                suggestedName: r.suggestedName,
+                componentType: r.componentType,
+                confidence: r.confidence,
+                reasoning: r.reasoning,
+                source: 'ai'
+              });
+
+              // 패턴 DB에 저장 (해당 노드의 structure 정보 찾기)
+              const nodeData = nodesForAI.find(n => n.nodeId === r.nodeId);
+              if (nodeData?.structure) {
+                try {
+                  await fetch(AGENT_SERVER_URL + '/patterns', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      name: r.suggestedName,
+                      structure: nodeData.structure,
+                      sourceNodeId: r.nodeId
+                    }),
+                  });
+                  console.log('[Pattern Save]', r.suggestedName);
+                } catch (saveErr) {
+                  console.warn('[Pattern Save Error]', saveErr);
+                }
+              }
+            }
           }
-        }, '*');
+        } catch (aiErr) {
+          console.error('[AI Naming Error]', aiErr);
+        }
+      }
+
+      // 3. 최종 결과 전달
+      console.log('[Naming Summary] 패턴 적용:', patternAppliedCount, ', AI 분석:', nodesForAI.length);
+
+      parent.postMessage({
+        pluginMessage: {
+          type: 'naming-context-result',
+          success: true,
+          data: { results }
+        }
+      }, '*');
+    }
+
+    // HITL 모달 표시 (Promise 기반)
+    function showPatternConfirmModalAsync(node, match) {
+      return new Promise((resolve) => {
+        patternDecisionResolver = resolve;
+        pendingPatternDecision = { node, match };
+
+        document.getElementById('pattern-node-name').textContent = node.currentName;
+        document.getElementById('pattern-suggested-name').textContent = match.pattern.name;
+        document.getElementById('pattern-score').textContent = (match.score * 100).toFixed(0);
+
+        document.getElementById('pattern-confirm-modal').style.display = 'flex';
+      });
+    }
+
+    // HITL 모달 버튼 핸들러
+    function confirmPatternApply() {
+      document.getElementById('pattern-confirm-modal').style.display = 'none';
+      if (patternDecisionResolver) {
+        patternDecisionResolver('apply');
+        patternDecisionResolver = null;
+      }
+    }
+
+    function skipToAINaming() {
+      document.getElementById('pattern-confirm-modal').style.display = 'none';
+      if (patternDecisionResolver) {
+        patternDecisionResolver('ai');
+        patternDecisionResolver = null;
+      }
+    }
+
+    function enableAutoApplyAll() {
+      document.getElementById('pattern-confirm-modal').style.display = 'none';
+      if (patternDecisionResolver) {
+        patternDecisionResolver('auto-all');
+        patternDecisionResolver = null;
       }
     }
 
@@ -1112,6 +1321,7 @@
         }, '*');
       }
     }
+
   </script>
 </body>
 </html>
