@@ -26,6 +26,7 @@
 | 4: 패턴 API | v2.5.0 | - | `ffd41da` |
 | 문서화 | - | ADR-0002, ADR-0003 생성 | `4448cc9` |
 | /record 커맨드 | - | [record.md](../.claude/commands/record.md) | `3118488` |
+| 패턴 HITL 통합 | - | - | `cf3c868` |
 
 상세: [CHANGELOG.md](../CHANGELOG.md)
 

@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
-### Changed
-- 문서 역할 경계 규칙 + lessons-learned 사건 추가
-- 슬래시 커맨드 생성 체크리스트 추가
 ### Added
+- AI 네이밍 + 패턴 DB 자동 통합 (HITL 포함)
 - 커밋 후 자동 기록 시스템 (3중 안전망)
 - coach 스킬 v4 - 초보 친화 규칙 추가
 - `/record` 커맨드 - 작업 완료 기록 자동화 (CHANGELOG + SESSION 연동)
+
+### Changed
+- hook 디버그 로깅 추가 및 경로 수정
+- 문서 역할 경계 규칙 + lessons-learned 사건 추가
+- 슬래시 커맨드 생성 체크리스트 추가
 
 ## [2.5.0] - 2026-01-17
 
