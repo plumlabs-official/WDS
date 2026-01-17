@@ -27,6 +27,8 @@
 | 문서화 | - | ADR-0002, ADR-0003 생성 | `4448cc9` |
 | /record 커맨드 | - | [record.md](../.claude/commands/record.md) | `3118488` |
 | 패턴 HITL 통합 | - | - | `cf3c868` |
+| 패턴 저장 순서 변경 | - | - | `4a85087` |
+| 버튼 속성 자동 감지 | - | - | `83d86a5` |
 
 상세: [CHANGELOG.md](../CHANGELOG.md)
 
@@ -53,6 +55,9 @@
 - [x] "유사 패턴 찾기" 버튼 제거
 - [x] AI 네이밍 결과 → 패턴 DB 자동 저장
 - [x] 빌드 성공
+- [x] 패턴 저장 순서 변경 (네이밍 완료 후 일괄 저장)
+- [x] 패턴 DB 초기화 버튼 추가
+- [x] POST /patterns/reset 엔드포인트 추가
 
 **플랜 파일:** `.claude/plans/modular-skipping-adleman.md`
 
