@@ -68,6 +68,15 @@ export const StructureFeaturesSchema = z.object({
 
   /** 아이콘 힌트 (자식 Icon/* 이름) */
   iconHints: z.array(z.string()).optional(),
+
+  /** 부모 노드 이름 (context 기반 매칭용) */
+  parentName: z.string().nullable().optional(),
+
+  /** 벡터 경로 해시 (아이콘 구분용) */
+  vectorPathHash: z.string().nullable().optional(),
+
+  /** 텍스트 지문 (TEXT 노드 구분용) */
+  textFingerprint: z.string().nullable().optional(),
 });
 
 export type StructureFeatures = z.infer<typeof StructureFeaturesSchema>;

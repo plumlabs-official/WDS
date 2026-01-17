@@ -18,12 +18,15 @@ import { getAllPatterns } from './store';
 // ============================================
 
 const WEIGHTS = {
-  childCount: 0.20,      // 자식 수
-  childTypes: 0.25,      // 자식 타입 구성
-  layoutMode: 0.15,      // 레이아웃 방향
-  positionZone: 0.15,    // 위치 (상단/하단/중앙)
-  aspectRatio: 0.15,     // 가로/세로 비율
-  childNames: 0.10,      // 자식 이름 유사도 (보너스)
+  childCount: 0.08,      // 자식 수
+  childTypes: 0.12,      // 자식 타입 구성
+  layoutMode: 0.06,      // 레이아웃 방향
+  positionZone: 0.06,    // 위치 (상단/하단/중앙)
+  aspectRatio: 0.08,     // 가로/세로 비율
+  childNames: 0.08,      // 자식 이름 유사도 (보너스)
+  parentName: 0.17,      // 부모 이름 일치 (context 기반)
+  vectorPathHash: 0.17,  // 벡터 경로 해시 (아이콘 구분)
+  textFingerprint: 0.18, // 텍스트 지문 (TEXT 노드 구분)
 };
 
 // ============================================
@@ -131,6 +134,82 @@ function scoreChildNames(a?: string[], b?: string[]): number {
   return union > 0 ? intersection / union : 0;
 }
 
+/**
+ * 부모 이름 점수 (context 기반 매칭)
+ * - 정확히 일치: 1.0
+ * - 둘 다 없음: 0.5 (중립)
+ * - 하나만 있거나 불일치: 0.0
+ */
+function scoreParentName(a?: string | null, b?: string | null): number {
+  // 둘 다 없으면 중립 (기존 패턴과 호환)
+  if (!a && !b) return 0.5;
+
+  // 하나만 있으면 불일치
+  if (!a || !b) return 0.0;
+
+  // 정확히 일치
+  if (a === b) return 1.0;
+
+  // 부분 일치 (예: "Container/TimeRemaining" vs "TimeRemaining")
+  if (a.includes(b) || b.includes(a)) return 0.7;
+
+  // 완전 불일치
+  return 0.0;
+}
+
+/**
+ * 벡터 경로 해시 점수 (아이콘 구분)
+ * - 정확히 일치: 1.0
+ * - 둘 다 없음: 0.5 (중립 - 벡터가 아닌 노드)
+ * - 하나만 있거나 불일치: 0.0
+ */
+function scoreVectorPathHash(a?: string | null, b?: string | null): number {
+  // 둘 다 없으면 중립 (벡터가 아닌 노드끼리 비교)
+  if (!a && !b) return 0.5;
+
+  // 하나만 있으면 불일치 (벡터 vs 비벡터)
+  if (!a || !b) return 0.0;
+
+  // 정확히 일치 (같은 모양의 아이콘)
+  if (a === b) return 1.0;
+
+  // 해시 길이(path 길이)만 비교 - 부분 일치
+  const aLen = parseInt(a.split('-')[0]) || 0;
+  const bLen = parseInt(b.split('-')[0]) || 0;
+  if (aLen > 0 && bLen > 0) {
+    const ratio = Math.min(aLen, bLen) / Math.max(aLen, bLen);
+    if (ratio > 0.9) return 0.3; // 길이가 비슷하면 약간의 점수
+  }
+
+  // 완전 불일치
+  return 0.0;
+}
+
+/**
+ * 텍스트 지문 점수 (TEXT 노드 구분)
+ * - 정확히 일치: 1.0
+ * - 둘 다 없음: 0.5 (중립 - TEXT가 아닌 노드)
+ * - 하나만 있거나 불일치: 0.0
+ */
+function scoreTextFingerprint(a?: string | null, b?: string | null): number {
+  // 둘 다 없으면 중립 (TEXT가 아닌 노드끼리 비교)
+  if (!a && !b) return 0.5;
+
+  // 하나만 있으면 불일치 (TEXT vs non-TEXT)
+  if (!a || !b) return 0.0;
+
+  // 정확히 일치 (같은 패턴의 텍스트)
+  if (a === b) return 1.0;
+
+  // 부분 일치: 길이 버킷이 같으면 약간의 점수
+  const aLen = a.charAt(0); // S, M, L
+  const bLen = b.charAt(0);
+  if (aLen === bLen) return 0.3;
+
+  // 완전 불일치
+  return 0.0;
+}
+
 // ============================================
 // 매칭 함수
 // ============================================
@@ -194,6 +273,36 @@ export function calculateSimilarity(
     });
   }
 
+  // 7. 부모 이름 (context 기반 매칭 - 핵심!)
+  const parentNameScore = scoreParentName(input.parentName, pattern.parentName);
+  if (input.parentName || pattern.parentName) {
+    reasons.push({
+      factor: 'parentName',
+      score: parentNameScore,
+      detail: `입력: ${input.parentName || '(없음)'}, 패턴: ${pattern.parentName || '(없음)'}`,
+    });
+  }
+
+  // 8. 벡터 경로 해시 (아이콘 구분)
+  const vectorPathHashScore = scoreVectorPathHash(input.vectorPathHash, pattern.vectorPathHash);
+  if (input.vectorPathHash || pattern.vectorPathHash) {
+    reasons.push({
+      factor: 'vectorPathHash',
+      score: vectorPathHashScore,
+      detail: `입력: ${input.vectorPathHash ? '있음' : '없음'}, 패턴: ${pattern.vectorPathHash ? '있음' : '없음'}`,
+    });
+  }
+
+  // 9. 텍스트 지문 (TEXT 노드 구분)
+  const textFingerprintScore = scoreTextFingerprint(input.textFingerprint, pattern.textFingerprint);
+  if (input.textFingerprint || pattern.textFingerprint) {
+    reasons.push({
+      factor: 'textFingerprint',
+      score: textFingerprintScore,
+      detail: `입력: ${input.textFingerprint || '(없음)'}, 패턴: ${pattern.textFingerprint || '(없음)'}`,
+    });
+  }
+
   // 가중 평균 계산
   const totalScore =
     childCountScore * WEIGHTS.childCount +
@@ -201,7 +310,10 @@ export function calculateSimilarity(
     layoutModeScore * WEIGHTS.layoutMode +
     positionZoneScore * WEIGHTS.positionZone +
     aspectRatioScore * WEIGHTS.aspectRatio +
-    childNamesScore * WEIGHTS.childNames;
+    childNamesScore * WEIGHTS.childNames +
+    parentNameScore * WEIGHTS.parentName +
+    vectorPathHashScore * WEIGHTS.vectorPathHash +
+    textFingerprintScore * WEIGHTS.textFingerprint;
 
   return { score: totalScore, reasons };
 }
