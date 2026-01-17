@@ -35,32 +35,30 @@
 
 ---
 
-## 이번 세션 (2026-01-17 #3)
+## 다음 세션 (2026-01-18 예정)
 
-**Phase 4 UI 통합 진행 중:**
+### 계획
+1. **레이어 네이밍 타입별 테스트**
+   - 변경된 컴포넌트 속성 (cornerRadius, effects, strokeWidth) 적용 확인
+   - 버튼 속성 자동 감지 (Intent/Shape/State/Icon) 검증
+   - Avatar/Card/Input/Toggle 힌트 동작 확인
 
-### 논의 히스토리
-1. **초기 구현**: "유사 패턴 찾기" 버튼 별도 추가 → 완료
-2. **사용자 피드백**: 원하는 워크플로우는 AI 네이밍에 패턴 매칭 자동 통합
-3. **HITL 결정**: 유사 패턴 발견 시 모달로 유저 확인 (초기 DB 품질 보정)
-4. **최종 결정**:
-   - 임계값: **0.8**
-   - 모달 옵션: **적용 / AI로 분석 / 모두 자동 적용**
-   - "유사 패턴 찾기" 버튼: **제거**
+2. **문제 없으면 → Auto Layout 작업**
+   - AI Auto Layout 개선 예정
 
-### 완료
-- [x] code.ts - extractNodeStructure 함수 추가
-- [x] ui.html - "유사 패턴 찾기" 버튼 + 결과 패널 (1차)
-- [x] HITL 모달 추가 (적용/AI분석/모두자동적용)
-- [x] AI 네이밍에 패턴 매칭 자동 통합
-- [x] "유사 패턴 찾기" 버튼 제거
-- [x] AI 네이밍 결과 → 패턴 DB 자동 저장
-- [x] 빌드 성공
-- [x] 패턴 저장 순서 변경 (네이밍 완료 후 일괄 저장)
-- [x] 패턴 DB 초기화 버튼 추가
-- [x] POST /patterns/reset 엔드포인트 추가
+---
 
-**플랜 파일:** `.claude/plans/modular-skipping-adleman.md`
+## 이전 세션 (2026-01-17 #3) - 완료
+
+**Phase 4 UI 통합 완료:**
+
+### 완료 항목
+- [x] HITL 모달 (적용/AI분석/모두자동적용)
+- [x] AI 네이밍 ↔ 패턴 매칭 자동 통합
+- [x] 패턴 DB 자동 저장 + 초기화 버튼
+- [x] 컴포넌트 속성 확장 (cornerRadius, effects, strokeWidth)
+- [x] 버튼 속성 자동 감지 (Intent/Shape/State/Icon)
+- [x] layoutPositioning 버그 수정 (Ignore auto-layout 방지)
 
 ---
 
