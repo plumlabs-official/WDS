@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-17 15:00 | v2.5.0
+> Last updated: 2026-01-18 23:00 | v2.5.0
 
 ---
 
@@ -30,21 +30,28 @@
 | 패턴 저장 순서 변경 | - | - | `4a85087` |
 | 버튼 속성 자동 감지 | - | - | `83d86a5` |
 | 컴포넌트 속성 확장 | - | - | `7ccf624` |
+| 네이밍 테스트 완료 | - | - | `729d8ff` |
 
 상세: [CHANGELOG.md](../CHANGELOG.md)
 
 ---
 
-## 다음 세션 (2026-01-18 예정)
+## 현재 세션 (2026-01-18)
 
-### 계획
-1. **레이어 네이밍 타입별 테스트**
-   - 변경된 컴포넌트 속성 (cornerRadius, effects, strokeWidth) 적용 확인
-   - 버튼 속성 자동 감지 (Intent/Shape/State/Icon) 검증
-   - Avatar/Card/Input/Toggle 힌트 동작 확인
+### 완료
+- [x] 레이어 네이밍 타입별 테스트 ✅
+  - 컴포넌트 속성 (cornerRadius, effects, strokeWidth) 정상
+  - 버튼 속성 자동 감지 (Intent/Shape/State/Icon) 정상
+  - Avatar/Card/Input/Toggle 힌트 정상
 
-2. **문제 없으면 → Auto Layout 작업**
-   - AI Auto Layout 개선 예정
+### 다음 작업
+- [ ] **Auto Layout 개선**
+  - AI Auto Layout 기능 개선 예정
+
+### 지속 테스트 (틈틈이)
+- [ ] Input 컴포넌트 속성 감지 테스트
+- [ ] Toggle 컴포넌트 속성 감지 테스트
+- [ ] 기타 컴포넌트 속성 (cornerRadius, effects, strokeWidth) 반영 확인
 
 ---
 

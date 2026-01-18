@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+### Changed
+- 다음 세션 계획 업데이트 (네이밍 테스트 + 오토레이아웃)
 ### Added
 - 컴포넌트 속성 확장 (cornerRadius, effects, strokeWidth) - Avatar/Card/Input/Toggle 힌트
 - 버튼 속성 자동 감지 (Intent/Shape/State/Icon)
