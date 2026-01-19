@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-18 23:00 | v2.5.0
+> Last updated: 2026-01-19 02:00 | v2.5.0
 
 ---
 
@@ -31,6 +31,7 @@
 | 버튼 속성 자동 감지 | - | - | `83d86a5` |
 | 컴포넌트 속성 확장 | - | - | `7ccf624` |
 | 네이밍 테스트 완료 | - | - | `729d8ff` |
+| Auto Layout 반응형 전환 | - | autolayout-rules v3.0 | `14c8428` |
 
 상세: [CHANGELOG.md](../CHANGELOG.md)
 
@@ -51,9 +52,15 @@
   - Truncation 지원 추가 (Title/SubTitle)
   - 테스트 범위: 375px → 1024px
 
-### 다음 작업
-- [ ] Figma에서 실제 테스트
-- [ ] 문제 발생 시 프롬프트 튜닝
+### 다음 작업 (Auto Layout 이슈 수정)
+테스트 결과 발견된 5가지 이슈:
+1. [ ] **Icon/Info 375x375** - 작은 요소 STRETCH 방지
+2. [ ] **Vector 너비 확장** - Vector/작은 요소 absolute position
+3. [ ] **Header-Section 겹침 풀림** - 오버레이 패턴 감지
+4. [ ] **TabBar 플로팅 풀림** - TabBar/BottomNav absolute
+5. [ ] **프레임 높이 증가** - 겹침 요소 처리
+
+참고: `.ai/prompts/auto-layout-responsive.md`
 
 ### 지속 테스트 (틈틈이)
 - [ ] Input 컴포넌트 속성 감지 테스트
