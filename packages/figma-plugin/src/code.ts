@@ -1291,6 +1291,78 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
 
     console.log('[AI AutoLayout] 자식 순서 재정렬 완료:', childrenWithPos.map(c => c.node.name).join(', '));
 
+    // 0-1. 원본 위치 저장 (ABSOLUTE 복원용)
+    const originalPositions = new Map<string, { x: number; y: number; width: number; height: number }>();
+    for (const item of childrenWithPos) {
+      originalPositions.set(item.node.id, {
+        x: item.x,
+        y: item.y,
+        width: item.node.width,
+        height: item.node.height,
+      });
+    }
+
+    // 0-2. 오버레이/플로팅/고아 요소 감지 (Auto Layout 적용 전, 원본 위치 기반)
+    const parentWidth = node.width;
+    const parentHeight = node.height;
+    const absoluteCandidates = new Set<string>(); // node.id로 저장
+
+    // 상단 오버레이 요소 감지 (y<=10에서 겹치는 넓은 요소들)
+    const overlappingAtTop: typeof childrenWithPos = [];
+    const floatingAtBottom: typeof childrenWithPos = [];
+    const orphanElements: typeof childrenWithPos = []; // 고아 요소 (작은 요소가 이상한 위치)
+
+    for (const item of childrenWithPos) {
+      const child = item.node;
+      const childName = child.name.toLowerCase();
+
+      // TabBar/BottomNav/FloatingButton 패턴 감지
+      const isFloatingPattern =
+        childName.includes('tabbar') ||
+        childName.includes('bottomnav') ||
+        childName.includes('floating') ||
+        childName.includes('bottom-nav') ||
+        childName.includes('navigation-bar');
+
+      // 하단 플로팅 요소 (원본 y가 부모 높이의 80% 이상)
+      if (isFloatingPattern || (item.y >= parentHeight * 0.8 && child.width >= parentWidth * 0.9)) {
+        floatingAtBottom.push(item);
+        absoluteCandidates.add(child.id);
+        console.log('[AI AutoLayout] 플로팅 요소 감지:', child.name, '(y:', item.y, ')');
+      }
+
+      // 상단 오버레이 요소 (y<=10, 너비가 부모의 80% 이상)
+      if (item.y <= 10 && child.width >= parentWidth * 0.8) {
+        overlappingAtTop.push(item);
+      }
+
+      // 고아 요소 감지: 작은 요소(10% 미만)가 콘텐츠 영역에 직접 배치된 경우
+      const isSmall = child.width < parentWidth * 0.1 || child.height < parentHeight * 0.1;
+      const isInMiddle = item.y > 50 && item.y < parentHeight * 0.7; // 중간 영역
+      const isOrphanType = child.type === 'VECTOR' || child.type === 'LINE' ||
+        childName.includes('icon/') || childName.includes('vector');
+
+      if (isSmall && isInMiddle && isOrphanType) {
+        orphanElements.push(item);
+        absoluteCandidates.add(child.id);
+        console.log('[AI AutoLayout] 고아 요소 감지:', child.name, '(', item.x, ',', item.y, ')');
+      }
+    }
+
+    // 상단 오버레이: 높이가 가장 큰 요소를 기준(base)으로, 나머지는 ABSOLUTE
+    if (overlappingAtTop.length > 1) {
+      // 높이 기준 내림차순 정렬 (가장 큰 것이 base)
+      overlappingAtTop.sort((a, b) => b.node.height - a.node.height);
+      const baseElement = overlappingAtTop[0];
+      console.log('[AI AutoLayout] 오버레이 base:', baseElement.node.name, '(h:', baseElement.node.height, ')');
+
+      // 나머지는 ABSOLUTE (작은 것들 = 오버레이 헤더)
+      for (let i = 1; i < overlappingAtTop.length; i++) {
+        absoluteCandidates.add(overlappingAtTop[i].node.id);
+        console.log('[AI AutoLayout] 오버레이 ABSOLUTE:', overlappingAtTop[i].node.name, '(h:', overlappingAtTop[i].node.height, ')');
+      }
+    }
+
     // 1. Auto Layout 기본 설정
     node.layoutMode = direction;
     node.itemSpacing = result.gap || 0;
@@ -1318,21 +1390,95 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
       node.counterAxisSizingMode = 'FIXED';
     }
 
-    // 5. 자식 요소 개별 Sizing 적용
+    // 5. 자식 요소 개별 Sizing 적용 (후처리 안전 규칙 포함)
+    // absoluteCandidates는 위에서 원본 위치 기반으로 이미 계산됨
     if (result.childrenSizing && result.childrenSizing.length > 0) {
       const children = node.children;
+
       for (const sizing of result.childrenSizing) {
         if (sizing.index < children.length) {
           const child = children[sizing.index];
 
+          // 5-1. 후처리 안전 규칙 적용
+          let finalLayoutAlign = sizing.layoutAlign;
+          const shouldBeAbsolute = absoluteCandidates.has(child.id);
+
+          // 규칙 1: 작은 요소 보호 (부모의 15% 미만)
+          const isSmallElement =
+            child.width < parentWidth * 0.15 &&
+            child.height < parentHeight * 0.15;
+
+          // 규칙 2: Vector/작은 유틸리티 타입 보호
+          const isVectorOrIcon =
+            child.type === 'VECTOR' ||
+            child.type === 'BOOLEAN_OPERATION' ||
+            child.type === 'STAR' ||
+            child.type === 'ELLIPSE' ||
+            child.type === 'LINE' ||
+            child.name.toLowerCase().includes('icon');
+
+          // 규칙 3: 아이콘/아바타/썸네일 패턴 보호
+          const isFixedSizePattern =
+            child.name.toLowerCase().includes('avatar') ||
+            child.name.toLowerCase().includes('thumbnail') ||
+            child.name.toLowerCase().includes('badge');
+
+          // STRETCH → INHERIT 강제 변환 조건
+          if (sizing.layoutAlign === 'STRETCH' && (isSmallElement || isVectorOrIcon || isFixedSizePattern)) {
+            finalLayoutAlign = 'INHERIT';
+            console.log('[AI AutoLayout] STRETCH → INHERIT 강제 변환:', child.name,
+              isSmallElement ? '(작은 요소)' : '',
+              isVectorOrIcon ? '(Vector/Icon)' : '',
+              isFixedSizePattern ? '(고정 크기 패턴)' : '');
+          }
+
           // layoutAlign 적용 (STRETCH = 교차축 FILL)
           if ('layoutAlign' in child) {
-            (child as SceneNode & { layoutAlign: string }).layoutAlign = sizing.layoutAlign;
+            (child as SceneNode & { layoutAlign: string }).layoutAlign = finalLayoutAlign;
+
+            // STRETCH일 때 layoutSizingHorizontal도 FILL로 설정 (진짜 반응형 동작)
+            if (finalLayoutAlign === 'STRETCH' && 'layoutSizingHorizontal' in child) {
+              (child as SceneNode & { layoutSizingHorizontal: string }).layoutSizingHorizontal = 'FILL';
+              console.log('[AI AutoLayout] layoutSizingHorizontal = FILL:', child.name);
+            }
           }
 
           // layoutGrow 적용 (1 = 주축 FILL)
           if ('layoutGrow' in child) {
             (child as SceneNode & { layoutGrow: number }).layoutGrow = sizing.layoutGrow;
+          }
+
+          // 5-2. 플로팅/오버레이 요소 absolute 처리 + 원본 위치 복원 + 반응형 constraints
+          if (shouldBeAbsolute && 'layoutPositioning' in child) {
+            (child as SceneNode & { layoutPositioning: string }).layoutPositioning = 'ABSOLUTE';
+
+            // 원본 위치 복원
+            const originalPos = originalPositions.get(child.id);
+            if (originalPos && 'x' in child && 'y' in child) {
+              (child as SceneNode & { x: number; y: number }).x = originalPos.x;
+              (child as SceneNode & { y: number }).y = originalPos.y;
+            }
+
+            // ABSOLUTE 요소에 반응형 constraints 설정 (부모 크기 변경 시 늘어남)
+            if ('constraints' in child) {
+              const frameChild = child as FrameNode;
+              // 넓은 요소(부모의 80% 이상)는 양쪽에 붙도록 STRETCH
+              if (originalPos && originalPos.width >= parentWidth * 0.8) {
+                frameChild.constraints = { horizontal: 'STRETCH', vertical: 'MIN' };
+                console.log('[AI AutoLayout] ABSOLUTE + STRETCH constraints:', child.name);
+              } else {
+                // 작은 요소는 원본 위치 기준으로 고정
+                const isLeftSide = originalPos && originalPos.x < parentWidth * 0.3;
+                const isRightSide = originalPos && originalPos.x > parentWidth * 0.7;
+                frameChild.constraints = {
+                  horizontal: isRightSide ? 'MAX' : (isLeftSide ? 'MIN' : 'CENTER'),
+                  vertical: 'MIN'
+                };
+                console.log('[AI AutoLayout] ABSOLUTE + constraints:', child.name, frameChild.constraints.horizontal);
+              }
+            } else {
+              console.log('[AI AutoLayout] ABSOLUTE 설정:', child.name);
+            }
           }
 
           // Truncation 적용 (텍스트 노드인 경우)
@@ -1352,7 +1498,42 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
             applyTruncationToTextChildren(child as FrameNode);
           }
 
-          console.log('[AI AutoLayout] Child ' + sizing.index + ':', sizing.layoutAlign, 'grow=' + sizing.layoutGrow, sizing.truncation ? '(truncation)' : '', '-', sizing.reasoning);
+          console.log('[AI AutoLayout] Child ' + sizing.index + ':', finalLayoutAlign, 'grow=' + sizing.layoutGrow,
+            shouldBeAbsolute ? '(absolute)' : '',
+            sizing.truncation ? '(truncation)' : '', '-', sizing.reasoning);
+        }
+      }
+    }
+
+    // 5-3. childrenSizing에 포함되지 않은 absoluteCandidates 처리 (안전망)
+    const processedIds = new Set(result.childrenSizing?.map((s: ChildSizing) => node.children[s.index]?.id).filter(Boolean) || []);
+    for (const child of node.children) {
+      if (absoluteCandidates.has(child.id) && !processedIds.has(child.id)) {
+        if ('layoutPositioning' in child) {
+          (child as SceneNode & { layoutPositioning: string }).layoutPositioning = 'ABSOLUTE';
+
+          const originalPos = originalPositions.get(child.id);
+          if (originalPos && 'x' in child && 'y' in child) {
+            (child as SceneNode & { x: number; y: number }).x = originalPos.x;
+            (child as SceneNode & { y: number }).y = originalPos.y;
+          }
+
+          // ABSOLUTE 요소에 반응형 constraints 설정
+          if ('constraints' in child) {
+            const frameChild = child as FrameNode;
+            if (originalPos && originalPos.width >= parentWidth * 0.8) {
+              frameChild.constraints = { horizontal: 'STRETCH', vertical: 'MIN' };
+              console.log('[AI AutoLayout] 누락된 ABSOLUTE + STRETCH:', child.name);
+            } else {
+              const isLeftSide = originalPos && originalPos.x < parentWidth * 0.3;
+              const isRightSide = originalPos && originalPos.x > parentWidth * 0.7;
+              frameChild.constraints = {
+                horizontal: isRightSide ? 'MAX' : (isLeftSide ? 'MIN' : 'CENTER'),
+                vertical: 'MIN'
+              };
+              console.log('[AI AutoLayout] 누락된 ABSOLUTE + constraints:', child.name);
+            }
+          }
         }
       }
     }

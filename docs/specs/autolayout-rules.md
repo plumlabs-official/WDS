@@ -167,6 +167,38 @@ children.forEach((child, i) => frame.insertChild(i, child));
 
 ---
 
+## 후처리 안전 규칙 (v3.1)
+
+AI 응답 후 자동 적용되는 안전 규칙:
+
+### 1. 작은 요소 보호
+**조건**: 부모의 15% 미만 크기
+**동작**: STRETCH → INHERIT 강제 변환
+
+```
+Icon/Info (28x28) in 375x812 → INHERIT 유지
+```
+
+### 2. Vector/Icon 타입 보호
+**조건**: VECTOR, BOOLEAN_OPERATION, STAR, ELLIPSE, LINE 타입 또는 이름에 "icon" 포함
+**동작**: STRETCH → INHERIT 강제 변환
+
+### 3. 고정 크기 패턴 보호
+**조건**: 이름에 avatar, thumbnail, badge 포함
+**동작**: STRETCH → INHERIT 강제 변환
+
+### 4. 플로팅 요소 감지
+**조건**:
+- 이름에 tabbar, bottomnav, floating, bottom-nav, navigation-bar 포함
+- 또는 y >= 부모높이 * 80% AND 너비 >= 부모너비 * 90%
+**동작**: layoutPositioning = 'ABSOLUTE'
+
+### 5. 오버레이 패턴 감지
+**조건**: y <= 10 AND 너비 >= 부모너비 * 90% 인 요소가 2개 이상
+**동작**: 첫 번째(Header)는 유지, 나머지는 ABSOLUTE
+
+---
+
 ## 검증 체크리스트
 
 - [ ] 375px에서 디자인 유지되는가?
@@ -188,3 +220,4 @@ children.forEach((child, i) => frame.insertChild(i, child));
 | 2025-01-15 | 1.1.0 | FILL 최소화 원칙 추가 |
 | 2026-01-15 | 2.0.0 | 터치 타겟 규칙 추가 |
 | 2026-01-19 | 3.0.0 | **반응형 전환** - Fill 적극 사용, Truncation 추가 |
+| 2026-01-19 | 3.1.0 | **후처리 안전 규칙** - 작은요소/Vector/플로팅/오버레이 보호 |

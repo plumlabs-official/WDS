@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-19 02:00 | v2.5.0
+> Last updated: 2026-01-19 03:00 | v3.1.0
 
 ---
 
@@ -52,15 +52,18 @@
   - Truncation 지원 추가 (Title/SubTitle)
   - 테스트 범위: 375px → 1024px
 
-### 다음 작업 (Auto Layout 이슈 수정)
-테스트 결과 발견된 5가지 이슈:
-1. [ ] **Icon/Info 375x375** - 작은 요소 STRETCH 방지
-2. [ ] **Vector 너비 확장** - Vector/작은 요소 absolute position
-3. [ ] **Header-Section 겹침 풀림** - 오버레이 패턴 감지
-4. [ ] **TabBar 플로팅 풀림** - TabBar/BottomNav absolute
-5. [ ] **프레임 높이 증가** - 겹침 요소 처리
+### 완료 (Auto Layout 후처리 안전 규칙 v3.1)
+테스트 결과 발견된 5가지 이슈 수정:
+1. [x] **Icon/Info 375x375** - 작은 요소(15% 미만) INHERIT 강제
+2. [x] **Vector 너비 확장** - VECTOR/ELLIPSE/LINE 타입 INHERIT 강제
+3. [x] **Header-Section 겹침 풀림** - y<=10 오버레이 패턴 감지 → ABSOLUTE
+4. [x] **TabBar 플로팅 풀림** - 이름 패턴 + y>=80% → ABSOLUTE
+5. [x] **프레임 높이 증가** - 위 규칙으로 해결
 
-참고: `.ai/prompts/auto-layout-responsive.md`
+참고: `docs/specs/autolayout-rules.md` (v3.1)
+
+### 다음 작업
+- [ ] Figma에서 실제 테스트 진행
 
 ### 지속 테스트 (틈틈이)
 - [ ] Input 컴포넌트 속성 감지 테스트
