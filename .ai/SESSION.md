@@ -32,6 +32,7 @@
 | 컴포넌트 속성 확장 | - | - | `7ccf624` |
 | 네이밍 테스트 완료 | - | - | `729d8ff` |
 | Auto Layout 반응형 전환 | - | autolayout-rules v3.0 | `14c8428` |
+| Auto Layout 후처리 + constraints | - | autolayout-rules v3.1 | `fd66107` |
 
 상세: [CHANGELOG.md](../CHANGELOG.md)
 
@@ -62,8 +63,18 @@
 
 참고: `docs/specs/autolayout-rules.md` (v3.1)
 
+### 완료 (ABSOLUTE 요소 constraints)
+- [x] `layoutSizingHorizontal = 'FILL'` 자동 적용 (STRETCH 시)
+- [x] ABSOLUTE 요소에 constraints 설정:
+  - 너비 >= 80%: `horizontal: 'STRETCH'`
+  - 좌측 (x < 30%): `horizontal: 'MIN'`
+  - 우측 (x > 70%): `horizontal: 'MAX'`
+  - 중앙: `horizontal: 'CENTER'`
+
 ### 다음 작업
-- [ ] Figma에서 실제 테스트 진행
+- [ ] **재귀적 Auto Layout 적용** (Option A): 내부 자식까지 반응형 적용
+  - 현재: 최상위 요소만 STRETCH, 내부 자식은 고정 375px
+  - 필요: Organism → Molecule → Atom 재귀 적용
 
 ### 지속 테스트 (틈틈이)
 - [ ] Input 컴포넌트 속성 감지 테스트

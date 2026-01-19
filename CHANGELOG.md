@@ -11,9 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AI Auto Layout 반응형 모드 전환 (Fill 적극 사용, 70% 기준)
 - Truncation 지원 (Title/SubTitle 텍스트 자동 적용)
 - 배경 요소 자동 감지 및 프레임 fills로 변환
+- **후처리 안전 규칙** (v3.1): 작은요소/Vector/Icon 보호, 오버레이/플로팅 감지
+- **ABSOLUTE 요소 반응형 constraints**: STRETCH/MIN/MAX 자동 설정
+- layoutSizingHorizontal = FILL 자동 적용
 
 ### Changed
-- autolayout-rules.md v3.0.0 (반응형 규칙)
+- autolayout-rules.md v3.1.0 (후처리 안전 규칙 추가)
 ### Added
 - 컴포넌트 속성 확장 (cornerRadius, effects, strokeWidth) - Avatar/Card/Input/Toggle 힌트
 - 버튼 속성 자동 감지 (Intent/Shape/State/Icon)
