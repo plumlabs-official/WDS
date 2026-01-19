@@ -44,9 +44,16 @@
   - 버튼 속성 자동 감지 (Intent/Shape/State/Icon) 정상
   - Avatar/Card/Input/Toggle 힌트 정상
 
+### 완료 (Auto Layout 반응형 전환)
+- [x] **AI Auto Layout 반응형 모드로 교체**
+  - 프롬프트 교체: `packages/agent-server/prompts/autolayout.md`
+  - Fill 적극 사용 (70% 이상 → STRETCH)
+  - Truncation 지원 추가 (Title/SubTitle)
+  - 테스트 범위: 375px → 1024px
+
 ### 다음 작업
-- [ ] **Auto Layout 개선**
-  - AI Auto Layout 기능 개선 예정
+- [ ] Figma에서 실제 테스트
+- [ ] 문제 발생 시 프롬프트 튜닝
 
 ### 지속 테스트 (틈틈이)
 - [ ] Input 컴포넌트 속성 감지 테스트

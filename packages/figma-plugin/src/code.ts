@@ -140,6 +140,7 @@ interface ChildSizing {
   index: number;
   layoutAlign: 'INHERIT' | 'STRETCH';
   layoutGrow: 0 | 1;
+  truncation?: boolean; // 텍스트 Truncation 적용 여부
   reasoning?: string;
 }
 
@@ -1094,7 +1095,16 @@ async function handleAutoLayoutAgent() {
 
   figma.ui.postMessage({ type: 'task-start', taskName: 'AI Auto Layout 분석 중...' });
 
-  // 스크린샷 캡처
+  // 0. 배경 요소를 프레임 fills로 변환 후 삭제 (AI 분석 전에 처리)
+  // FRAME만 fills 속성이 있으므로 타입 체크
+  if (node.type === 'FRAME') {
+    const backgroundsRemoved = convertBackgroundToFrameFill(node as FrameNode);
+    if (backgroundsRemoved > 0) {
+      console.log(`[AutoLayout] ${backgroundsRemoved}개 배경 요소를 프레임 속성으로 변환 (AI 분석 전)`);
+    }
+  }
+
+  // 스크린샷 캡처 (배경 제거 후)
   const screenshot = await captureNodeScreenshot(node);
   const children = extractChildrenLayout(node as FrameNode | GroupNode);
 
@@ -1132,6 +1142,96 @@ async function handleAutoLayoutAgent() {
 }
 
 /**
+ * 프레임 내 텍스트 자식에 Truncation 적용 (재귀)
+ */
+function applyTruncationToTextChildren(frame: FrameNode) {
+  for (const child of frame.children) {
+    if (child.type === 'TEXT') {
+      try {
+        (child as TextNode).textTruncation = 'ENDING';
+        console.log('[AI AutoLayout] Truncation applied to nested text:', child.name);
+      } catch (e) {
+        console.warn('[AI AutoLayout] Truncation failed for nested text:', child.name, e);
+      }
+    } else if (child.type === 'FRAME' && 'children' in child) {
+      // 재귀적으로 하위 프레임도 처리
+      applyTruncationToTextChildren(child as FrameNode);
+    }
+  }
+}
+
+/**
+ * 배경 요소를 프레임 속성으로 변환하고 삭제
+ * - Background/White 같은 전체 크기 배경 사각형을 감지
+ * - 부모 프레임의 fills로 이동 후 삭제
+ */
+function convertBackgroundToFrameFill(frame: FrameNode): number {
+  let removedCount = 0;
+
+  try {
+    const frameWidth = frame.width;
+    const frameHeight = frame.height;
+
+    // children 복사본으로 순회 (삭제 중 변경되므로)
+    for (const child of [...frame.children]) {
+      try {
+        // 배경 요소 판단 조건:
+        // 1. 이름에 "Background" 포함
+        // 2. RECTANGLE 또는 fills가 있는 FRAME
+        // 3. 크기가 부모의 50% 이상 (배경으로 추정)
+        const isBackgroundName = child.name.toLowerCase().includes('background');
+        const isRectLike = child.type === 'RECTANGLE' || child.type === 'FRAME';
+        const coversMostOfParent = child.width >= frameWidth * 0.5 && child.height >= frameHeight * 0.5;
+
+        if (isBackgroundName && isRectLike && coversMostOfParent) {
+          console.log(`[AutoLayout] 배경 요소 감지: ${child.name} (${child.width}x${child.height})`);
+
+          // fills 추출
+          if ('fills' in child) {
+            const fills = child.fills;
+            if (Array.isArray(fills) && fills.length > 0) {
+              // 부모 프레임에 fills 적용 (clone으로 복사)
+              const visibleFills = fills.filter((f: Paint) => f.visible !== false);
+              if (visibleFills.length > 0) {
+                try {
+                  frame.fills = JSON.parse(JSON.stringify(visibleFills));
+                  console.log(`[AutoLayout] 배경 fills를 프레임으로 이동: ${visibleFills.length}개`);
+                } catch (fillError) {
+                  console.warn(`[AutoLayout] fills 이동 실패:`, fillError);
+                }
+              }
+            }
+          }
+
+          // 배경 요소 삭제 시도
+          try {
+            // locked 체크
+            if ('locked' in child && child.locked) {
+              console.log(`[AutoLayout] 배경 요소가 잠김 상태, 해제 시도: ${child.name}`);
+              (child as FrameNode).locked = false;
+            }
+
+            console.log(`[AutoLayout] 배경 요소 삭제 시도: ${child.name}, parent: ${child.parent?.name}`);
+            child.remove();
+            removedCount++;
+            console.log(`[AutoLayout] 배경 요소 삭제됨: ${child.name}`);
+          } catch (removeError) {
+            console.error(`[AutoLayout] 배경 요소 삭제 실패: ${child.name}`, removeError);
+            // 삭제 실패해도 계속 진행
+          }
+        }
+      } catch (childError) {
+        console.warn(`[AutoLayout] 배경 요소 처리 중 에러: ${child.name}`, childError);
+      }
+    }
+  } catch (error) {
+    console.error(`[AutoLayout] convertBackgroundToFrameFill 에러:`, error);
+  }
+
+  return removedCount;
+}
+
+/**
  * AutoLayout Agent 결과 처리
  */
 function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
@@ -1161,6 +1261,8 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
     preAutoLayoutSnapshot = null;
     return;
   }
+
+  // 배경 요소는 이미 handleAutoLayoutAgent에서 제거됨 (AI 분석 전)
 
   const direction = result.direction === 'HORIZONTAL' ? 'HORIZONTAL' : 'VERTICAL';
 
@@ -1233,7 +1335,24 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
             (child as SceneNode & { layoutGrow: number }).layoutGrow = sizing.layoutGrow;
           }
 
-          console.log('[AI AutoLayout] Child ' + sizing.index + ':', sizing.layoutAlign, 'grow=' + sizing.layoutGrow, '-', sizing.reasoning);
+          // Truncation 적용 (텍스트 노드인 경우)
+          if (sizing.truncation && child.type === 'TEXT') {
+            const textNode = child as TextNode;
+            try {
+              // Truncation 활성화 (textTruncation = 'ENDING')
+              textNode.textTruncation = 'ENDING';
+              console.log('[AI AutoLayout] Truncation applied to:', child.name);
+            } catch (e) {
+              console.warn('[AI AutoLayout] Truncation failed for:', child.name, e);
+            }
+          }
+
+          // 프레임 내 텍스트 자식에도 Truncation 적용
+          if (sizing.truncation && child.type === 'FRAME' && 'children' in child) {
+            applyTruncationToTextChildren(child as FrameNode);
+          }
+
+          console.log('[AI AutoLayout] Child ' + sizing.index + ':', sizing.layoutAlign, 'grow=' + sizing.layoutGrow, sizing.truncation ? '(truncation)' : '', '-', sizing.reasoning);
         }
       }
     }

@@ -1,23 +1,33 @@
-# Auto Layout Rules
+# Auto Layout Rules (반응형)
 
 > AI Auto Layout 에이전트가 준수해야 하는 규칙
 >
-> Last updated: 2026-01-16 | v2.0.0
+> Last updated: 2026-01-19 | v3.0.0 (반응형 전환)
 
 ---
 
-## 핵심 원칙
+## 핵심 목표: 반응형 레이아웃
 
-### 1. 기존 디자인 100% 보존
-- 적용 후 시각적 변화 없어야 함
-- 5px 이상 변화 시 경고
+- 375px(모바일) → 600px → 1024px까지 자연스럽게 확장
+- 컨테이너는 기본적으로 **Width=Fill**
+- 카드/섹션은 가로 확장 시 2열로 전환 가능
 
-### 2. FILL 최소화
-- `layoutGrow: 1` (FILL)은 95% 이상 채우는 경우에만
-- 기본값: `layoutAlign: INHERIT`, `layoutGrow: 0`
+---
 
-### 3. 요소 순서 유지
-- 레이어 순서 → 시각적 순서로 정렬 후 적용
+## 절대 원칙
+
+### 1. 375px 기준 디자인 유지
+- 시작 해상도(375px)에서 현재 디자인이 깨지지 않아야 함
+- 확장 시에만 반응형 동작
+
+### 2. 요소 순서 유지
+- 자식 요소의 시각적 순서(위→아래, 왼쪽→오른쪽) 유지
+- 레이어 순서는 시각적 순서에 맞게 재정렬
+
+### 3. Fill 적극 사용 (반응형 핵심)
+- **컨테이너/섹션**: Width=Fill, Height=Hug
+- **텍스트**: Width=Fill (Truncation 활용)
+- **이미지**: 비율 유지
 
 ---
 
@@ -37,31 +47,43 @@
 
 ---
 
-## Sizing 옵션
+## Sizing 규칙
 
-### primaryAxisSizingMode
-| 값 | 설명 |
-|-----|------|
-| AUTO (HUG) | 자식에 맞춰 줄어듦 |
-| FIXED | 고정 크기 유지 |
+### 컨테이너 (Frame/Section/Card)
 
-### counterAxisSizingMode
-| 값 | 설명 |
-|-----|------|
-| AUTO (HUG) | 자식에 맞춰 줄어듦 |
-| FIXED | 고정 크기 유지 |
+| 요소 타입 | Width | Height | 조건 |
+|----------|-------|--------|------|
+| 최상위 컨테이너 | FIXED | HUG | 루트 프레임 |
+| Section/Container | FILL (STRETCH) | HUG | 부모 너비 따라감 |
+| Card | FILL (STRETCH) | HUG | 1열→2열 대응 |
+| Header/TabBar | FILL (STRETCH) | FIXED | 고정 높이 |
 
 ### layoutAlign (자식)
-| 값 | 설명 |
-|-----|------|
-| INHERIT | 부모 설정 따름 |
-| STRETCH | 교차축 FILL |
+
+| 값 | 설명 | 사용 시점 |
+|-----|------|----------|
+| INHERIT | 부모 설정 따름 | 아이콘, 이미지, 고정 버튼 |
+| STRETCH | 교차축 FILL | 컨테이너, 섹션, 전체 너비 요소 |
 
 ### layoutGrow (자식)
-| 값 | 설명 |
-|-----|------|
-| 0 | 고정 크기 |
-| 1 | 주축 FILL (남은 공간 채움) |
+
+| 값 | 설명 | 사용 시점 |
+|-----|------|----------|
+| 0 | 고정 크기 | 대부분의 요소 |
+| 1 | 주축 FILL | 남은 공간 채우기 |
+
+### FILL 판단 기준 (확장됨)
+
+다음 중 하나라도 해당하면 FILL(STRETCH) 사용:
+1. 부모 너비의 **70% 이상** 차지
+2. 이름에 Container, Section, Card, Content, Main, Body 포함
+3. 여러 자식을 포함한 레이아웃 프레임
+4. Input, Button/...Full, Divider 등 전체 너비 요소
+
+### FILL 사용하지 않는 경우
+- Icon, Avatar, Thumbnail: 항상 FIXED
+- 고정 크기 버튼 (아이콘 버튼 등)
+- 이미지 (비율 유지 필요)
 
 ---
 
@@ -81,11 +103,25 @@
 
 ---
 
-## Gap 계산
+## Gap 규칙
 
-- 자식들 사이 간격
-- 일정하면 해당 값 사용
-- 불규칙하면 평균값 또는 최빈값
+- Gap은 **고정값** 사용 (비례 확장 아님)
+- 현재 간격을 그대로 유지
+- 표준 간격: 4, 8, 12, 16, 20, 24, 32
+
+---
+
+## 텍스트 Truncation 규칙
+
+Title/SubTitle로 판단되는 텍스트는 Truncation 적용:
+- 이름에 Title, Heading, Name, Label 포함
+- 단일 라인 텍스트
+- 부모 너비에 가까운 텍스트
+
+**적용 방법:**
+```typescript
+textNode.textTruncation = 'ENDING'; // "..." 표시
+```
 
 ---
 
@@ -115,69 +151,40 @@ children.forEach((child, i) => frame.insertChild(i, child));
 |--------|----------|----------|
 | iOS (Apple HIG) | 44x44px | 44x44px |
 | Android (Material) | 48x48px | 48x48px |
-| **웰위 통일 기준** | **48x48px** | **48x48px** |
+| **통일 기준** | **48x48px** | **48x48px** |
 
 ### 적용 컴포넌트
 
-| 컴포넌트 | 터치 타겟 필수 | 비고 |
-|---------|--------------|------|
-| Button | ✅ | 모든 버튼 |
-| Icon (터치 가능) | ✅ | 클릭 가능한 아이콘 |
-| TabItem | ✅ | 탭바 아이템 |
-| ListItem | ✅ | 리스트 행 |
-| Toggle | ✅ | 토글 스위치 |
-| Checkbox | ✅ | 체크박스 |
-| Input | ✅ | 입력 필드 |
-| Card (터치 가능) | ✅ | 클릭 가능한 카드 |
-
-### 터치 타겟 검증 규칙
-
-```typescript
-// 최소 크기 검증
-const MIN_TOUCH_TARGET = 48;
-
-function validateTouchTarget(node: SceneNode): boolean {
-  if (!isTouchable(node)) return true;
-  return node.width >= MIN_TOUCH_TARGET && node.height >= MIN_TOUCH_TARGET;
-}
-```
-
-### 패딩으로 터치 영역 확보
-
-시각적으로 작은 요소도 터치 영역은 48px 이상 확보:
-
-```
-시각적 크기: 24x24px (아이콘)
-터치 영역: 48x48px (패딩 12px 추가)
-```
-
-**Auto Layout 적용 시:**
-```typescript
-{
-  paddingTop: 12,
-  paddingRight: 12,
-  paddingBottom: 12,
-  paddingLeft: 12
-}
-```
+| 컴포넌트 | 터치 타겟 필수 |
+|---------|--------------|
+| Button | ✅ |
+| Icon (터치 가능) | ✅ |
+| TabItem | ✅ |
+| ListItem | ✅ |
+| Toggle | ✅ |
+| Checkbox | ✅ |
+| Input | ✅ |
 
 ---
 
 ## 검증 체크리스트
 
+- [ ] 375px에서 디자인 유지되는가?
 - [ ] 방향이 시각적 배열과 일치하는가?
 - [ ] 패딩이 정확한가?
 - [ ] Gap이 일관적인가?
 - [ ] 자식 순서가 올바른가?
-- [ ] 적용 후 크기 변화가 5px 이내인가?
+- [ ] 컨테이너/섹션이 Fill로 설정되었는가?
+- [ ] Title 텍스트에 Truncation이 적용되었는가?
 - [ ] 터치 가능한 요소가 48x48px 이상인가?
 
 ---
 
 ## 변경 이력
 
-| 날짜 | 내용 |
-|------|------|
-| 2025-01-15 | 초기 작성 |
-| 2025-01-15 | FILL 최소화 원칙 추가 |
-| 2026-01-15 | 터치 타겟 규칙 추가 (48x48px 최소) |
+| 날짜 | 버전 | 내용 |
+|------|------|------|
+| 2025-01-15 | 1.0.0 | 초기 작성 |
+| 2025-01-15 | 1.1.0 | FILL 최소화 원칙 추가 |
+| 2026-01-15 | 2.0.0 | 터치 타겟 규칙 추가 |
+| 2026-01-19 | 3.0.0 | **반응형 전환** - Fill 적극 사용, Truncation 추가 |

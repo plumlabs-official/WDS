@@ -110,6 +110,7 @@ export interface ChildSizing {
   index: number;
   layoutAlign: 'INHERIT' | 'STRETCH'; // 교차축 정렬 (STRETCH = FILL)
   layoutGrow: 0 | 1; // 주축 공간 채우기 (1 = FILL)
+  truncation?: boolean; // 텍스트 Truncation 적용 여부 (Title/SubTitle)
   reasoning?: string;
 }
 
