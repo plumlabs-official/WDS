@@ -1,7 +1,7 @@
 {
-  "name": "wellwe-design-system-automator",
+  "name": "wds",
   "version": "2.0.0",
-  "description": "Wellwe 디자인 시스템 자동화 Figma 플러그인",
+  "description": "WDS - Figma 디자인 시스템 자동화 플러그인",
   "private": true,
   "workspaces": [
     "packages/*"

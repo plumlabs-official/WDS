@@ -14,9 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **후처리 안전 규칙** (v3.1): 작은요소/Vector/Icon 보호, 오버레이/플로팅 감지
 - **ABSOLUTE 요소 반응형 constraints**: STRETCH/MIN/MAX 자동 설정
 - layoutSizingHorizontal = FILL 자동 적용
+- **재귀적 FILL 적용** (v3.2): 내부 자식까지 반응형 확장
+- **Safe Zone 패턴**: Feed/Grid/Card 내부는 고정 크기 유지
+- **위치 기반 constraints**: Button CENTER, ActionButtons MAX, Icon MIN/MAX
+- **Top-level 강제 STRETCH**: AI가 INHERIT 반환해도 80% 이상 요소는 강제 STRETCH
 
 ### Changed
 - autolayout-rules.md v3.1.0 (후처리 안전 규칙 추가)
+- AI 프롬프트 개선: 절대 위치 판단 금지, 전체 너비 요소 STRETCH 강조
+
+### Fixed
+- 인덱스 매핑 버그 수정 (AI 응답 인덱스 ↔ 재정렬 후 노드 불일치)
 ### Added
 - 컴포넌트 속성 확장 (cornerRadius, effects, strokeWidth) - Avatar/Card/Input/Toggle 힌트
 - 버튼 속성 자동 감지 (Intent/Shape/State/Icon)

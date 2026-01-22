@@ -1,6 +1,6 @@
 # Project Constitution
 
-> Wellwe Design System Automator - AI 행동 지침
+> WDS (WellWe Design System) - AI 행동 지침
 >
 > Last updated: 2026-01-17 | v2.1.0
 

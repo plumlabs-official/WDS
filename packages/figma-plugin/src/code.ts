@@ -1161,6 +1161,217 @@ function applyTruncationToTextChildren(frame: FrameNode) {
 }
 
 /**
+ * 재귀적으로 내부 자식에게 반응형 설정 적용
+ * - Auto Layout 있는 부모 → layoutSizingHorizontal = 'FILL'
+ * - Auto Layout 없는 부모 → constraints.horizontal = 'STRETCH'
+ * - 70% 이상 너비 또는 특정 이름 패턴 적용
+ * - Icon/Avatar/Thumbnail 등은 건너뛰기
+ * - Safe Zone (Feed/Card/List/Grid): 내부 자식 STRETCH 안 함
+ */
+function applyRecursiveFill(node: FrameNode | ComponentNode | InstanceNode, depth: number = 0, inSafeZone: boolean = false): number {
+  const MAX_DEPTH = 5; // 무한 재귀 방지
+  let appliedCount = 0;
+
+  // 깊이 제한 초과
+  if (depth > MAX_DEPTH) {
+    return appliedCount;
+  }
+
+  const parentWidth = node.width;
+  const parentHeight = node.height;
+  const parentHasAutoLayout = 'layoutMode' in node && node.layoutMode !== 'NONE';
+  const nodeName = node.name.toLowerCase();
+
+  // Safe Zone 진입 체크 (Feed, Card 리스트, Grid, Masonry 등)
+  // 이 영역의 "내부 자식"은 STRETCH 하지 않음
+  const isSafeZoneEntry =
+    nodeName.includes('feed') ||
+    nodeName.includes('grid') ||
+    nodeName.includes('masonry') ||
+    (nodeName.includes('list') && !nodeName.includes('list/'));
+
+  // Safe Zone 안에 있으면 내부 자식 STRETCH 안 함
+  const currentInSafeZone = inSafeZone || isSafeZoneEntry;
+
+  for (const child of node.children) {
+    // FRAME, COMPONENT, INSTANCE만 처리
+    if (child.type !== 'FRAME' && child.type !== 'COMPONENT' && child.type !== 'INSTANCE') {
+      continue;
+    }
+
+    // ABSOLUTE 위치인 경우 스킵 (이미 constraints로 처리됨)
+    if ('layoutPositioning' in child && (child as FrameNode).layoutPositioning === 'ABSOLUTE') {
+      // 하지만 내부 자식은 재귀 처리
+      appliedCount += applyRecursiveFill(child as FrameNode, depth + 1, currentInSafeZone);
+      continue;
+    }
+
+    const childName = child.name.toLowerCase();
+
+    // Safe Zone 내부의 Card 패턴은 완전 스킵 (재귀도 안 함)
+    const isCardInSafeZone = currentInSafeZone && (
+      childName.includes('card/') ||
+      childName.includes('card/user') ||
+      childName.includes('section/image')
+    );
+
+    if (isCardInSafeZone) {
+      console.log('[Recursive FILL] Safe Zone skip:', child.name);
+      continue;
+    }
+
+    // 고정 크기 패턴은 스킵 (Icon, Avatar, Thumbnail, Badge 등)
+    const isFixedSizePattern =
+      childName.includes('icon/') ||
+      childName.includes('avatar') ||
+      childName.includes('thumbnail') ||
+      childName.includes('badge') ||
+      childName.includes('checkbox') ||
+      childName.includes('radio') ||
+      childName.includes('image/') ||
+      childName.includes('profile');
+
+    // 버튼 패턴: STRETCH 안 함, 가운데 정렬 (CENTER constraint)
+    const isButtonPattern =
+      childName.includes('button/') ||
+      childName.startsWith('button');
+
+    if (isButtonPattern) {
+      // 버튼은 STRETCH 안 함, CENTER constraint 적용
+      if ('constraints' in child) {
+        const frameChild = child as FrameNode;
+        const currentConstraints = frameChild.constraints;
+        if (currentConstraints.horizontal !== 'CENTER') {
+          frameChild.constraints = { ...currentConstraints, horizontal: 'CENTER' };
+          appliedCount++;
+          console.log('[Recursive FILL] Button CENTER:', child.name);
+        }
+      }
+      // 버튼 내부는 재귀 처리
+      appliedCount += applyRecursiveFill(child as FrameNode, depth + 1, currentInSafeZone);
+      continue;
+    }
+
+    if (isFixedSizePattern) {
+      // 고정 크기 패턴: 위치 기반 constraints 적용 (좌/우 정렬)
+      if ('constraints' in child) {
+        const frameChild = child as FrameNode;
+        const childX = child.x;
+        const isLeftSide = childX < parentWidth * 0.3;
+        const isRightSide = childX + child.width > parentWidth * 0.7;
+
+        const targetConstraint = isRightSide ? 'MAX' : (isLeftSide ? 'MIN' : 'CENTER');
+        const currentConstraints = frameChild.constraints;
+
+        if (currentConstraints.horizontal !== targetConstraint) {
+          frameChild.constraints = { ...currentConstraints, horizontal: targetConstraint };
+          console.log('[Recursive FILL] Fixed pattern constraint:', child.name, targetConstraint);
+        }
+      }
+      // 재귀는 계속 (내부에 FILL 적용할 요소가 있을 수 있음)
+      appliedCount += applyRecursiveFill(child as FrameNode, depth + 1, currentInSafeZone);
+      continue;
+    }
+
+    // 작은 요소 스킵 (부모의 15% 미만)
+    const isSmallElement = child.width < parentWidth * 0.15 && child.height < parentHeight * 0.15;
+    if (isSmallElement) {
+      appliedCount += applyRecursiveFill(child as FrameNode, depth + 1, currentInSafeZone);
+      continue;
+    }
+
+    // Safe Zone 내부면 STRETCH 적용 안 함 (재귀만 계속)
+    if (currentInSafeZone) {
+      console.log('[Recursive FILL] Safe Zone child (no stretch):', child.name);
+      appliedCount += applyRecursiveFill(child as FrameNode, depth + 1, currentInSafeZone);
+      continue;
+    }
+
+    // ActionButtons 패턴: 우측 정렬 (MAX constraint)
+    const isActionButtonsPattern =
+      childName.includes('actionbuttons') ||
+      childName.includes('action-buttons') ||
+      childName.includes('container/action');
+
+    if (isActionButtonsPattern) {
+      if ('constraints' in child) {
+        const frameChild = child as FrameNode;
+        const currentConstraints = frameChild.constraints;
+        if (currentConstraints.horizontal !== 'MAX') {
+          frameChild.constraints = { ...currentConstraints, horizontal: 'MAX' };
+          appliedCount++;
+          console.log('[Recursive FILL] ActionButtons MAX (right):', child.name);
+        }
+      }
+      appliedCount += applyRecursiveFill(child as FrameNode, depth + 1, currentInSafeZone);
+      continue;
+    }
+
+    // FILL/STRETCH 적용 조건: 부모 너비의 70% 이상
+    const shouldFill = child.width >= parentWidth * 0.7;
+
+    // FILL 적용 조건 2: 반응형 대상 이름 패턴 (Safe Zone 제외, Button 제외)
+    const isFillNamePattern =
+      childName.includes('container/') ||
+      childName.includes('section/header') ||
+      childName.includes('section/icon') ||
+      childName.includes('content') ||
+      childName.includes('main') ||
+      childName.includes('body') ||
+      childName.includes('header/') ||
+      childName.includes('footer') ||
+      childName.includes('subtab') ||
+      childName.includes('tabitem') ||
+      childName.includes('tabbar') ||
+      childName.includes('background/');
+
+    if (shouldFill || isFillNamePattern) {
+      const frameChild = child as FrameNode;
+
+      // 위치 기반 체크: 명확히 한쪽에 치우친 요소는 STRETCH 대신 위치 고정
+      const childX = child.x;
+      const childRight = childX + child.width;
+      const isPositionedLeft = childX < parentWidth * 0.2 && childRight < parentWidth * 0.5;
+      const isPositionedRight = childX > parentWidth * 0.5 && childRight > parentWidth * 0.8;
+      const isFullWidth = child.width >= parentWidth * 0.8; // 거의 전체 너비
+
+      if (!isFullWidth && (isPositionedLeft || isPositionedRight) && 'constraints' in frameChild) {
+        // 한쪽에 치우친 요소는 위치 고정 (STRETCH 안 함)
+        const targetConstraint = isPositionedRight ? 'MAX' : 'MIN';
+        const currentConstraints = frameChild.constraints;
+        if (currentConstraints.horizontal !== targetConstraint) {
+          frameChild.constraints = { ...currentConstraints, horizontal: targetConstraint };
+          appliedCount++;
+          console.log('[Recursive FILL] Position-based constraint:', child.name, targetConstraint);
+        }
+      } else if (parentHasAutoLayout) {
+        // 부모가 Auto Layout → layoutSizingHorizontal = 'FILL'
+        if ('layoutSizingHorizontal' in frameChild && frameChild.layoutSizingHorizontal !== 'FILL') {
+          frameChild.layoutSizingHorizontal = 'FILL';
+          appliedCount++;
+          console.log('[Recursive FILL] Auto Layout child:', child.name, 'at depth', depth);
+        }
+      } else {
+        // 부모가 Auto Layout 없음 → constraints.horizontal = 'STRETCH'
+        if ('constraints' in frameChild) {
+          const currentConstraints = frameChild.constraints;
+          if (currentConstraints.horizontal !== 'STRETCH') {
+            frameChild.constraints = { ...currentConstraints, horizontal: 'STRETCH' };
+            appliedCount++;
+            console.log('[Recursive FILL] Constraints child:', child.name, 'at depth', depth);
+          }
+        }
+      }
+    }
+
+    // 재귀: 이 자식의 내부도 처리
+    appliedCount += applyRecursiveFill(child as FrameNode, depth + 1, currentInSafeZone);
+  }
+
+  return appliedCount;
+}
+
+/**
  * 배경 요소를 프레임 속성으로 변환하고 삭제
  * - Background/White 같은 전체 크기 배경 사각형을 감지
  * - 부모 프레임의 fills로 이동 후 삭제
@@ -1205,18 +1416,22 @@ function convertBackgroundToFrameFill(frame: FrameNode): number {
 
           // 배경 요소 삭제 시도
           try {
+            // 삭제 전 이름 저장 (remove 후 접근 불가)
+            const childName = child.name;
+            const parentName = child.parent?.name;
+
             // locked 체크
             if ('locked' in child && child.locked) {
-              console.log(`[AutoLayout] 배경 요소가 잠김 상태, 해제 시도: ${child.name}`);
+              console.log(`[AutoLayout] 배경 요소가 잠김 상태, 해제 시도: ${childName}`);
               (child as FrameNode).locked = false;
             }
 
-            console.log(`[AutoLayout] 배경 요소 삭제 시도: ${child.name}, parent: ${child.parent?.name}`);
+            console.log(`[AutoLayout] 배경 요소 삭제 시도: ${childName}, parent: ${parentName}`);
             child.remove();
             removedCount++;
-            console.log(`[AutoLayout] 배경 요소 삭제됨: ${child.name}`);
+            console.log(`[AutoLayout] 배경 요소 삭제됨: ${childName}`);
           } catch (removeError) {
-            console.error(`[AutoLayout] 배경 요소 삭제 실패: ${child.name}`, removeError);
+            console.error(`[AutoLayout] 배경 요소 삭제 실패`, removeError);
             // 삭제 실패해도 계속 진행
           }
         }
@@ -1267,7 +1482,13 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
   const direction = result.direction === 'HORIZONTAL' ? 'HORIZONTAL' : 'VERTICAL';
 
   try {
-    // 0. Auto Layout 적용 전에 자식들을 시각적 순서로 재정렬
+    // 0. 원본 인덱스 → 노드 매핑 저장 (AI 응답의 인덱스는 원본 순서 기준)
+    const originalIndexToNode = new Map<number, SceneNode>();
+    [...node.children].forEach((child, i) => {
+      originalIndexToNode.set(i, child);
+    });
+
+    // 0-1. Auto Layout 적용 전에 자식들을 시각적 순서로 재정렬
     // Figma의 children은 레이어 순서(z-index)이므로 시각적 순서와 다를 수 있음
     const childrenWithPos = node.children.map(child => ({
       node: child,
@@ -1392,121 +1613,138 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
 
     // 5. 자식 요소 개별 Sizing 적용 (후처리 안전 규칙 포함)
     // absoluteCandidates는 위에서 원본 위치 기반으로 이미 계산됨
+    // ⚠️ 주의: AI 응답의 인덱스는 원본 순서 기준이므로 originalIndexToNode 사용
     if (result.childrenSizing && result.childrenSizing.length > 0) {
-      const children = node.children;
-
       for (const sizing of result.childrenSizing) {
-        if (sizing.index < children.length) {
-          const child = children[sizing.index];
-
-          // 5-1. 후처리 안전 규칙 적용
-          let finalLayoutAlign = sizing.layoutAlign;
-          const shouldBeAbsolute = absoluteCandidates.has(child.id);
-
-          // 규칙 1: 작은 요소 보호 (부모의 15% 미만)
-          const isSmallElement =
-            child.width < parentWidth * 0.15 &&
-            child.height < parentHeight * 0.15;
-
-          // 규칙 2: Vector/작은 유틸리티 타입 보호
-          const isVectorOrIcon =
-            child.type === 'VECTOR' ||
-            child.type === 'BOOLEAN_OPERATION' ||
-            child.type === 'STAR' ||
-            child.type === 'ELLIPSE' ||
-            child.type === 'LINE' ||
-            child.name.toLowerCase().includes('icon');
-
-          // 규칙 3: 아이콘/아바타/썸네일 패턴 보호
-          const isFixedSizePattern =
-            child.name.toLowerCase().includes('avatar') ||
-            child.name.toLowerCase().includes('thumbnail') ||
-            child.name.toLowerCase().includes('badge');
-
-          // STRETCH → INHERIT 강제 변환 조건
-          if (sizing.layoutAlign === 'STRETCH' && (isSmallElement || isVectorOrIcon || isFixedSizePattern)) {
-            finalLayoutAlign = 'INHERIT';
-            console.log('[AI AutoLayout] STRETCH → INHERIT 강제 변환:', child.name,
-              isSmallElement ? '(작은 요소)' : '',
-              isVectorOrIcon ? '(Vector/Icon)' : '',
-              isFixedSizePattern ? '(고정 크기 패턴)' : '');
-          }
-
-          // layoutAlign 적용 (STRETCH = 교차축 FILL)
-          if ('layoutAlign' in child) {
-            (child as SceneNode & { layoutAlign: string }).layoutAlign = finalLayoutAlign;
-
-            // STRETCH일 때 layoutSizingHorizontal도 FILL로 설정 (진짜 반응형 동작)
-            if (finalLayoutAlign === 'STRETCH' && 'layoutSizingHorizontal' in child) {
-              (child as SceneNode & { layoutSizingHorizontal: string }).layoutSizingHorizontal = 'FILL';
-              console.log('[AI AutoLayout] layoutSizingHorizontal = FILL:', child.name);
-            }
-          }
-
-          // layoutGrow 적용 (1 = 주축 FILL)
-          if ('layoutGrow' in child) {
-            (child as SceneNode & { layoutGrow: number }).layoutGrow = sizing.layoutGrow;
-          }
-
-          // 5-2. 플로팅/오버레이 요소 absolute 처리 + 원본 위치 복원 + 반응형 constraints
-          if (shouldBeAbsolute && 'layoutPositioning' in child) {
-            (child as SceneNode & { layoutPositioning: string }).layoutPositioning = 'ABSOLUTE';
-
-            // 원본 위치 복원
-            const originalPos = originalPositions.get(child.id);
-            if (originalPos && 'x' in child && 'y' in child) {
-              (child as SceneNode & { x: number; y: number }).x = originalPos.x;
-              (child as SceneNode & { y: number }).y = originalPos.y;
-            }
-
-            // ABSOLUTE 요소에 반응형 constraints 설정 (부모 크기 변경 시 늘어남)
-            if ('constraints' in child) {
-              const frameChild = child as FrameNode;
-              // 넓은 요소(부모의 80% 이상)는 양쪽에 붙도록 STRETCH
-              if (originalPos && originalPos.width >= parentWidth * 0.8) {
-                frameChild.constraints = { horizontal: 'STRETCH', vertical: 'MIN' };
-                console.log('[AI AutoLayout] ABSOLUTE + STRETCH constraints:', child.name);
-              } else {
-                // 작은 요소는 원본 위치 기준으로 고정
-                const isLeftSide = originalPos && originalPos.x < parentWidth * 0.3;
-                const isRightSide = originalPos && originalPos.x > parentWidth * 0.7;
-                frameChild.constraints = {
-                  horizontal: isRightSide ? 'MAX' : (isLeftSide ? 'MIN' : 'CENTER'),
-                  vertical: 'MIN'
-                };
-                console.log('[AI AutoLayout] ABSOLUTE + constraints:', child.name, frameChild.constraints.horizontal);
-              }
-            } else {
-              console.log('[AI AutoLayout] ABSOLUTE 설정:', child.name);
-            }
-          }
-
-          // Truncation 적용 (텍스트 노드인 경우)
-          if (sizing.truncation && child.type === 'TEXT') {
-            const textNode = child as TextNode;
-            try {
-              // Truncation 활성화 (textTruncation = 'ENDING')
-              textNode.textTruncation = 'ENDING';
-              console.log('[AI AutoLayout] Truncation applied to:', child.name);
-            } catch (e) {
-              console.warn('[AI AutoLayout] Truncation failed for:', child.name, e);
-            }
-          }
-
-          // 프레임 내 텍스트 자식에도 Truncation 적용
-          if (sizing.truncation && child.type === 'FRAME' && 'children' in child) {
-            applyTruncationToTextChildren(child as FrameNode);
-          }
-
-          console.log('[AI AutoLayout] Child ' + sizing.index + ':', finalLayoutAlign, 'grow=' + sizing.layoutGrow,
-            shouldBeAbsolute ? '(absolute)' : '',
-            sizing.truncation ? '(truncation)' : '', '-', sizing.reasoning);
+        // 원본 인덱스 → 노드 매핑 사용 (재정렬 후에도 올바른 노드 참조)
+        const child = originalIndexToNode.get(sizing.index);
+        if (!child) {
+          console.warn('[AI AutoLayout] 인덱스 매핑 실패:', sizing.index);
+          continue;
         }
+
+        // 5-1. 후처리 안전 규칙 적용
+        let finalLayoutAlign = sizing.layoutAlign;
+        const shouldBeAbsolute = absoluteCandidates.has(child.id);
+
+        // 규칙 0: 전체 너비 요소 강제 STRETCH (AI가 INHERIT 반환해도 무시)
+        // Top-level에서 부모의 80% 이상 차지하는 요소는 반응형 필수
+        const isFullWidthElement = child.width >= parentWidth * 0.8;
+        const childName = child.name.toLowerCase();
+        const isStretchableType =
+          child.type === 'FRAME' ||
+          child.type === 'COMPONENT' ||
+          child.type === 'INSTANCE';
+
+        if (isFullWidthElement && isStretchableType && sizing.layoutAlign === 'INHERIT') {
+          finalLayoutAlign = 'STRETCH';
+          console.log('[AI AutoLayout] INHERIT → STRETCH 강제 변환 (전체 너비):', child.name);
+        }
+
+        // 규칙 1: 작은 요소 보호 (부모의 15% 미만)
+        const isSmallElement =
+          child.width < parentWidth * 0.15 &&
+          child.height < parentHeight * 0.15;
+
+        // 규칙 2: Vector/작은 유틸리티 타입 보호
+        const isVectorOrIcon =
+          child.type === 'VECTOR' ||
+          child.type === 'BOOLEAN_OPERATION' ||
+          child.type === 'STAR' ||
+          child.type === 'ELLIPSE' ||
+          child.type === 'LINE' ||
+          childName.includes('icon');
+
+        // 규칙 3: 아이콘/아바타/썸네일 패턴 보호
+        const isFixedSizePattern =
+          childName.includes('avatar') ||
+          childName.includes('thumbnail') ||
+          childName.includes('badge');
+
+        // STRETCH → INHERIT 강제 변환 조건 (작은 요소/아이콘만)
+        if (finalLayoutAlign === 'STRETCH' && (isSmallElement || isVectorOrIcon || isFixedSizePattern)) {
+          finalLayoutAlign = 'INHERIT';
+          console.log('[AI AutoLayout] STRETCH → INHERIT 강제 변환:', child.name,
+            isSmallElement ? '(작은 요소)' : '',
+            isVectorOrIcon ? '(Vector/Icon)' : '',
+            isFixedSizePattern ? '(고정 크기 패턴)' : '');
+        }
+
+        // layoutAlign 적용 (STRETCH = 교차축 FILL)
+        if ('layoutAlign' in child) {
+          (child as SceneNode & { layoutAlign: string }).layoutAlign = finalLayoutAlign;
+
+          // STRETCH일 때 layoutSizingHorizontal도 FILL로 설정 (진짜 반응형 동작)
+          if (finalLayoutAlign === 'STRETCH' && 'layoutSizingHorizontal' in child) {
+            (child as SceneNode & { layoutSizingHorizontal: string }).layoutSizingHorizontal = 'FILL';
+            console.log('[AI AutoLayout] layoutSizingHorizontal = FILL:', child.name);
+          }
+        }
+
+        // layoutGrow 적용 (1 = 주축 FILL)
+        if ('layoutGrow' in child) {
+          (child as SceneNode & { layoutGrow: number }).layoutGrow = sizing.layoutGrow;
+        }
+
+        // 5-2. 플로팅/오버레이 요소 absolute 처리 + 원본 위치 복원 + 반응형 constraints
+        if (shouldBeAbsolute && 'layoutPositioning' in child) {
+          (child as SceneNode & { layoutPositioning: string }).layoutPositioning = 'ABSOLUTE';
+
+          // 원본 위치 복원
+          const originalPos = originalPositions.get(child.id);
+          if (originalPos && 'x' in child && 'y' in child) {
+            (child as SceneNode & { x: number; y: number }).x = originalPos.x;
+            (child as SceneNode & { y: number }).y = originalPos.y;
+          }
+
+          // ABSOLUTE 요소에 반응형 constraints 설정 (부모 크기 변경 시 늘어남)
+          if ('constraints' in child) {
+            const frameChild = child as FrameNode;
+            // 넓은 요소(부모의 80% 이상)는 양쪽에 붙도록 STRETCH
+            if (originalPos && originalPos.width >= parentWidth * 0.8) {
+              frameChild.constraints = { horizontal: 'STRETCH', vertical: 'MIN' };
+              console.log('[AI AutoLayout] ABSOLUTE + STRETCH constraints:', child.name);
+            } else {
+              // 작은 요소는 원본 위치 기준으로 고정
+              const isLeftSide = originalPos && originalPos.x < parentWidth * 0.3;
+              const isRightSide = originalPos && originalPos.x > parentWidth * 0.7;
+              frameChild.constraints = {
+                horizontal: isRightSide ? 'MAX' : (isLeftSide ? 'MIN' : 'CENTER'),
+                vertical: 'MIN'
+              };
+              console.log('[AI AutoLayout] ABSOLUTE + constraints:', child.name, frameChild.constraints.horizontal);
+            }
+          } else {
+            console.log('[AI AutoLayout] ABSOLUTE 설정:', child.name);
+          }
+        }
+
+        // Truncation 적용 (텍스트 노드인 경우)
+        if (sizing.truncation && child.type === 'TEXT') {
+          const textNode = child as TextNode;
+          try {
+            // Truncation 활성화 (textTruncation = 'ENDING')
+            textNode.textTruncation = 'ENDING';
+            console.log('[AI AutoLayout] Truncation applied to:', child.name);
+          } catch (e) {
+            console.warn('[AI AutoLayout] Truncation failed for:', child.name, e);
+          }
+        }
+
+        // 프레임 내 텍스트 자식에도 Truncation 적용
+        if (sizing.truncation && child.type === 'FRAME' && 'children' in child) {
+          applyTruncationToTextChildren(child as FrameNode);
+        }
+
+        console.log('[AI AutoLayout] Child', sizing.index, '(' + child.name + '):', finalLayoutAlign, 'grow=' + sizing.layoutGrow,
+          shouldBeAbsolute ? '(absolute)' : '',
+          sizing.truncation ? '(truncation)' : '', '-', sizing.reasoning);
       }
     }
 
     // 5-3. childrenSizing에 포함되지 않은 absoluteCandidates 처리 (안전망)
-    const processedIds = new Set(result.childrenSizing?.map((s: ChildSizing) => node.children[s.index]?.id).filter(Boolean) || []);
+    // 원본 인덱스 매핑 사용
+    const processedIds = new Set(result.childrenSizing?.map((s: ChildSizing) => originalIndexToNode.get(s.index)?.id).filter(Boolean) || []);
     for (const child of node.children) {
       if (absoluteCandidates.has(child.id) && !processedIds.has(child.id)) {
         if ('layoutPositioning' in child) {
@@ -1553,8 +1791,15 @@ function handleAutoLayoutResult(msg: AutoLayoutResultMessage) {
       }
     }
 
+    // 7. 재귀적 FILL 적용 (내부 자식까지 반응형)
+    const recursiveFillCount = applyRecursiveFill(node);
+    if (recursiveFillCount > 0) {
+      console.log('[AI AutoLayout] 재귀 FILL 적용:', recursiveFillCount, '개 요소');
+    }
+
     console.log('[AI AutoLayout]', result.reasoning);
-    figma.notify('AI Auto Layout 적용 완료: ' + direction + ', gap=' + result.gap, { timeout: 3000 });
+    figma.notify('AI Auto Layout 적용 완료: ' + direction + ', gap=' + result.gap +
+      (recursiveFillCount > 0 ? ` (+${recursiveFillCount} 내부 FILL)` : ''), { timeout: 3000 });
 
   } catch (e) {
     console.error('[AI AutoLayout] Error:', e);

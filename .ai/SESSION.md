@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-19 03:00 | v3.1.0
+> Last updated: 2026-01-19 05:30 | v3.2.0
 
 ---
 
@@ -38,48 +38,63 @@
 
 ---
 
-## 현재 세션 (2026-01-18)
+## 현재 세션 (2026-01-19)
+
+### 완료 (재귀적 반응형 적용 v3.2)
+
+#### 1. 인덱스 매핑 버그 수정
+- AI 응답의 인덱스가 재정렬 후 잘못된 노드에 적용되는 버그
+- `originalIndexToNode` 매핑으로 해결
+
+#### 2. 재귀적 FILL 적용 (`applyRecursiveFill`)
+- Auto Layout 있는 부모 → `layoutSizingHorizontal = 'FILL'`
+- Auto Layout 없는 부모 → `constraints.horizontal = 'STRETCH'`
+- 최대 깊이 5까지 재귀
+
+#### 3. Safe Zone 패턴 (카드 고정)
+- Feed, Grid, Masonry, List 패턴 내부는 STRETCH 안 함
+- Card/, Section/Image 패턴은 완전 스킵
+- 모바일 퍼스트: 카드는 고정 크기 유지
+
+#### 4. 위치 기반 constraints
+- **Button/** → CENTER (가운데 고정)
+- **Container/ActionButtons** → MAX (우측)
+- **Icon/** 좌측 (x < 30%) → MIN
+- **Icon/** 우측 (x > 70%) → MAX
+- 위치 기반 체크: 20%/50%/80% 기준
+
+#### 5. Top-level 강제 STRETCH
+- AI가 INHERIT 반환해도 80% 이상 전체너비 요소는 강제 STRETCH
+- 후처리 안전망 역할
+
+#### 6. AI 프롬프트 개선
+- "절대 위치 배치 판단 금지" 명시
+- "전체 너비 요소 = 무조건 STRETCH" 강조
+- 파일: `packages/agent-server/prompts/autolayout.md`
+
+### 테스트 결과
+- ✅ Header/TabBar/SubTab 반응형 동작
+- ✅ 피드 카드 고정 크기 (Safe Zone)
+- ✅ Button CENTER 정렬
+- ⚠️ 일부 내부 요소 정렬 미세 조정 필요
+
+### 참고 샘플
+- `14365:1706` - 수동 반응형 샘플 (justify-between 패턴)
+
+### 다음 작업
+- [ ] Header 내부 좌우 정렬 미세 조정
+- [ ] SubTab 탭 균등 분배 개선
+- [ ] 실제 Figma에서 375px → 600px 테스트
+
+---
+
+## 이전 세션 (2026-01-18) - 완료
 
 ### 완료
 - [x] 레이어 네이밍 타입별 테스트 ✅
-  - 컴포넌트 속성 (cornerRadius, effects, strokeWidth) 정상
-  - 버튼 속성 자동 감지 (Intent/Shape/State/Icon) 정상
-  - Avatar/Card/Input/Toggle 힌트 정상
-
-### 완료 (Auto Layout 반응형 전환)
-- [x] **AI Auto Layout 반응형 모드로 교체**
-  - 프롬프트 교체: `packages/agent-server/prompts/autolayout.md`
-  - Fill 적극 사용 (70% 이상 → STRETCH)
-  - Truncation 지원 추가 (Title/SubTitle)
-  - 테스트 범위: 375px → 1024px
-
-### 완료 (Auto Layout 후처리 안전 규칙 v3.1)
-테스트 결과 발견된 5가지 이슈 수정:
-1. [x] **Icon/Info 375x375** - 작은 요소(15% 미만) INHERIT 강제
-2. [x] **Vector 너비 확장** - VECTOR/ELLIPSE/LINE 타입 INHERIT 강제
-3. [x] **Header-Section 겹침 풀림** - y<=10 오버레이 패턴 감지 → ABSOLUTE
-4. [x] **TabBar 플로팅 풀림** - 이름 패턴 + y>=80% → ABSOLUTE
-5. [x] **프레임 높이 증가** - 위 규칙으로 해결
-
-참고: `docs/specs/autolayout-rules.md` (v3.1)
-
-### 완료 (ABSOLUTE 요소 constraints)
-- [x] `layoutSizingHorizontal = 'FILL'` 자동 적용 (STRETCH 시)
-- [x] ABSOLUTE 요소에 constraints 설정:
-  - 너비 >= 80%: `horizontal: 'STRETCH'`
-  - 좌측 (x < 30%): `horizontal: 'MIN'`
-  - 우측 (x > 70%): `horizontal: 'MAX'`
-  - 중앙: `horizontal: 'CENTER'`
-
-### 다음 작업
-- [ ] **재귀적 Auto Layout 적용** (Option A): 내부 자식까지 반응형 적용
-  - 현재: 최상위 요소만 STRETCH, 내부 자식은 고정 375px
-  - 필요: Organism → Molecule → Atom 재귀 적용
-
-### 지속 테스트 (틈틈이)
-- [ ] Input 컴포넌트 속성 감지 테스트
-- [ ] Toggle 컴포넌트 속성 감지 테스트
-- [ ] 기타 컴포넌트 속성 (cornerRadius, effects, strokeWidth) 반영 확인
+- [x] AI Auto Layout 반응형 모드로 교체
+- [x] 후처리 안전 규칙 v3.1
+- [x] ABSOLUTE 요소 constraints
 
 ---
 

@@ -1,6 +1,6 @@
 {
-  "name": "Wellwe Design System Automator",
-  "id": "wellwe-design-system-automator",
+  "name": "WDS",
+  "id": "wds",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",

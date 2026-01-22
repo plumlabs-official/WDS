@@ -1,6 +1,6 @@
 # Contributing Guide
 
-WellWe Design System Automator 프로젝트에 기여해주셔서 감사합니다.
+WDS (WellWe Design System) 프로젝트에 기여해주셔서 감사합니다.
 
 ---
 
@@ -45,7 +45,7 @@ API 변경 → api-contract.md만 수정
 
 ```bash
 git clone <repository-url>
-cd figma-design-system-automator
+cd wds
 npm install
 cd agent-server && npm install && cd ..
 ```

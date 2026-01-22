@@ -117,3 +117,20 @@ Title/SubTitle로 판단되는 텍스트는 `truncation: true` 표시:
 - 컨테이너/섹션은 기본적으로 `layoutAlign: "STRETCH"` (Width Fill)
 - 아이콘/이미지/고정 버튼만 `layoutAlign: "INHERIT"`
 - Title 계열 텍스트는 `truncation: true`
+
+## ⚠️ 반응형 모드 필수 규칙
+
+**절대 위치 배치 판단 금지**: 현재 요소들이 절대 좌표로 배치되어 있더라도, 이는 Auto Layout 적용 전 상태입니다. "절대 위치이므로 INHERIT" 판단은 잘못된 것입니다.
+
+**전체 너비 요소 = 무조건 STRETCH**:
+- 부모 너비의 **80% 이상** 차지하는 요소 → 반드시 `layoutAlign: "STRETCH"`
+- Header, TabBar, Container, Section 등 전체 너비 요소는 **예외 없이 STRETCH**
+- 의심스러우면 STRETCH 선택 (후처리에서 필요시 보정됨)
+
+**INHERIT은 예외적으로만 사용**:
+- 아이콘 (Icon/)
+- 아바타/썸네일 (Avatar, Thumbnail)
+- 고정 크기 버튼 (37x37 등 정사각형)
+- Vector, Ellipse, Line 등 도형
+
+**보수적 판단 금지**: "현재 구조 유지" 목적의 INHERIT 반환은 반응형 동작을 방해합니다.
