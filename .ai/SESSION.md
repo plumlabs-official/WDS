@@ -2,7 +2,7 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-19 05:30 | v3.2.0
+> Last updated: 2026-01-25 | v3.2.0
 
 ---
 
@@ -38,7 +38,16 @@
 
 ---
 
-## 현재 세션 (2026-01-19)
+## 현재 세션 (2026-01-25)
+
+### 환경 변경
+- 프로젝트 경로 통합: `~/figma-design-system-automator` 삭제 → iCloud 경로만 사용
+- `/wds` 커맨드 경로 업데이트: `~/.claude/commands/wds.md`
+- 새 경로: `~/Library/Mobile Documents/com~apple~CloudDocs/Projects/WDS`
+
+---
+
+## 이전 세션 (2026-01-19)
 
 ### 완료 (재귀적 반응형 적용 v3.2)
 
