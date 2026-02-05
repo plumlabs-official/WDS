@@ -526,6 +526,8 @@
         completed: []
       };
       namingDeferredCount = 0;
+      namingCollisionHoldCount = 0;
+      pendingPatternsToSave = [];
       updateProgressMetaBadge();
       insertProgressPanelAfterButton();
       renderProgress();
@@ -577,6 +579,8 @@
       document.getElementById('progress-panel').style.display = 'none';
       currentPipeline = null;
       namingDeferredCount = 0;
+      namingCollisionHoldCount = 0;
+      pendingPatternsToSave = [];
       updateProgressMetaBadge();
       activeButton = null;
     }
@@ -598,6 +602,8 @@
         completed: []
       };
       namingDeferredCount = 0;
+      namingCollisionHoldCount = 0;
+      pendingPatternsToSave = [];
       updateProgressMetaBadge();
       insertProgressPanelAfterButton();
       renderProgress();

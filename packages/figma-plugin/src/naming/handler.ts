@@ -858,6 +858,39 @@ export function handleNamingBatchResult(msg: NamingBatchResultMessage): void {
   let renamedCount = 0;
   const collisionNodes: { nodeId: string; suggestedName: string; currentName: string }[] = [];
 
+  // 1차 패스: AI 제안 이름 중 같은 부모 아래 중복 감지 (충돌 후보 전부 보류 정책)
+  const proposedByParent = new Map<string, Map<string, number[]>>(); // parentId -> (name -> indices[])
+  for (let i = 0; i < msg.results.length; i++) {
+    const result = msg.results[i];
+    const node = pendingNamingNodes[i];
+    if (result && result.success && result.data && node && node.parent) {
+      const parentId = node.parent.id;
+      const suggestedName = result.data.suggestedName;
+      if (!proposedByParent.has(parentId)) {
+        proposedByParent.set(parentId, new Map());
+      }
+      const nameMap = proposedByParent.get(parentId)!;
+      if (!nameMap.has(suggestedName)) {
+        nameMap.set(suggestedName, []);
+      }
+      nameMap.get(suggestedName)!.push(i);
+    }
+  }
+
+  // 중복 제안된 인덱스 집합
+  const duplicateIndices = new Set<number>();
+  for (const [_parentId, nameMap] of proposedByParent) {
+    for (const [_name, indices] of nameMap) {
+      if (indices.length > 1) {
+        indices.forEach(idx => duplicateIndices.add(idx));
+      }
+    }
+  }
+  if (duplicateIndices.size > 0) {
+    console.log(`[AI Naming] 중복 제안 감지: ${duplicateIndices.size}개 노드 전부 보류`);
+  }
+
+  // 2차 패스: 실제 적용
   for (let i = 0; i < msg.results.length; i++) {
     const result = msg.results[i];
     const node = pendingNamingNodes[i];
@@ -866,10 +899,17 @@ export function handleNamingBatchResult(msg: NamingBatchResultMessage): void {
       const suggestedName = result.data.suggestedName;
       const oldName = node.name;
 
-      // 충돌 체크: 충돌 시 적용 보류 (SSOT 정책)
+      // 충돌 체크 1: AI가 같은 이름을 여러 노드에 제안 → 전부 보류
+      if (duplicateIndices.has(i)) {
+        collisionNodes.push({ nodeId: node.id, suggestedName, currentName: oldName });
+        console.log(`[AI Naming] 중복 제안 보류: "${oldName}" → "${suggestedName}"`);
+        continue;
+      }
+
+      // 충돌 체크 2: 기존 형제와 충돌 → 보류
       if (hasExistingSiblingConflict(node, suggestedName)) {
         collisionNodes.push({ nodeId: node.id, suggestedName, currentName: oldName });
-        console.log(`[AI Naming] 충돌 보류: "${oldName}" → "${suggestedName}"`);
+        console.log(`[AI Naming] 형제 충돌 보류: "${oldName}" → "${suggestedName}"`);
         continue;
       }
 
@@ -912,16 +952,53 @@ export function handleNamingContextResult(msg: NamingContextResultMessage): void
   const collisionNodes: { nodeId: string; suggestedName: string; currentName: string }[] = [];
   const appliedNodeIds: string[] = []; // 패턴 저장 가드용
 
-  // nodeId로 매칭하여 이름 적용 (충돌 시 보류)
+  // 1차 패스: AI 제안 이름 중 같은 부모 아래 중복 감지 (충돌 후보 전부 보류 정책)
+  const proposedByParent = new Map<string, Map<string, string[]>>(); // parentId -> (name -> nodeIds[])
+  for (const result of msg.data.results) {
+    const node = pendingNamingNodes.find(n => n.id === result.nodeId);
+    if (node && node.parent) {
+      const parentId = node.parent.id;
+      if (!proposedByParent.has(parentId)) {
+        proposedByParent.set(parentId, new Map());
+      }
+      const nameMap = proposedByParent.get(parentId)!;
+      if (!nameMap.has(result.suggestedName)) {
+        nameMap.set(result.suggestedName, []);
+      }
+      nameMap.get(result.suggestedName)!.push(node.id);
+    }
+  }
+
+  // 중복 제안된 nodeId 집합 (같은 부모 아래 같은 이름 2개 이상)
+  const duplicateNodeIds = new Set<string>();
+  for (const [_parentId, nameMap] of proposedByParent) {
+    for (const [_name, nodeIds] of nameMap) {
+      if (nodeIds.length > 1) {
+        nodeIds.forEach(id => duplicateNodeIds.add(id));
+      }
+    }
+  }
+  if (duplicateNodeIds.size > 0) {
+    console.log(`[Context AI Naming] 중복 제안 감지: ${duplicateNodeIds.size}개 노드 전부 보류`);
+  }
+
+  // 2차 패스: 실제 적용 (중복 제안 또는 기존 형제 충돌 시 보류)
   for (const result of msg.data.results) {
     const node = pendingNamingNodes.find(n => n.id === result.nodeId);
     if (node) {
       const oldName = node.name;
 
-      // 충돌 체크: 충돌 시 적용 보류 (SSOT 정책)
+      // 충돌 체크 1: AI가 같은 이름을 여러 노드에 제안 → 전부 보류
+      if (duplicateNodeIds.has(node.id)) {
+        collisionNodes.push({ nodeId: node.id, suggestedName: result.suggestedName, currentName: oldName });
+        console.log(`[Context AI Naming] 중복 제안 보류: "${oldName}" → "${result.suggestedName}"`);
+        continue;
+      }
+
+      // 충돌 체크 2: 기존 형제와 충돌 → 보류
       if (hasExistingSiblingConflict(node, result.suggestedName)) {
         collisionNodes.push({ nodeId: node.id, suggestedName: result.suggestedName, currentName: oldName });
-        console.log(`[Context AI Naming] 충돌 보류: "${oldName}" → "${result.suggestedName}"`);
+        console.log(`[Context AI Naming] 형제 충돌 보류: "${oldName}" → "${result.suggestedName}"`);
         continue;
       }
 
