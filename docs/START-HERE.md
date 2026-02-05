@@ -9,7 +9,7 @@
 ```bash
 # 1. 설치
 git clone <repository-url>
-cd figma-design-system-automator
+cd WDS
 npm install
 
 # 2. 환경 설정

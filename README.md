@@ -9,9 +9,6 @@
 ```bash
 # 의존성 설치
 npm install
-
-# Agent Server 의존성 설치
-cd agent-server && npm install && cd ..
 ```
 
 ### 2. 빌드
@@ -42,12 +39,12 @@ npm run server
 │   ├── agent-server/     # AI Agent Server (Claude API)
 │   └── common/           # 공유 타입/스키마
 ├── docs/                 # 문서
-│   ├── tutorials/        # 시작 가이드
-│   ├── guides/           # 작업별 가이드
+│   ├── START-HERE.md     # 5분 시작 가이드
+│   ├── how-to/           # 작업별 가이드
 │   ├── specs/            # 규칙/사양 (SSOT)
 │   └── architecture/     # 아키텍처/ADR
 ├── .ai/                  # AI 협업용 메모리
-└── reference/            # 외부 참고자료
+└── research/             # 외부 참고자료
 ```
 
 ## 주요 기능
@@ -61,8 +58,8 @@ npm run server
 
 | 문서 | 설명 |
 |------|------|
-| [docs/tutorials/quickstart.md](docs/tutorials/quickstart.md) | 빠른 시작 가이드 |
-| [docs/guides/](docs/guides/) | 작업별 상세 가이드 |
+| [docs/START-HERE.md](docs/START-HERE.md) | 빠른 시작 가이드 |
+| [docs/how-to/](docs/how-to/) | 작업별 상세 가이드 |
 | [docs/specs/](docs/specs/) | 네이밍/오토레이아웃 규칙 |
 | [docs/architecture/](docs/architecture/) | 아키텍처 및 의사결정 |
 

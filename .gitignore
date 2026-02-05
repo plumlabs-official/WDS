@@ -28,3 +28,6 @@ api-usage.json
 
 # Test coverage
 coverage/
+
+# Runtime learning data (local only, PR 제외)
+packages/agent-server/data/naming-patterns.json

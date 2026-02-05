@@ -89,64 +89,15 @@ export function convertKoreanLabel(name: string): string {
  * @returns 중복 해결된 변경 목록
  *
  * 예시:
- * - Content, Content → Content, Content_2
- * - Header, Header, Header → Header, Header_2, Header_3
+ * - 충돌 후보가 있으면 이 단계에서는 이름을 변경하지 않음
+ * - 실제 충돌 처리는 makeUniqueSiblingName에서 "기존 이름 유지"로 안전하게 스킵
  */
 export function resolveSiblingDuplicates(
   changes: Array<{ node: SceneNode; oldName: string; newName: string }>
 ): Array<{ node: SceneNode; oldName: string; newName: string }> {
-  // 부모별로 그룹화
-  const byParent = new Map<string, Array<{ node: SceneNode; oldName: string; newName: string }>>();
-
-  for (const change of changes) {
-    const parentId = change.node.parent?.id || 'root';
-    if (!byParent.has(parentId)) {
-      byParent.set(parentId, []);
-    }
-    byParent.get(parentId)!.push(change);
-  }
-
-  const result: Array<{ node: SceneNode; oldName: string; newName: string }> = [];
-
-  // 각 부모 그룹 내에서 중복 처리
-  for (const [_parentId, siblings] of byParent) {
-    // 새 이름별로 카운트
-    const nameCount = new Map<string, number>();
-    const nameIndices = new Map<string, number>();
-
-    // 1차: 카운트 계산
-    for (const change of siblings) {
-      const count = nameCount.get(change.newName) || 0;
-      nameCount.set(change.newName, count + 1);
-    }
-
-    // 2차: 인덱스 부여 (중복인 경우만)
-    for (const change of siblings) {
-      const count = nameCount.get(change.newName) || 0;
-
-      if (count > 1) {
-        // 중복 있음 - 인덱스 부여
-        const currentIndex = (nameIndices.get(change.newName) || 0) + 1;
-        nameIndices.set(change.newName, currentIndex);
-
-        // 첫 번째는 그대로, 2번째부터 _2, _3...
-        if (currentIndex > 1) {
-          result.push({
-            node: change.node,
-            oldName: change.oldName,
-            newName: `${change.newName}_${currentIndex}`,
-          });
-        } else {
-          result.push(change);
-        }
-      } else {
-        // 중복 없음 - 그대로
-        result.push(change);
-      }
-    }
-  }
-
-  return result;
+  // SSOT 규칙: 언더스코어/넘버링 자동 생성 금지
+  // 중복 해소는 makeUniqueSiblingName에서 "기존 이름 유지"로 처리한다.
+  return changes;
 }
 
 /**
@@ -157,14 +108,10 @@ export function makeUniqueSiblingName(node: SceneNode, baseName: string): string
     return baseName;
   }
 
-  // 충돌 시 인덱스 추가
-  let index = 2;
-  let uniqueName = `${baseName}_${index}`;
-
-  while (hasExistingSiblingConflict(node, uniqueName)) {
-    index++;
-    uniqueName = `${baseName}_${index}`;
-  }
-
-  return uniqueName;
+  // SSOT 규칙: 숫자 접미사로 이름 생성하지 않는다.
+  // 충돌 시 현재 이름을 유지해 안전하게 스킵한다.
+  return node.name;
 }
+
+// Note: hasExistingSiblingConflict는 validate.ts에서 export됨
+// 충돌 체크는 해당 함수를 직접 사용

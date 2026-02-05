@@ -350,19 +350,19 @@ function fixParentChildSameName(
     const parts = suggestedName.split('/');
     const type = parts[0];
 
-    // 대체 이름 생성
-    // Section → Container/Content
-    // Header → Container/HeaderContent
-    // Card → Container/CardContent
+    // 대체 이름 생성 (SSOT: Content 슬롯 금지)
+    // Section → Container/SectionBody
+    // Header → Container/HeaderBody
+    // Card → Container/CardBody
     const typeToReplacement: Record<string, string> = {
-      'Section': 'Container/Content',
-      'Header': 'Container/HeaderContent',
-      'Card': 'Container/CardContent',
-      'TabBar': 'Container/TabItems',
-      'TopBar': 'Container/TopContent',
+      'Section': 'Container/SectionBody',
+      'Header': 'Container/HeaderBody',
+      'Card': 'Container/CardBody',
+      'TabBar': 'Container/TabGroup',
+      'TopBar': 'Container/TopBarBody',
     };
 
-    const replacement = typeToReplacement[type] || `Container/${type}Content`;
+    const replacement = typeToReplacement[type] || `Container/${type}Body`;
     console.log(`[PostProcess] 부모-자식 동일 이름 수정: "${suggestedName}" → "${replacement}"`);
     return replacement;
   }

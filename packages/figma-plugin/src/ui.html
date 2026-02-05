@@ -196,6 +196,22 @@
       text-align: right;
     }
 
+    .progress-meta {
+      display: none;
+      margin-bottom: 8px;
+    }
+
+    .progress-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 999px;
+    }
+
     .server-status-wrapper {
       display: flex;
       align-items: center;
@@ -420,6 +436,9 @@
   <!-- 진행 상태 패널 -->
   <div id="progress-panel" class="progress-panel" style="display: none;">
     <div class="progress-title">진행 상태</div>
+    <div id="progress-meta" class="progress-meta">
+      <span id="progress-badge" class="progress-badge"></span>
+    </div>
     <div id="progress-steps" class="progress-steps"></div>
     <div class="progress-bar-container">
       <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
@@ -473,6 +492,32 @@
     // 진행 상태 관리
     // ============================================
     let currentPipeline = null;
+    let namingDeferredCount = 0;
+    let namingCollisionHoldCount = 0;
+    let appliedNodeIds = []; // 패턴 저장 가드용
+    let pendingPatternsToSave = []; // 패턴 저장 대기 (적용 성공 후 저장)
+
+    function updateProgressMetaBadge() {
+      const metaEl = document.getElementById('progress-meta');
+      const badgeEl = document.getElementById('progress-badge');
+      if (!metaEl || !badgeEl) return;
+
+      const parts = [];
+      if (namingDeferredCount > 0) {
+        parts.push(`AI 이관 ${namingDeferredCount}개`);
+      }
+      if (namingCollisionHoldCount > 0) {
+        parts.push(`충돌 보류 ${namingCollisionHoldCount}개`);
+      }
+
+      if (parts.length > 0) {
+        badgeEl.textContent = parts.join(' / ');
+        metaEl.style.display = 'block';
+      } else {
+        badgeEl.textContent = '';
+        metaEl.style.display = 'none';
+      }
+    }
 
     function showPipelineProgress(steps) {
       currentPipeline = {
@@ -480,6 +525,8 @@
         currentStep: 0,
         completed: []
       };
+      namingDeferredCount = 0;
+      updateProgressMetaBadge();
       insertProgressPanelAfterButton();
       renderProgress();
       document.getElementById('progress-panel').style.display = 'block';
@@ -529,6 +576,8 @@
     function hidePipelineProgress() {
       document.getElementById('progress-panel').style.display = 'none';
       currentPipeline = null;
+      namingDeferredCount = 0;
+      updateProgressMetaBadge();
       activeButton = null;
     }
 
@@ -548,6 +597,8 @@
         currentStep: 0,
         completed: []
       };
+      namingDeferredCount = 0;
+      updateProgressMetaBadge();
       insertProgressPanelAfterButton();
       renderProgress();
       document.getElementById('progress-panel').style.display = 'block';
@@ -728,6 +779,43 @@
 
         case 'task-complete':
           completeSingleTaskProgress();
+          break;
+
+        case 'naming-deferred-info':
+          namingDeferredCount = Math.max(0, Number(msg.count) || 0);
+          updateProgressMetaBadge();
+          break;
+
+        case 'naming-collision-hold':
+          // 충돌로 적용 보류된 노드 처리
+          namingCollisionHoldCount = msg.nodes?.length || 0;
+          updateProgressMetaBadge();
+          // 콘솔에 상세 정보 출력
+          if (msg.nodes && msg.nodes.length > 0) {
+            console.log(`[Naming] 충돌 보류: ${msg.nodes.length}개`);
+            for (const n of msg.nodes) {
+              console.log(`  - "${n.currentName}" → "${n.suggestedName}" (형제 충돌)`);
+            }
+          }
+          break;
+
+        case 'naming-applied-nodes':
+          // 패턴 저장 가드: 적용 성공 노드만 저장
+          appliedNodeIds = msg.nodeIds || [];
+          console.log(`[Naming] 적용 성공 노드: ${appliedNodeIds.length}개`);
+
+          // 대기 중인 패턴 중 적용 성공한 것만 저장
+          if (pendingPatternsToSave.length > 0 && appliedNodeIds.length > 0) {
+            const filteredPatterns = pendingPatternsToSave.filter(p =>
+              appliedNodeIds.includes(p.sourceNodeId)
+            );
+            const excludedCount = pendingPatternsToSave.length - filteredPatterns.length;
+            console.log(`[Pattern Save] 저장: ${filteredPatterns.length}개 (충돌 제외: ${excludedCount}개)`);
+            if (filteredPatterns.length > 0) {
+              savePatternsBatch(filteredPatterns);
+            }
+          }
+          pendingPatternsToSave = []; // 초기화
           break;
 
         case 'save-patterns-batch':
@@ -1226,7 +1314,9 @@
       }
 
       // 2. AI 네이밍 대상이 있으면 AI API 호출
+      console.log('[DEBUG] AI 호출 전 - nodesForAI:', nodesForAI.length);
       if (nodesForAI.length > 0) {
+        console.log('[DEBUG] AI 블록 진입');
         if (currentPipeline && currentPipeline.steps.length === 1) {
           currentPipeline.steps[0] = `AI 네이밍 분석 중... (${nodesForAI.length}개 노드)`;
           renderProgress();
@@ -1241,13 +1331,18 @@
             model: 'two-stage'
           };
 
+          console.log('[DEBUG] AI 요청 시작 - 노드:', nodesForAI.length, '개, 스크린샷 크기:', data.screenScreenshot?.length || 0);
+
           const aiResponse = await fetch(AGENT_SERVER_URL + '/agents/naming/context', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(aiData),
           });
 
+          console.log('[DEBUG] AI 응답 상태:', aiResponse.status, aiResponse.statusText);
+
           const aiResult = await aiResponse.json();
+          console.log('[DEBUG] AI 결과:', aiResult.success, '결과 수:', aiResult.data?.results?.length || 0);
 
           if (aiResult.success && aiResult.data?.results) {
             // AI 결과 추가 + 패턴 수집 (저장은 나중에)
@@ -1275,6 +1370,7 @@
           }
         } catch (aiErr) {
           console.error('[AI Naming Error]', aiErr);
+          console.error('[AI Naming Error] Stack:', aiErr.stack);
         }
       }
 
@@ -1290,10 +1386,10 @@
         }
       }, '*');
 
-      // 4. 네이밍 완료 후 패턴 일괄 저장 (같은 실행 내 HITL 방지)
+      // 4. 패턴 저장 대기 (naming-applied-nodes 메시지 후 필터링하여 저장)
       if (patternsToSave.length > 0) {
-        console.log('[Pattern] 패턴 일괄 저장 시작:', patternsToSave.length, '개');
-        await savePatternsBatch(patternsToSave);
+        console.log('[Pattern] 패턴 저장 대기:', patternsToSave.length, '개 (적용 성공 후 저장)');
+        pendingPatternsToSave = patternsToSave;
       }
     }
 
