@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **네이밍 충돌 안정화 Phase A** (SSOT 정책)
+  - 충돌 후보 전부 보류 (자동 suffix `_2`, `/id` 금지)
+  - 적용 성공 노드만 패턴 저장
+  - 중복 제안 1차 감지 → 전부 보류 (P1 보완)
+  - 충돌 배지 UI + 콘솔 로그
 - AI Auto Layout 반응형 모드 전환 (Fill 적극 사용, 70% 기준)
 - Truncation 지원 (Title/SubTitle 텍스트 자동 적용)
 - 배경 요소 자동 감지 및 프레임 fills로 변환
@@ -20,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Top-level 강제 STRETCH**: AI가 INHERIT 반환해도 80% 이상 요소는 강제 STRETCH
 
 ### Changed
+- `naming-patterns.json` 로컬 전용 (git 추적 해제, PR 노이즈 제거)
+- Content → Body 슬롯 네이밍 변경 (SSOT 준수)
 - autolayout-rules.md v3.1.0 (후처리 안전 규칙 추가)
 - AI 프롬프트 개선: 절대 위치 판단 금지, 전체 너비 요소 STRETCH 강조
 

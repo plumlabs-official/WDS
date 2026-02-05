@@ -2,7 +2,37 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-01-25 | v3.2.0
+> Last updated: 2026-02-05 | v3.3.0
+
+---
+
+## 현재 세션 (2026-02-05)
+
+### 완료: 네이밍 충돌 안정화 Phase A
+
+**커밋:**
+- `fe9fde6` feat: 네이밍 충돌 안정화 - SSOT 정책 적용
+- `633c444` fix: P1 충돌 안정화 보완
+
+**핵심 정책:**
+1. 충돌 후보 전부 보류 (자동 suffix 금지)
+2. 실제 적용 성공 노드만 패턴 저장
+3. `naming-patterns.json` 로컬 전용 (git 추적 해제)
+
+**변경 요약:**
+- handler.ts: 3개 핸들러 충돌 로직 통일 + 중복 제안 1차 감지
+- normalize.ts: `/id` fallback 함수 제거
+- ui.html: 충돌 배지 + 패턴 저장 가드 + 상태 초기화
+- naming.ts: Content → Body 슬롯 변경 (Codex 기여)
+
+### Phase B (다음)
+
+| 항목 | 설명 | 우선순위 |
+|------|------|----------|
+| 동시 적용 가능성 개선 | 이름 교환 케이스 과보류 문제 | P1 |
+| AI 프롬프트 형제 컨텍스트 | `siblings[]` 필드 추가 | P1 |
+| 금지 패턴 저장 가드 | Content, Layout, _ 재검증 | P2 |
+| `naming-patterns.seed.json` | 고정 시드 파일 관리 | P2 |
 
 ---
 
