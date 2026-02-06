@@ -2,6 +2,10 @@
  * 공통 타입 정의
  */
 
+// BaseResponse는 @wellwe/common에서 가져옴 (SSOT)
+import type { BaseResponse } from '@wellwe/common';
+export type { BaseResponse };
+
 // AI 모델 타입
 export type ModelType = 'haiku' | 'sonnet' | 'opus';
 
@@ -15,12 +19,6 @@ export type AgentType = 'naming' | 'autolayout' | 'componentize';
 export interface BaseRequest {
   nodeId: string;
   screenshot?: string; // base64
-}
-
-export interface BaseResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
 }
 
 // Naming Agent 타입

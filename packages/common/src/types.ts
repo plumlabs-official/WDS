@@ -1,6 +1,6 @@
 // 공통 타입 정의
 
-export interface BaseResponse<T> {
+export interface BaseResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
