@@ -1,0 +1,177 @@
+/**
+ * Wellwe Design System - CSS Variables
+ *
+ * Auto-generated from tokens.ts
+ * Source: /packages/figma-plugin/config/tokens.ts
+ *
+ * Usage: Import this file in ui.html or component styles
+ */
+
+:root {
+  /* ============================================
+   * 1. Colors
+   * ============================================ */
+
+  /* Primary Colors */
+  --color-primary-main: #00cc61;
+  --color-primary-light: #c5ffa8;
+  --color-primary-background: #f3fff3;
+
+  /* Neutral Colors */
+  --color-neutral-white: #ffffff;
+  --color-neutral-black: #000000;
+
+  /* Text Colors */
+  --color-text-primary: #161616;
+  --color-text-secondary: #797979;
+  --color-text-disabled: #c3c3c3;
+
+  /* Semantic Colors */
+  --color-semantic-success: #00cc61;
+  --color-semantic-error: #F33939;
+  --color-semantic-warning: #F33939;
+  --color-semantic-info: #797979;
+
+  /* Shadow/Border Colors */
+  --color-shadow-light: rgba(225, 224, 219, 0.3);
+  --color-shadow-border: rgba(198, 198, 198, 0.1);
+
+  /* ============================================
+   * 2. Spacing (4px scale)
+   * ============================================ */
+  --spacing-0: 0;
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-64: 64px;
+
+  /* ============================================
+   * 3. Typography
+   * ============================================ */
+
+  /* Font Family */
+  --font-family-primary: 'Pretendard', sans-serif;
+  --font-family-fallback: sans-serif;
+
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Font Sizes */
+  --font-size-12: 12px;
+  --font-size-13: 13px;
+  --font-size-14: 14px;
+  --font-size-15: 15px;
+  --font-size-17: 17px;
+  --font-size-18: 18px;
+  --font-size-20: 20px;
+  --font-size-22: 22px;
+
+  /* Line Heights */
+  --line-height-17: 17px;
+  --line-height-18: 18px;
+  --line-height-22: 22px;
+  --line-height-26: 26px;
+  --line-height-28: 28px;
+  --line-height-32: 32px;
+
+  /* ============================================
+   * 4. Border Radius
+   * ============================================ */
+  --radius-none: 0;
+  --radius-xs: 4px;
+  --radius-sm: 12px;
+  --radius-lg: 28px;
+  --radius-full: 100px;
+
+  /* ============================================
+   * 5. Shadows / Elevation
+   * ============================================ */
+  --shadow-none: none;
+  --shadow-elevation-1: 0px 0px 0px 1px rgba(198, 198, 198, 0.1), 0px 8px 8px 0px rgba(225, 224, 219, 0.3);
+  --shadow-text: 0px 0px 3px rgba(0, 0, 0, 0.15), 0px 0px 2px rgba(0, 0, 0, 0.3);
+
+  /* ============================================
+   * 6. Layout
+   * ============================================ */
+  --layout-status-bar-height: 50px;
+  --layout-top-bar-height: 60px;
+  --layout-home-indicator-height: 34px;
+  --layout-bottom-button-height: 72px;
+
+  /* ============================================
+   * 7. Grid System
+   * ============================================ */
+
+  /* Mobile */
+  --grid-mobile-columns: 4;
+  --grid-mobile-margin: 16px;
+  --grid-mobile-gutter: 8px;
+  --grid-mobile-content-width: 343px;
+
+  /* Tablet */
+  --grid-tablet-columns: 8;
+  --grid-tablet-margin: 24px;
+  --grid-tablet-gutter: 16px;
+
+  /* Desktop */
+  --grid-desktop-columns: 12;
+  --grid-desktop-margin: 32px;
+  --grid-desktop-gutter: 24px;
+  --grid-desktop-max-width: 1200px;
+
+  /* Breakpoints */
+  --breakpoint-mobile: 0;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+
+  /* ============================================
+   * 8. Component Sizes
+   * ============================================ */
+
+  /* Button Heights */
+  --button-height-lg: 56px;
+  --button-height-md: 48px;
+  --button-height-sm: 32px;
+  --button-height-icon-only: 38px;
+  --button-width-full: 343px;
+
+  /* Input Heights */
+  --input-height-lg: 48px;
+  --input-height-md: 46px;
+  --input-height-search: 40px;
+
+  /* Checkbox/Radio */
+  --checkbox-size-sm: 20px;
+  --checkbox-size-lg: 24px;
+
+  /* Toggle */
+  --toggle-width: 40px;
+  --toggle-height: 40px;
+
+  /* Tab/Segment */
+  --tab-height-sub: 42px;
+  --tab-height-segment: 34px;
+
+  /* Bottom Sheet */
+  --bottom-sheet-handle-height: 42px;
+
+  /* Avatar Sizes */
+  --avatar-size-xs: 27px;
+  --avatar-size-sm: 38px;
+  --avatar-size-md: 44px;
+  --avatar-size-lg: 56px;
+  --avatar-size-xl: 62px;
+  --avatar-size-max: 130px;
+
+  /* Icon Sizes */
+  --icon-size-xs: 14px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 20px;
+  --icon-size-lg: 24px;
+  --icon-size-xl: 28px;
+}
