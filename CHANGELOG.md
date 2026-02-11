@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `.ai/prompts/` 문서 간소화 - 상세 규칙은 `docs/specs/` 링크로 SSOT 통합 (중복 제거)
+
 ### Added
 - **네이밍 충돌 안정화 Phase A** (SSOT 정책)
   - 충돌 후보 전부 보류 (자동 suffix `_2`, `/id` 금지)

@@ -6,7 +6,17 @@
 
 ---
 
-## 현재 세션 (2026-02-06)
+## 현재 세션 (2026-02-11)
+
+### 완료: 문서 SSOT 통합
+
+`.ai/prompts/auto-layout-responsive.md` 간소화 (112줄 → 23줄)
+- 상세 규칙은 `docs/specs/autolayout-rules.md` 링크로 대체
+- 체크리스트만 유지
+
+---
+
+## 이전 세션 (2026-02-06)
 
 ### 완료: Agent Teams 병렬 작업 테스트
 
