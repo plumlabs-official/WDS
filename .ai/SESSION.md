@@ -2,11 +2,31 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-02-06 | v3.4.0
+> Last updated: 2026-02-12 | v3.4.0
 
 ---
 
-## 현재 세션 (2026-02-11)
+## 현재 세션 (2026-02-12)
+
+### 완료: WellWe 프로덕트 디자인 간소화 TF 일정표
+
+**Lenny Director 모드** 사용 (Design Director + Product Leader + WellWe Domain Expert)
+
+**산출물:**
+- `wellwe-simplification-schedule.tsv` - 구글 시트 복붙용
+- `wellwe-simplification-schedule.gs` - Apps Script 자동화
+
+**일정:**
+| 세션 | 날짜 | 워크샵 항목 |
+|------|------|-----------|
+| 1차 | 2026-02-27 | 10개 (온보딩/진입) |
+| 2차 | 2026-03-13 | 11개 (피드/소셜) |
+| 3차 | 2026-03-27 | 9개 (결제/수익화) |
+| 4차 | 2026-04-10 | 22개 (마무리/QA) |
+
+---
+
+## 이전 세션 (2026-02-11)
 
 ### 완료: 문서 SSOT 통합
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- WellWe 프로덕트 디자인 간소화 TF 일정표 생성 (TSV + Apps Script)
+  - 140개 항목 MECE 분류 (12개 대분류)
+  - 4회 워크샵 일정 (2/27, 3/13, 3/27, 4/10)
+  - 워크샵 필요 여부 구분 (정책 결정 vs 실무 완성도)
+
 ### Changed
 - `.ai/prompts/` 문서 간소화 - 상세 규칙은 `docs/specs/` 링크로 SSOT 통합 (중복 제거)
 
