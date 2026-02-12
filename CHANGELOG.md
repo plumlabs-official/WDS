@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 워크샵 필요 여부 구분 (정책 결정 vs 실무 완성도)
 
 ### Changed
+- WellWe TF 일정표 2차 리뷰 반영
+  - 상태 오류 수정: "오늘의 할 일 표시", "오늘 미션 목록" → 완료
+  - 누락 항목 4개 추가 (간소화 주제 e, f, h)
+  - 비고 보강: 라운지 입장 조건에 유료 챌린지 전용 명시
+
+### Changed
 - `.ai/prompts/` 문서 간소화 - 상세 규칙은 `docs/specs/` 링크로 SSOT 통합 (중복 제거)
 
 ### Added
