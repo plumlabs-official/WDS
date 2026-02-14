@@ -8,7 +8,7 @@
 
 | 용도 | 파일 |
 |------|------|
-| 프로젝트 헌법 | `AGENTS.md` |
+| 프로젝트 헌법 | `CONSTITUTION.md` |
 | 기술 사양/API | `docs/specs/technical-spec.md` |
 | SSOT 인덱스 | `docs/specs/index.md` |
 | 버그 패턴 (WHAT) | `docs/architecture/lessons-learned.md` |
@@ -44,7 +44,7 @@
 | AI Agent/서버 수정 | `docs/architecture/lessons-learned.md` | "AI Agent 버그 패턴" 섹션 |
 | **Figma 속성 추출** | `docs/architecture/lessons-learned.md` | "Figma 속성 추출 버그 패턴" 섹션 |
 | 빌드/디버깅 | `.ai/RECIPES.md` | "빌드", "디버깅" 섹션 |
-| 문서 구조 변경 | `AGENTS.md` | "문서 관리 원칙" 섹션 |
+| 문서 구조 변경 | `CONSTITUTION.md` | "문서 관리 원칙" 섹션 |
 | 새 기능 설계 | `docs/architecture/ADRs/` | 관련 ADR |
 
 **규칙**: 해당 작업 시작 전, 위 문서의 지정 섹션을 먼저 읽고 진행

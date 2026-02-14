@@ -42,7 +42,7 @@
 
 ```
 /
-├── AGENTS.md               # 프로젝트 헌법 (이 파일)
+├── CONSTITUTION.md               # 프로젝트 헌법 (이 파일)
 ├── CLAUDE.md               # Claude Code 지침
 ├── CONTRIBUTING.md         # SSOT 정책, 문서 업데이트 규칙
 ├── docs/                   # 문서 (목적 중심)

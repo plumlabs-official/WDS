@@ -6,7 +6,16 @@
 
 ---
 
-## 현재 세션 (2026-02-13)
+## 현재 세션 (2026-02-15)
+
+### 완료: AGENTS.md → CONSTITUTION.md rename
+- Codex 전용 `~/AGENTS.md`와 혼동 방지
+- CLAUDE.md, CONSTITUTION.md 내 참조 업데이트
+- Agent: Claude
+
+---
+
+## 이전 세션 (2026-02-13)
 
 ### 완료: WellWe TF 간트차트 일정 수정
 

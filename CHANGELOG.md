@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 워크샵 필요 여부 구분 (정책 결정 vs 실무 완성도)
 
 ### Changed
+- AGENTS.md → CONSTITUTION.md rename (Codex 전용 AGENTS.md와 혼동 방지)
 - WellWe TF 간트차트 일정 수정
   - 타임라인 → 간트차트 형태로 변경
   - 워크샵 일정: 2/25, 3/11, 3/25, 4/8 (2주 간격 수요일)
