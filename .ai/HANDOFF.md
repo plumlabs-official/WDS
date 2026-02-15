@@ -19,3 +19,13 @@ Commits: <커밋 해시 또는 pending>
 ---
 
 <!-- 아래에 handoff 기록 추가 -->
+
+---
+HANDOFF: Claude -> Codex
+Date: 2026-02-15 03:37:00
+Project: /Users/zenkim_office/Project/WDS
+Agent: Claude
+Summary: AGENTS.md → CONSTITUTION.md rename. Codex 전용 ~/AGENTS.md와 혼동 방지. CLAUDE.md 내 참조도 업데이트.
+Next-TODO: 없음
+Commits: 4f0cbdb
+---
