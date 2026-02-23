@@ -62,7 +62,7 @@ Button/Intent/Shape/[Color]/Size[/State][/Icon]
 
 ⚠️ **Intent 힌트가 제공되면 반드시 참고!**
 - `Intent 힌트: Danger (확실)` → Intent = Danger
-- `Intent 힌트: Success (추정)` → Intent = Success (추정이어도 채택)
+- `Intent 힌트: Primary (추정)` → Intent = Primary (추정이어도 채택)
 - `Intent 힌트: Primary (약함)` → 스크린샷으로 재확인 후 판단
 
 **1단계: Intent 힌트 확인 (최우선)**
@@ -70,7 +70,6 @@ Button/Intent/Shape/[Color]/Size[/State][/Icon]
 |------|------|
 | `Intent 힌트: Danger` | Intent = Danger |
 | `Intent 힌트: Warning` | Intent = Warning |
-| `Intent 힌트: Success` | Intent = Success |
 | `Intent 힌트: Info` | Intent = Info |
 | `Intent 힌트: Primary` | Intent = Primary |
 | `Intent 힌트: Secondary` | Intent = Secondary |
@@ -81,13 +80,12 @@ Button/Intent/Shape/[Color]/Size[/State][/Icon]
 |------|--------|
 | 빨간색 계열 | Danger |
 | 노란색/주황색 | Warning |
-| 초록색 계열 | Success |
 | 파란색 계열 (정보 목적) | Info |
-| 채도 높은 색상 | Primary |
+| 채도 높은 색상 (초록 포함) | Primary |
 | 채도 낮은 색상 | Secondary |
 | 회색/무채색 | Normal |
 
-**판단 충돌 시**: 색상 의미(Danger/Warning/Success/Info) > 강조도(Primary/Secondary/Normal)
+**판단 충돌 시**: 색상 의미(Danger/Warning/Info) > 강조도(Primary/Secondary/Normal)
 
 **Intent 구분 핵심 원칙:**
 - **Primary**: 화면의 핵심 전환 행동 (가입, 구매, 시작)
@@ -168,7 +166,7 @@ Button/Primary/Outlined/White/56      ← 컬러 배경 위 흰색 Outlined (대
 Button/Secondary/Ghost/White/26       ← 컬러 배경 위 보조 안내 텍스트 링크
 Button/Danger/Outlined/44             ← 빨간 테두리 버튼, 높이 44px
 Button/Secondary/Ghost/36             ← 보조 텍스트 버튼, 높이 36px
-Button/Success/Filled/52              ← 초록색 채워진 버튼, 높이 52px
+Button/Primary/Filled/52              ← 브랜드색(초록) 채워진 버튼, 높이 52px
 Button/Normal/Filled/40/IconLeft      ← 회색 버튼, 왼쪽 아이콘
 ```
 
@@ -321,14 +319,14 @@ Tag/Intent/Size
 
 ### Intent (버튼과 동일 규칙)
 - Intent 힌트가 제공되면 그대로 사용
-- Primary, Secondary, Danger, Warning, Success, Info, Normal
+- Primary, Secondary, Danger, Warning, Info, Normal
 
 ### Size (필수)
 - **실제 height(px)를 그대로 사용**
 
 ### Badge/Tag 예시
 ```
-Badge/Success/24    ← 초록색 24px 뱃지
+Badge/Primary/24    ← 브랜드색 24px 뱃지
 Badge/Danger/20     ← 빨간색 20px 뱃지
 Tag/Primary/28      ← 브랜드색 28px 태그
 Tag/Normal/24       ← 회색 24px 태그

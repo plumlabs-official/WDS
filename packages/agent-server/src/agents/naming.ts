@@ -70,15 +70,7 @@ function detectIntentFromColor(hexColor: string | null | undefined): { intent: s
     return { intent: 'Danger', confidence: 'medium' };
   }
 
-  // 2. Success (초록색 계열): G가 높고, R과 B가 낮음
-  if (g >= 180 && r <= 100 && b <= 100) {
-    return { intent: 'Success', confidence: 'high' };
-  }
-  if (g >= 150 && g > r && g > b && g - r >= 30) {
-    return { intent: 'Success', confidence: 'medium' };
-  }
-
-  // 3. Warning (노란/주황 계열): R과 G가 높고, B가 낮음
+  // 2. Warning (노란/주황 계열): R과 G가 높고, B가 낮음
   if (r >= 200 && g >= 150 && b <= 100) {
     return { intent: 'Warning', confidence: 'high' };
   }
@@ -86,7 +78,7 @@ function detectIntentFromColor(hexColor: string | null | undefined): { intent: s
     return { intent: 'Warning', confidence: 'medium' };
   }
 
-  // 4. Info (파란색 계열 - 정보 목적): B가 높고, R이 낮음
+  // 3. Info (파란색 계열 - 정보 목적): B가 높고, R이 낮음
   if (b >= 180 && r <= 100 && g <= 180) {
     return { intent: 'Info', confidence: 'high' };
   }
@@ -94,7 +86,7 @@ function detectIntentFromColor(hexColor: string | null | undefined): { intent: s
     return { intent: 'Info', confidence: 'medium' };
   }
 
-  // 5. Normal (회색/무채색)
+  // 4. Normal (회색/무채색)
   if (isGray) {
     if (brightness >= 200) {
       // 밝은 회색은 Disabled 가능성
@@ -103,7 +95,7 @@ function detectIntentFromColor(hexColor: string | null | undefined): { intent: s
     return { intent: 'Normal', confidence: 'high' };
   }
 
-  // 6. Primary vs Secondary 판단 (채도와 밝기 기반)
+  // 5. Primary vs Secondary 판단 (채도와 밝기 기반)
   if (saturation >= 0.5 && brightness >= 80 && brightness <= 200) {
     // 채도 높고 적당한 밝기 → Primary
     return { intent: 'Primary', confidence: 'medium' };
@@ -170,7 +162,7 @@ const BLACKLIST_PATTERNS = ['Content', 'Layout', 'Inner', 'Wrapper', 'Box', 'Ite
 /**
  * 버튼 Intent 값
  */
-const VALID_INTENTS = ['Primary', 'Secondary', 'Danger', 'Warning', 'Success', 'Info', 'Normal'];
+const VALID_INTENTS = ['Primary', 'Secondary', 'Danger', 'Warning', 'Info', 'Normal'];
 
 /**
  * 버튼 Shape 값
@@ -721,7 +713,7 @@ function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
     let toggleStateHint = '';
     if (fillColor && !isWhiteOrTransparent) {
       const toggleIntent = detectIntentFromColor(fillColor);
-      if (toggleIntent?.intent === 'Success' || toggleIntent?.intent === 'Primary') {
+      if (toggleIntent?.intent === 'Primary') {
         toggleStateHint = `\n   - Toggle/Checkbox 힌트: On (활성 색상 ${fillColor})`;
       }
     }

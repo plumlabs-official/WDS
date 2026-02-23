@@ -28,7 +28,7 @@ Button/Intent/Shape/[Color]/Size[/State][/Icon]
 
 | 속성 | 필수 | 값 | 설명 |
 |------|------|-----|------|
-| Intent | ✅ | Primary, Secondary, Danger, Warning, Success, Info, Normal | 의미/중요도 |
+| Intent | ✅ | Primary, Secondary, Danger, Warning, Info, Normal | 의미/중요도 |
 | Shape | ✅ | Filled, Outlined, Ghost | 시각적 스타일 |
 | Color | ❌ | White | 컬러/어두운 배경 위 흰색 버튼. Default면 생략 |
 | Size | ✅ | 32, 44, 48, 56 | 높이 (px) |
@@ -52,11 +52,10 @@ Button/Primary/Filled/56/IconOnly     # 아이콘만
 
 | Intent | 의미 | 시각적 특징 | 사용 예 |
 |--------|------|------------|--------|
-| Primary | 핵심 전환 행동 | 메인 컬러, 강조 | 확인, 저장, 시작하기, 가입 |
+| Primary | 핵심 전환 행동 | 메인/브랜드 컬러, 강조 | 확인, 저장, 시작하기, 가입 |
 | Secondary | 보조/안내 행동 | 보조 컬러, 덜 강조 | 취소, 뒤로가기, 기존 회원 안내, 로그인 링크 |
 | Danger | 위험/삭제 | 빨간색 계열 | 삭제, 탈퇴 |
 | Warning | 경고 | 노란색/주황색 계열 | 주의 필요 행동 |
-| Success | 성공/완료 | 초록색 계열 | 완료, 승인 |
 | Info | 정보 | 파란색 계열 | 정보 보기, 도움말 |
 | Normal | 일반 | 회색/무채색 | 일반 행동 |
 
@@ -145,7 +144,7 @@ Authenticated ❌
 Unauthenticated ❌
 Empty ❌
 Active ❌
-Success ❌ (Intent로 사용)
+Success ❌ (비즈니스 상태)
 ```
 
 ---
@@ -206,7 +205,7 @@ Section/Challenge (컨테이너)
 ## 검증 체크리스트
 
 ### 버튼
-- [ ] Intent가 유효한 값인가? (Primary, Secondary, Danger, Warning, Success, Info, Normal)
+- [ ] Intent가 유효한 값인가? (Primary, Secondary, Danger, Warning, Info, Normal)
 - [ ] Shape이 유효한 값인가? (Filled, Outlined, Ghost)
 - [ ] Size가 숫자인가? (32, 44, 48, 56)
 - [ ] State가 UI 상태인가? (Disabled, Loading, Focus)
