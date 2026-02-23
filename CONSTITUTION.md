@@ -17,6 +17,7 @@
 2. **네이밍 규칙 준수**: `docs/specs/naming-schema.md` 필수 참조
 3. **Read First**: 코드 수정 전 반드시 해당 파일 Read 먼저
 4. **작은 단위**: 한 번에 50줄 이상 작성 금지
+5. **정책 파일 단일화**: 이 프로젝트의 정책 파일은 `CONSTITUTION.md`만 사용 (`AGENTS.md` 재생성/수정 금지)
 
 ## Forbidden
 
