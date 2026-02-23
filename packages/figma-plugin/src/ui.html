@@ -369,6 +369,9 @@
     <button id="btn-flatten-same-name" class="btn-secondary" onclick="runCommandWithProgress('collect-merge-candidates', this)">
       중첩 레이어 병합
     </button>
+    <button id="btn-standardize-spacing" class="btn-secondary" onclick="runCommandWithProgress('standardize-spacing', this)">
+      간격 표준화
+    </button>
   </div>
 
   <!-- 병합 후보 모달 -->
@@ -407,9 +410,6 @@
     <div style="font-size: 10px; color: #999; margin-bottom: 6px;">전처리</div>
     <button id="btn-autolayout-agent" class="btn-agent" onclick="runCommandWithProgress('apply-autolayout-agent', this)" disabled>
       AI Auto Layout
-    </button>
-    <button id="btn-standardize-spacing" class="btn-secondary" onclick="runCommandWithProgress('standardize-spacing', this)">
-      간격 표준화
     </button>
     <div style="font-size: 10px; color: #999; margin: 8px 0 6px 0;">변환</div>
     <button id="btn-componentize" class="btn-secondary" onclick="runCommand('componentize')">

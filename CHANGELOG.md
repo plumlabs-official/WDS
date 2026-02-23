@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Button Color Variant 슬롯 공식화 (`Button/Intent/Shape/[Color]/Size[/State][/Icon]`)
+  - `White`: 컬러/어두운 배경 위 버튼 (brightness < 180)
+  - 부모 배경색 감지 로직 추가 (`parentBgColor`)
+- Intent에서 Success 제거 — 초록색(브랜드)을 Primary로 통합
+- Intent 구분 원칙 강화 (Primary=핵심 전환, Secondary=보조/안내)
+- UI: "간격 표준화" 버튼을 전처리 섹션 마지막으로 이동
+
 ### Added
 - WellWe 프로덕트 디자인 간소화 TF 일정표 생성 (TSV + Apps Script)
   - 140개 항목 MECE 분류 (12개 대분류)

@@ -6,7 +6,19 @@
 
 ---
 
-## 현재 세션 (2026-02-15)
+## 현재 세션 (2026-02-23)
+
+### 완료: Button Color Variant + Intent 정비
+- Color Variant 슬롯 공식화 (White — 컬러 배경 위 버튼)
+- 부모 배경색 감지 로직 추가 (handler.ts → parentBgColor)
+- Intent에서 Success 제거, 초록색을 Primary로 통합
+- Primary vs Secondary 구분 원칙 스키마/프롬프트에 반영
+- UI: "간격 표준화" 버튼 전처리 섹션으로 이동
+- Agent: Claude
+
+---
+
+## 이전 세션 (2026-02-15)
 
 ### 완료: AGENTS.md → CONSTITUTION.md rename
 - Codex 전용 `~/AGENTS.md`와 혼동 방지
