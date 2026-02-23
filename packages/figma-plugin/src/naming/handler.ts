@@ -70,6 +70,7 @@ export interface NamingContextResultMessage {
 
 let pendingNamingNode: SceneNode | null = null;
 let pendingNamingNodes: SceneNode[] = [];
+let isNamingInProgress = false;
 
 export function getPendingNamingNode(): SceneNode | null {
   return pendingNamingNode;
@@ -217,6 +218,8 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
   cornerRadius: number | null;
   strokeWidth: number | null;
   hasShadow: boolean;
+  // Color Variant 감지용 (부모 배경색)
+  parentBgColor: string | null;
 } {
   const childTypes: string[] = [];
   const childNames: string[] = [];
@@ -474,6 +477,28 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
     }
   }
 
+  // 부모/조상 배경색 감지 (Color Variant 판단용)
+  let parentBgColor: string | null = null;
+  {
+    let ancestor: BaseNode | null = node.parent;
+    while (ancestor && ancestor.type !== 'PAGE') {
+      if ('fills' in ancestor && Array.isArray((ancestor as any).fills)) {
+        const ancestorFill = extractFillFromNode(ancestor as SceneNode);
+        if (ancestorFill.color) {
+          // 흰색/거의 흰색이 아닌 첫 번째 조상 배경색
+          const c = ancestorFill.color.toUpperCase();
+          const isWhitish = c === '#FFFFFF' || c === '#FAFAFA' || c === '#F5F5F5' ||
+                            c === '#FEFEFE' || /^#F[0-9A-F]{5}$/.test(c);
+          if (!isWhitish) {
+            parentBgColor = ancestorFill.color;
+            break;
+          }
+        }
+      }
+      ancestor = ancestor.parent;
+    }
+  }
+
   // 아이콘 위치 감지 (버튼 내 아이콘 위치)
   let iconPosition: 'left' | 'right' | 'only' | null = null;
 
@@ -531,6 +556,7 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
     cornerRadius,
     strokeWidth,
     hasShadow,
+    parentBgColor,
   };
 }
 
@@ -542,10 +568,18 @@ function extractNodeStructure(node: SceneNode, screenFrame: FrameNode): {
  * AI Naming Agent 핸들러 (재귀 + 제외/변환 로직)
  */
 export async function handleNamingAgent(): Promise<void> {
+  // 중복 실행 방지 가드
+  if (isNamingInProgress) {
+    console.warn('[Naming] 이미 네이밍 진행 중 - 중복 호출 무시');
+    return;
+  }
+  isNamingInProgress = true;
+
   const selection = figma.currentPage.selection;
 
   if (selection.length === 0) {
     figma.notify('노드를 선택해주세요.', { error: true });
+    isNamingInProgress = false;
     return;
   }
 
@@ -694,6 +728,7 @@ export async function handleNamingAgent(): Promise<void> {
     if (!screenFrame) {
       figma.notify('스크린 프레임을 찾을 수 없습니다.', { error: true });
       figma.ui.postMessage({ type: 'task-complete' });
+      isNamingInProgress = false;
       return;
     }
 
@@ -702,6 +737,7 @@ export async function handleNamingAgent(): Promise<void> {
     if (!screenScreenshot) {
       figma.notify('스크린 캡처에 실패했습니다.', { error: true });
       figma.ui.postMessage({ type: 'task-complete' });
+      isNamingInProgress = false;
       return;
     }
 
@@ -800,7 +836,9 @@ export async function handleNamingAgent(): Promise<void> {
       : `변경할 이름이 없습니다. (${skippedCount}개 제외)`;
     figma.notify(msg, { timeout: 3000 });
     figma.ui.postMessage({ type: 'task-complete' });
+    isNamingInProgress = false;
   }
+  // Note: AI 경로에서는 handleNamingContextResult에서 isNamingInProgress를 리셋
 }
 
 /**
@@ -944,6 +982,7 @@ export function handleNamingContextResult(msg: NamingContextResultMessage): void
     figma.notify('컨텍스트 네이밍 분석 실패: ' + (msg.error || 'Unknown error'), { error: true });
     figma.ui.postMessage({ type: 'task-complete' });
     pendingNamingNodes = [];
+    isNamingInProgress = false;
     return;
   }
 
@@ -996,10 +1035,16 @@ export function handleNamingContextResult(msg: NamingContextResultMessage): void
       }
 
       // 충돌 체크 2: 기존 형제와 충돌 → 보류
-      if (hasExistingSiblingConflict(node, result.suggestedName)) {
+      // Screen 레벨 프레임(부모가 PAGE/SECTION)은 같은 이름 허용
+      const parentType = node.parent?.type;
+      const isScreenLevel = parentType === 'PAGE' || parentType === 'SECTION';
+      if (!isScreenLevel && hasExistingSiblingConflict(node, result.suggestedName)) {
         collisionNodes.push({ nodeId: node.id, suggestedName: result.suggestedName, currentName: oldName });
         console.log(`[Context AI Naming] 형제 충돌 보류: "${oldName}" → "${result.suggestedName}"`);
         continue;
+      }
+      if (isScreenLevel && hasExistingSiblingConflict(node, result.suggestedName)) {
+        console.log(`[Context AI Naming] Screen 레벨 충돌 무시: "${oldName}" → "${result.suggestedName}" (parent: ${parentType})`);
       }
 
       node.name = result.suggestedName;
@@ -1032,4 +1077,5 @@ export function handleNamingContextResult(msg: NamingContextResultMessage): void
 
   figma.ui.postMessage({ type: 'task-complete' });
   pendingNamingNodes = [];
+  isNamingInProgress = false;
 }

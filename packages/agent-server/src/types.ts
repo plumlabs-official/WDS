@@ -68,6 +68,7 @@ export interface ContextAwareNamingRequest {
       cornerRadius?: number | null;  // 모서리 반경 (Avatar Circle 감지)
       strokeWidth?: number | null;   // 테두리 두께 (Input)
       hasShadow?: boolean;           // 그림자 유무 (Card Elevation)
+      parentBgColor?: string | null; // 부모 배경색 (Color Variant 감지)
       [key: string]: unknown;     // 기타 구조 정보
     };
   }>;

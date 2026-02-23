@@ -117,18 +117,6 @@ function handleCommandWithUI(cmd: string) {
       handleRunAll();
       break;
 
-    case 'apply-autolayout-agent':
-      handleAutoLayoutAgent();
-      break;
-
-    case 'auto-naming-agent':
-      handleNamingAgent();
-      break;
-
-    case 'run-all-agent':
-      handleRunAllAgent();
-      break;
-
     default:
       figma.notify('알 수 없는 명령입니다.', { error: true });
   }

@@ -733,12 +733,27 @@ function formatNodeList(nodes: ContextAwareNamingRequest['nodes']): string {
       strokeWidthInfo = `\n   - 테두리 두께: ${strokeWidth}px`;
     }
 
+    // Color Variant 힌트 (부모 배경색 기반)
+    let colorVariantHint = '';
+    if (node.structure?.parentBgColor) {
+      const bg = node.structure.parentBgColor.toUpperCase().replace('#', '');
+      if (bg.length === 6) {
+        const bgR = parseInt(bg.substring(0, 2), 16);
+        const bgG = parseInt(bg.substring(2, 4), 16);
+        const bgB = parseInt(bg.substring(4, 6), 16);
+        const bgBrightness = (bgR + bgG + bgB) / 3;
+        if (bgBrightness < 180) {
+          colorVariantHint = `\n   - Color 힌트: White (부모 배경 ${node.structure.parentBgColor}, 어두운/컬러 배경)`;
+        }
+      }
+    }
+
     return `${index + 1}. nodeId="${node.nodeId}"
    - 현재 이름: "${node.currentName}"
    - 타입: ${node.nodeType}
    - 깊이: ${depthLabel}
    - 위치: (${node.x}, ${node.y})
-   - 크기: ${node.width} x ${node.height}${parentInfo}${textsInfo}${iconsInfo}${fillColorInfo}${strokeInfo}${strokeWidthInfo}${iconPositionInfo}${shapeHint}${stateHint}${intentHint}${avatarShapeHint}${cardElevationHint}${inputStateHint}${toggleStateHint}`;
+   - 크기: ${node.width} x ${node.height}${parentInfo}${textsInfo}${iconsInfo}${fillColorInfo}${strokeInfo}${strokeWidthInfo}${iconPositionInfo}${shapeHint}${stateHint}${intentHint}${colorVariantHint}${avatarShapeHint}${cardElevationHint}${inputStateHint}${toggleStateHint}`;
   }).join('\n\n');
 }
 

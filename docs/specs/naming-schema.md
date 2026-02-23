@@ -17,7 +17,7 @@ Type/Context[/State][/Icon]
 
 ### 버튼 (상세 구조)
 ```
-Button/Intent/Shape/Size[/State][/Icon]
+Button/Intent/Shape/[Color]/Size[/State][/Icon]
 ```
 
 ---
@@ -30,13 +30,17 @@ Button/Intent/Shape/Size[/State][/Icon]
 |------|------|-----|------|
 | Intent | ✅ | Primary, Secondary, Danger, Warning, Success, Info, Normal | 의미/중요도 |
 | Shape | ✅ | Filled, Outlined, Ghost | 시각적 스타일 |
+| Color | ❌ | White | 컬러/어두운 배경 위 흰색 버튼. Default면 생략 |
 | Size | ✅ | 32, 44, 48, 56 | 높이 (px) |
 | State | ❌ | Disabled, Loading, Focus | 기본(Default)이면 생략 |
 | Icon | ❌ | IconLeft, IconRight, IconOnly | 아이콘 있을 때만 |
 
 ### 예시
 ```
-Button/Primary/Filled/48              # 기본
+Button/Primary/Filled/48              # 기본 (밝은 배경)
+Button/Primary/Filled/White/56        # 컬러 배경 위 흰색 Filled
+Button/Primary/Outlined/White/56      # 컬러 배경 위 흰색 Outlined
+Button/Secondary/Ghost/White/26       # 컬러 배경 위 보조 텍스트 링크
 Button/Danger/Outlined/44             # 위험 행동, 아웃라인
 Button/Primary/Filled/48/Disabled     # 비활성
 Button/Secondary/Ghost/36/IconLeft    # 고스트, 왼쪽 아이콘
@@ -48,8 +52,8 @@ Button/Primary/Filled/56/IconOnly     # 아이콘만
 
 | Intent | 의미 | 시각적 특징 | 사용 예 |
 |--------|------|------------|--------|
-| Primary | 주요 행동 | 메인 컬러, 강조 | 확인, 저장, 시작하기 |
-| Secondary | 보조 행동 | 보조 컬러, 덜 강조 | 취소, 뒤로가기 |
+| Primary | 핵심 전환 행동 | 메인 컬러, 강조 | 확인, 저장, 시작하기, 가입 |
+| Secondary | 보조/안내 행동 | 보조 컬러, 덜 강조 | 취소, 뒤로가기, 기존 회원 안내, 로그인 링크 |
 | Danger | 위험/삭제 | 빨간색 계열 | 삭제, 탈퇴 |
 | Warning | 경고 | 노란색/주황색 계열 | 주의 필요 행동 |
 | Success | 성공/완료 | 초록색 계열 | 완료, 승인 |
@@ -63,6 +67,17 @@ Button/Primary/Filled/56/IconOnly     # 아이콘만
 | Filled | 배경색 채워짐 | 높음 (주요 행동) |
 | Outlined | 테두리만 | 중간 (보조 행동) |
 | Ghost | 배경/테두리 없음 | 낮음 (텍스트 버튼) |
+
+### Color 판단 기준
+
+| Color | 조건 | 설명 |
+|-------|------|------|
+| White | 부모 배경이 컬러/어두운 색 (brightness < 180) | 텍스트·테두리가 흰색인 버튼 |
+| (생략) | 부모 배경이 밝은 색/흰색 | 기본 색상 버튼 |
+
+- Shape와 Size 사이에 위치
+- 밝은 배경에서는 생략 (Default)
+- 향후 필요 시 Default → Brand 등으로 확장 가능
 
 ### Size 판단 기준
 

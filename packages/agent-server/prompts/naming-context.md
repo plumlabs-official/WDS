@@ -55,7 +55,7 @@
 ## 버튼 네이밍
 
 ```
-Button/Intent/Shape/Size[/State][/Icon]
+Button/Intent/Shape/[Color]/Size[/State][/Icon]
 ```
 
 ### Intent 판단 기준 (우선순위대로)
@@ -89,6 +89,11 @@ Button/Intent/Shape/Size[/State][/Icon]
 
 **판단 충돌 시**: 색상 의미(Danger/Warning/Success/Info) > 강조도(Primary/Secondary/Normal)
 
+**Intent 구분 핵심 원칙:**
+- **Primary**: 화면의 핵심 전환 행동 (가입, 구매, 시작)
+- **Secondary**: 보조/안내 행동 (로그인 링크, 기존 회원 안내, 취소)
+- 같은 화면에서 모든 버튼이 Primary면 안됨 — Intent 축의 구분력 유지 필수
+
 ### Shape (시각적 스타일)
 
 ⚠️ **Shape 힌트 필드가 제공되면 반드시 참고**
@@ -110,6 +115,19 @@ Button/Intent/Shape/Size[/State][/Icon]
 - `Shape 힌트: Outlined` → Shape = Outlined
 - `Shape 힌트: Filled` → Shape = Filled
 - `Shape 힌트: Ghost` → Shape = Ghost
+
+### Color (선택, Default면 생략)
+
+⚠️ **Color 힌트가 제공되면 반드시 참고!**
+
+| 조건 | Color |
+|------|-------|
+| `Color 힌트: White` | White |
+| (힌트 없음) | 생략 (Default) |
+
+- 컬러/어두운 배경 위에서 텍스트·테두리가 흰색인 버튼
+- Shape와 Size 사이에 위치: `Button/Intent/Shape/White/Size`
+- 밝은 배경(흰색 등)에서는 생략
 
 ### Size (높이)
 - **실제 높이(px)를 그대로 사용**
@@ -144,11 +162,14 @@ Button/Intent/Shape/Size[/State][/Icon]
 
 ### 버튼 예시
 ```
-Button/Primary/Filled/48      ← 브랜드색 채워진 버튼, 높이 48px
-Button/Danger/Outlined/44     ← 빨간 테두리 버튼, 높이 44px
-Button/Secondary/Ghost/36     ← 보조 텍스트 버튼, 높이 36px
-Button/Success/Filled/52      ← 초록색 채워진 버튼, 높이 52px
-Button/Normal/Filled/40/IconLeft ← 회색 버튼, 왼쪽 아이콘
+Button/Primary/Filled/48              ← 브랜드색 채워진 버튼, 높이 48px
+Button/Primary/Filled/White/56        ← 컬러 배경 위 흰색 Filled (핵심 전환)
+Button/Primary/Outlined/White/56      ← 컬러 배경 위 흰색 Outlined (대안 전환)
+Button/Secondary/Ghost/White/26       ← 컬러 배경 위 보조 안내 텍스트 링크
+Button/Danger/Outlined/44             ← 빨간 테두리 버튼, 높이 44px
+Button/Secondary/Ghost/36             ← 보조 텍스트 버튼, 높이 36px
+Button/Success/Filled/52              ← 초록색 채워진 버튼, 높이 52px
+Button/Normal/Filled/40/IconLeft      ← 회색 버튼, 왼쪽 아이콘
 ```
 
 ### ❌ 틀린 예시
@@ -157,6 +178,7 @@ Button/CTA/Primary/LG         ← Intent/Shape/Size 아님
 Button/Primary/48             ← Shape 누락
 Button/Red/Filled/48          ← Red는 Intent 아님, Danger 사용
 Button/Primary/Filled/Medium  ← Size는 숫자(px)여야 함
+Button/Primary/White/Filled/48 ← Color는 Shape 뒤에 위치해야 함
 ```
 
 ---
@@ -417,15 +439,16 @@ Type/Context[/State]
 ```json
 {
   "nodeId": "123:456",
-  "suggestedName": "Button/Primary/Filled/48",
+  "suggestedName": "Button/Primary/Filled/White/56",
   "componentType": "Button",
   "intent": "Primary",
   "shape": "Filled",
-  "size": "48",
+  "color": "White",
+  "size": "56",
   "state": null,
   "icon": null,
   "confidence": 0.95,
-  "reasoning": "브랜드 색상의 채워진 버튼, 실측 높이 48px"
+  "reasoning": "컬러 배경 위 흰색 채워진 버튼, 실측 높이 56px"
 }
 ```
 
