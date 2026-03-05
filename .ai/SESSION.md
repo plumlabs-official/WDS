@@ -8,12 +8,12 @@
 
 ## 현재 세션 (2026-03-05)
 
-### 완료: shadcn/ui Figma Kit 비교 분석
+### 완료: shadcn/ui Figma Kit 비교 분석 + 최종 결정
 - Tryve 디자인 시스템 도입을 위한 Kit 비교
 - 8개 Kit 전체 비교 완료 (무료 5개, 유료 3개)
 - 비교표 저장: `docs/shadcn-figma-kit-comparison.md`
-- **무료 추천:** RAVN (전 항목 🟢) / Obra (Blocks만 ❌)
-- **유료 추천:** shadcndesign $299 (코드 1:1 매핑 최고, 모바일 블록 최다)
+- **최종 결정:** Shadcraft Pro $299 구매 + RAVN 보조 활용
+- 선택 이유: Tryve 적합 템플릿 다수, Lucide Icons 통합
 - Agent: Claude
 
 ### 완료: Tryve 디자인 시스템 추천 (Team Mode)
