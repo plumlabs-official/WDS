@@ -27,9 +27,10 @@ Agent: Claude
 Summary: TDS Phase 5 진행 - 플러그인 완성 + Button 테스트 통과 + Lucide Icons 추가
 Next-TODO:
   1. Button 컴포넌트 전체 마이그레이션 (TDS 토큰 적용)
-  2. 아이콘 색상 확인/수정 (currentColor 또는 TDS 변수)
-  3. 나머지 컴포넌트 (Input, Card, Badge 등)
-  4. Library Publish
+  2. 아이콘 독립화 결정 (현재 Instance 상태 - 라이브러리 연결 vs Detach+컴포넌트화)
+  3. 아이콘 색상 확인/수정
+  4. 나머지 컴포넌트 (Input, Card, Badge 등)
+  5. Library Publish
 Commits: ebe8a04
 ---
 

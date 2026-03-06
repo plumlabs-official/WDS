@@ -48,9 +48,12 @@
 ### 다음 할 일
 
 1. **Button 컴포넌트 전체 마이그레이션** — 플러그인으로 전체 버튼에 TDS 토큰 적용
-2. **아이콘 색상 확인** — currentColor 또는 TDS 변수로 바인딩 필요 여부
-3. **나머지 컴포넌트** — Input, Card, Badge 등
-4. **Library Publish** — TDS 라이브러리 배포
+2. **아이콘 독립화 결정** — 현재 Instance 상태 (Shadcn-Kit → TDS). 옵션:
+   - A: Shadcn-Kit 라이브러리 연결해서 사용
+   - B: Detach → Component 재생성 (TDS 완전 독립)
+3. **아이콘 색상 확인** — currentColor 또는 TDS 변수로 바인딩 필요 여부
+4. **나머지 컴포넌트** — Input, Card, Badge 등
+5. **Library Publish** — TDS 라이브러리 배포
 
 ### 플러그인 사용법
 
