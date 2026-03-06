@@ -2,11 +2,35 @@
 
 > 세션 단기 기억 (compact 후 이어갈 내용)
 >
-> Last updated: 2026-03-05 | v3.5.0
+> Last updated: 2026-03-06 | v3.5.0
 
 ---
 
-## 현재 세션 (2026-03-05)
+## 현재 세션 (2026-03-06)
+
+### 진행 중: TDS 재구축 (shadcn 기반)
+
+**목표:** 기존 TDS 리셋 → shadcn Figma Kit 기반 재구축
+
+**마스터 플랜:** `.ai/plans/tds-rebuild-master-plan.md`
+
+**Phase 체크리스트:**
+- [ ] Phase 0: Inventory
+- [ ] Phase 1: Archive & Reset
+- [ ] Phase 2: Variables (Color)
+- [ ] Phase 3: Typography
+- [ ] Phase 4: Effects
+- [ ] Phase 5: Components
+- [ ] Phase 6: Publish & Test
+
+**원칙:**
+- shadcn 구조/네이밍 유지 (AI 바이브 코딩 호환)
+- 내용물(색상, 폰트)만 Tryve로 교체
+- Primitives 값만 수정, Theme/Mode는 자동 반영
+
+---
+
+## 이전 세션 (2026-03-05)
 
 ### 완료: shadcn/ui Figma Kit 비교 분석 + 최종 결정
 - Tryve 디자인 시스템 도입을 위한 Kit 비교
