@@ -44,27 +44,22 @@ Day 4+: Phase 5 (Components)
 - [x] 1.2 **새 TDS 파일 생성** (깨끗한 상태로 시작)
 - [x] 1.3 Variables/Styles/Libraries 없는 clean 상태 확인
 
-### Phase 2: Variables (2-3시간) 🔄 진행 중
+### Phase 2: Variables (2-3시간) ✅ 완료
 - [x] 2.1 Shadcraft Pro Variables 분석
-  - Primitives (357): 원본값 (colors, spacing, radius)
-  - Theme (252): 테마 변형 (Soft Pop, Vintage Paper) → **불필요, 삭제 예정**
-  - Mode (62): Light/Dark 시맨틱 토큰 → **필수**
-  - Pro (19): 프리미엄 기능
 - [x] 2.2 Export/Import 방법 발견
-  - Collection 우클릭 → Export → .zip → .tokens.json
-  - TDS Variables 패널에 드래그 드롭으로 Import
-- [x] 2.3 Primitives Collection Import 완료 (357개)
-- [x] 2.4 Theme Collection Import 완료 (252개) → 삭제 예정
-- [ ] 2.5 Mode Collection Import
-- [ ] 2.6 Theme 삭제 결정
-- [ ] 2.7 Tryve 색상으로 Primitives 값 교체
+- [x] 2.3 Primitives Collection Import (357개)
+- [x] 2.4 Theme Collection Import (252개)
+- [x] 2.5 Mode Collection Import (62개)
+- [x] 2.6 Theme에 "tds" 컬럼 추가 (Default 유지)
+- [x] 2.7 tds 컬럼에 Tryve 색상 적용
+- [x] 2.8 tds를 default로 설정 → Mode 자동 참조
 
-### Phase 3: Typography (1-2시간)
-- [ ] 3.1 Shadcraft Text Styles 분석
-- [ ] 3.2 Tryve 폰트 결정
-- [ ] 3.3 Text Styles 복제
-- [ ] 3.4 Font Family 교체
-- [ ] 3.5 Size/Weight 조정
+### Phase 3: Typography (1-2시간) ✅ 완료
+- [x] 3.1 Shadcraft Text Styles 분석 (변수 참조 확인)
+- [x] 3.2 Tryve 폰트 결정: **Pretendard**
+- [x] 3.3 font-sans → Pretendard (tds 컬럼)
+- [x] 3.4 Text Styles 자동 적용 (변수 참조)
+- [x] 3.5 Weight/Size 유지 (Tailwind 표준)
 
 ### Phase 4: Effects (30분)
 - [ ] 4.1 Shadow Styles 복제
@@ -91,46 +86,44 @@ Day 4+: Phase 5 (Components)
 
 ---
 
-## 현재 상태 (2026-03-06 11:10)
+## 현재 상태 (2026-03-06 14:00)
 
 ### TDS 파일 상태
-- **파일명:** TDS (새로 생성, 기존 파일 폐기)
-- **Variables:**
-  - Primitives (357) ✅ Import 완료
-  - Theme (252) ✅ Import 완료 → **삭제 예정** (불필요)
-  - Mode → Import 필요
+- **파일명:** TDS (Figma)
+- **Variables:** 전체 Import 완료
+  - Primitives (357) ✅
+  - Theme (252) ✅ - tds/shadcn 컬럼 구조
+  - Mode (62) ✅ - tds 참조
+  - Pro (19) ✅
+- **Typography:** Pretendard 적용 완료
 
-### Variables Import 방법 (발견)
-```
-1. Shadcraft Pro > Variables 패널 > Collection 우클릭 > Export
-2. .zip 파일 저장 → 압축 해제 → .tokens.json 파일
-3. TDS > Variables 패널 열기 > 빈 영역에 .json 드래그 드롭
-4. Collection 이름 변경 (필요시)
-```
+### Theme 컬럼 구조
+| 컬럼 | 용도 |
+|------|------|
+| **tds** | Tryve 색상 (default) |
+| shadcn | 원본 참조용 |
 
-### Collection 분석 결과
-| Collection | 개수 | 용도 | TDS에 필요? |
-|------------|------|------|-------------|
-| Primitives | 357 | 색상/간격 원본값 | ✅ 필수 |
-| Theme | 252 | 테마 프리셋 (Soft Pop, Vintage Paper) | ❌ 불필요 |
-| Mode | 62 | Light/Dark 시맨틱 토큰 | ✅ 필수 |
-| Pro | 19 | 프리미엄 기능 | ❓ 선택 |
-
-### 다음 단계
-1. ~~TDS에서 Theme Collection 삭제~~ → Theme 필요 (Mode가 참조)
-2. ~~Shadcraft Pro에서 Mode Collection Export~~ ✅
-3. ~~TDS에 Mode Import~~ ✅
-4. ~~Tryve 색상 팔레트 정리~~ ✅
-5. Mode Collection에서 Tryve 색상으로 교체 ← **다음 작업**
-
-### Tryve 색상 매핑 (확정)
+### Tryve 색상 매핑 (적용 완료)
 | shadcn 변수 | Tryve 값 | 용도 |
 |-------------|----------|------|
-| `white` | `#FFFFFF` | 배경, 버튼 텍스트 |
-| `black` | `#1A1A1A` | 기본 텍스트 (소프트 블랙) |
 | `primary` | `#00CC61` | CTA 버튼, 강조 |
 | `secondary` | `#EFF5FD` | 카드 배경, 탭 pill |
-| `destructive` | `#F33939` | 알림 배지, 경고 |
+| `destructive` | `#F33939` | 에러, 위험 |
+| `success` | `#00CC61` | 성공 (= primary) |
+| `warning` | `#FF6600` | 경고 (주황) |
 | `muted` | `#D3D8DC` | 배경, disabled |
 | `muted-foreground` | `#797979` | 서브 description |
-| `accent` | `#DFF7DF` | 스트릭 배지 배경 |
+| `foreground` | `#1A1A1A` | 기본 텍스트 (소프트 블랙) |
+
+### Typography
+| 항목 | 값 |
+|------|-----|
+| font-sans | **Pretendard** |
+| 헤더/타이틀 | SemiBold (600) |
+| 본문/설명 | Regular (400) |
+
+### 다음 단계
+1. Phase 4: Effects (Shadow) - 선택
+2. Phase 5: Components (Button 등)
+3. Dark 모드 색상 적용
+4. Library Publish

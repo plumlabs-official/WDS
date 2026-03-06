@@ -124,3 +124,17 @@ Next-TODO:
   3. Light/Dark 모드별로 적절한 값 지정
 Commits: 064c128
 ---
+
+---
+HANDOFF: Claude -> Claude (다음 세션)
+Date: 2026-03-06 14:05:00
+Project: ~/Project/WDS
+Agent: Claude
+Summary: TDS 재구축 Phase 2-3 완료. Theme에 tds 컬럼 생성 + Tryve 색상 적용 (Light). Typography에 Pretendard 적용. tds를 default로 설정하여 Mode 자동 참조.
+Next-TODO:
+  1. Phase 4: Effects (Shadow) - 선택
+  2. Phase 5: Components (Button 등)
+  3. Dark 모드 색상 적용 (나중에 일괄)
+  4. Library Publish
+Commits: 87d4560
+---

@@ -8,7 +8,7 @@
 
 ## 현재 세션 (2026-03-06)
 
-### 진행 중: TDS 재구축 (shadcn 기반)
+### 완료: TDS 재구축 Phase 2-3
 
 **목표:** 기존 TDS 리셋 → shadcn Figma Kit 기반 재구축
 
@@ -16,40 +16,40 @@
 
 **Phase 체크리스트:**
 - [x] Phase 0: Inventory ✅
-- [x] Phase 1: Archive & Reset ✅ (새 TDS 파일 생성)
-- [🔄] Phase 2: Variables - 진행 중
-  - [x] Primitives Import (357개)
-  - [x] Theme Import (252개) ← Mode가 참조하므로 유지
-  - [x] Mode Import (62개)
-  - [x] Pro Import (19개)
-  - [x] Tryve 색상 팔레트 분석 완료
-  - [ ] Mode Collection에 Tryve 색상 적용
-- [ ] Phase 3: Typography
+- [x] Phase 1: Archive & Reset ✅
+- [x] Phase 2: Variables ✅
+  - tds 컬럼 생성 (Default → shadcn으로 rename, 원본 유지)
+  - Tryve 색상 적용 (Light 모드)
+  - tds를 default로 설정 → Mode 자동 참조
+- [x] Phase 3: Typography ✅
+  - font-sans → Pretendard
+  - Text Styles 자동 적용 (변수 참조)
 - [ ] Phase 4: Effects
 - [ ] Phase 5: Components
 - [ ] Phase 6: Publish & Test
 
-**발견한 것:**
-- Figma Variables Export: Collection 우클릭 → Export → .zip
-- Import: .tokens.json 파일을 Variables 패널에 드래그 드롭
-- Theme Collection 필요 (Mode → Theme → Primitives 참조 체인)
-- Mode Collection이 Light/Dark 전환용 시맨틱 토큰
-
-**Tryve 색상 매핑 (확정):**
+**Tryve 색상 매핑 (적용 완료):**
 | 변수 | 값 | 용도 |
 |------|-----|------|
-| white | #FFFFFF | 배경, 버튼 텍스트 |
-| black | #1A1A1A | 기본 텍스트 (소프트 블랙) |
 | primary | #00CC61 | CTA 버튼, 강조 |
 | secondary | #EFF5FD | 카드 배경, 탭 pill |
-| destructive | #F33939 | 알림 배지, 경고 |
+| destructive | #F33939 | 에러, 위험 |
+| success | #00CC61 | 성공 (= primary) |
+| warning | #FF6600 | 경고 (주황) |
 | muted | #D3D8DC | 배경, disabled |
 | muted-foreground | #797979 | 서브 description |
-| accent | #DFF7DF | 스트릭 배지 배경 |
+| foreground | #1A1A1A | 소프트 블랙 |
+
+**Typography:**
+- font-sans: Pretendard (tds) | Geist (shadcn)
+- 헤더/타이틀: SemiBold (600)
+- 본문/설명: Regular (400)
 
 **다음 할 일:**
-1. TDS > Mode Collection에서 위 색상값 적용
-2. Light/Dark 모드별로 primary, secondary 등 교체
+1. Phase 4: Effects (선택)
+2. Phase 5: Components (Button 등)
+3. Dark 모드 색상 (나중에 일괄)
+4. Library Publish
 
 ---
 
